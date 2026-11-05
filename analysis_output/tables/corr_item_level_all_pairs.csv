@@ -1,0 +1,991 @@
+﻿var_1,var_2,spearman_rho,p_value,q_value_FDR,n
+Full of energy,Passionate about work,0.8277,0.0,0.0,239
+Passionate about work,Absorbed in work,0.8109,0.0,0.0,239
+Full of energy,Absorbed in work,0.7738,0.0,0.0,239
+'Can't take it anymore',Completely exhausted,0.7525,0.0,0.0,239
+Emotionally drained,Work emotionally draining,0.7432,0.0,0.0,239
+Emotionally drained,'Can't take it anymore',0.7425,0.0,0.0,239
+Often tired,Physically drained,0.7411,0.0,0.0,239
+Emotionally drained,Completely exhausted,0.7391,0.0,0.0,239
+Dread another work day,Every work hour is an ordeal,0.7376,0.0,0.0,239
+Completely exhausted,Drained after work day,0.7328,0.0,0.0,239
+Work emotionally draining,Work: about to collapse,0.7305,0.0,0.0,239
+'Can't take it anymore',Work: about to collapse,0.7188,0.0,0.0,239
+Completely exhausted,Work: about to collapse,0.7122,0.0,0.0,239
+Physically drained,Drained after work day,0.709,0.0,0.0,239
+Completely exhausted,Work emotionally draining,0.7029,0.0,0.0,239
+Work: about to collapse,Drained after work day,0.6966,0.0,0.0,239
+Weak / about to get sick,Work: about to collapse,0.6828,0.0,0.0,239
+Emotionally drained,Work: about to collapse,0.6802,0.0,0.0,239
+Often tired,Drained after work day,0.6796,0.0,0.0,239
+Recognition,Org supports work-life balance,0.6771,0.0,0.0,203
+Emotionally drained,Drained after work day,0.6771,0.0,0.0,239
+Work emotionally draining,Drained after work day,0.6762,0.0,0.0,239
+'Can't take it anymore',Work emotionally draining,0.6743,0.0,0.0,239
+Free to voice concerns,Skill development opportunity,0.6669,0.0,0.0,203
+Skill development opportunity,Career talks w/ leadership,0.6657,0.0,0.0,200
+Work gives me satisfaction,Glad I chose this career,0.6639,0.0,0.0,183
+Org supports work-life balance,Free to voice concerns,0.6619,0.0,0.0,202
+Emotionally drained,Dread another work day,0.6612,0.0,0.0,239
+Drained after work day,Dread another work day,0.6586,0.0,0.0,239
+'Can't take it anymore',Weak / about to get sick,0.6544,0.0,0.0,239
+Completely exhausted,Weak / about to get sick,0.6537,0.0,0.0,239
+Physically drained,Completely exhausted,0.6524,0.0,0.0,239
+'Can't take it anymore',Every work hour is an ordeal,0.6504,0.0,0.0,239
+'Can't take it anymore',Dread another work day,0.6435,0.0,0.0,239
+Work: about to collapse,Every work hour is an ordeal,0.6399,0.0,0.0,239
+Colleague support,Supervisor support,0.6377,0.0,0.0,199
+Full of energy,Work gives me satisfaction,0.6362,0.0,0.0,183
+Excess workload / uneven division,Unclear role definition,0.633,0.0,0.0,203
+Recognition,Free to voice concerns,0.6319,0.0,0.0,203
+Physically drained,Work: about to collapse,0.6306,0.0,0.0,239
+Often tired,Completely exhausted,0.6291,0.0,0.0,239
+Emotionally drained,Weak / about to get sick,0.6261,0.0,0.0,239
+Work: about to collapse,Dread another work day,0.6241,0.0,0.0,239
+Recognition,Skill development opportunity,0.6238,0.0,0.0,204
+Work emotionally draining,Dread another work day,0.6211,0.0,0.0,239
+Weak / about to get sick,Drained after work day,0.62,0.0,0.0,239
+Often tired,Emotionally drained,0.6183,0.0,0.0,239
+Free to voice concerns,Career talks w/ leadership,0.6102,0.0,0.0,200
+Work emotionally draining,Every work hour is an ordeal,0.6098,0.0,0.0,239
+Unclear role definition,Job demands exceed training,0.6062,0.0,0.0,203
+'Can't take it anymore',Drained after work day,0.6058,0.0,0.0,239
+Frequency considering leaving (0-4),Expect to stay 1 yr (1-5),-0.6042,0.0,0.0,205
+Physically drained,Emotionally drained,0.6032,0.0,0.0,239
+Supervisor support,Free to voice concerns,0.6027,0.0,0.0,199
+Often tired,Work: about to collapse,0.6023,0.0,0.0,239
+Completely exhausted,Dread another work day,0.602,0.0,0.0,239
+Affected by traumatised clients,Discouraged by traumatised clients,0.6002,0.0,0.0,183
+Supervisor support,Recognition,0.5979,0.0,0.0,199
+'Can't take it anymore',Work is frustrating,0.5973,0.0,0.0,239
+Unclear role definition,Difficulty w/ supervisor,0.5953,0.0,0.0,200
+Passionate about work,Work gives me satisfaction,0.5936,0.0,0.0,183
+Difficulty w/ supervisor,Supervisor support,-0.5926,0.0,0.0,198
+Control over how I work,Recognition,0.5893,0.0,0.0,205
+Weak / about to get sick,Dread another work day,0.5858,0.0,0.0,239
+I enjoy helping work,Glad I chose this career,0.5827,0.0,0.0,183
+Physically drained,Weak / about to get sick,0.5813,0.0,0.0,239
+Weak / about to get sick,Work emotionally draining,0.58,0.0,0.0,239
+Emotionally drained,Every work hour is an ordeal,0.5721,0.0,0.0,239
+Supervisor support,Career talks w/ leadership,0.5717,0.0,0.0,199
+Work emotionally draining,Work is frustrating,0.5698,0.0,0.0,239
+Often tired,Dread another work day,0.5683,0.0,0.0,239
+Full of energy,Glad I chose this career,0.5662,0.0,0.0,183
+Drained after work day,Every work hour is an ordeal,0.5648,0.0,0.0,239
+Completely exhausted,Every work hour is an ordeal,0.5625,0.0,0.0,239
+Emotionally drained,Work is frustrating,0.5592,0.0,0.0,239
+Limited career path,Pay / conditions unsustainable,0.5584,0.0,0.0,202
+Work: about to collapse,Work is frustrating,0.5524,0.0,0.0,239
+Weak / about to get sick,Every work hour is an ordeal,0.5515,0.0,0.0,239
+Physically drained,'Can't take it anymore',0.551,0.0,0.0,239
+Passionate about work,Glad I chose this career,0.5509,0.0,0.0,183
+Excess workload / uneven division,Work: about to collapse,0.5468,0.0,0.0,203
+Work is frustrating,Dread another work day,0.5458,0.0,0.0,239
+Work is frustrating,Every work hour is an ordeal,0.5432,0.0,0.0,239
+Recognition,Career talks w/ leadership,0.5412,0.0,0.0,200
+Difficulty w/ supervisor,Values misaligned w/ org,0.541,0.0,0.0,198
+Excess workload / uneven division,'Can't take it anymore',0.5407,0.0,0.0,203
+Absorbed in work,Work gives me satisfaction,0.5388,0.0,0.0,183
+Physically drained,Dread another work day,0.5346,0.0,0.0,239
+Work: about to collapse,Overwhelmed by endless workload,0.5344,0.0,0.0,183
+Physically drained,Work emotionally draining,0.5319,0.0,0.0,239
+Supervisor support,Org supports work-life balance,0.5317,0.0,0.0,199
+Difficulty w/ supervisor,Free to voice concerns,-0.5299,0.0,0.0,200
+Excess workload / uneven division,Emotionally drained,0.5299,0.0,0.0,203
+Often tired,'Can't take it anymore',0.5296,0.0,0.0,239
+Emotionally drained,Overwhelmed by endless workload,0.5266,0.0,0.0,183
+Difficulty w/ supervisor,Limited career path,0.5247,0.0,0.0,200
+Org supports work-life balance,Career talks w/ leadership,0.5223,0.0,0.0,199
+Excess workload / uneven division,Job demands exceed training,0.5211,0.0,0.0,203
+Limited career path,Values misaligned w/ org,0.5207,0.0,0.0,201
+Often tired,Work emotionally draining,0.5189,0.0,0.0,239
+Excess workload / uneven division,Pay / conditions unsustainable,0.5166,0.0,0.0,202
+Control over how I work,Org supports work-life balance,0.5153,0.0,0.0,203
+Often tired,Weak / about to get sick,0.5115,0.0,0.0,239
+Recognition,Full of energy,0.5069,0.0,0.0,205
+Org supports work-life balance,Skill development opportunity,0.5041,0.0,0.0,203
+Difficulty w/ colleagues,Difficulty w/ supervisor,0.5,0.0,0.0,200
+Difficulty w/ supervisor,Dread another work day,0.4992,0.0,0.0,200
+Limited career path,Skill development opportunity,-0.4975,0.0,0.0,203
+Feel stuck in helping work,Discouraged by traumatised clients,0.4963,0.0,0.0,183
+Difficulty w/ supervisor,Every work hour is an ordeal,0.4957,0.0,0.0,200
+'Can't take it anymore',Overwhelmed by endless workload,0.4956,0.0,0.0,183
+Excess workload / uneven division,Difficulty w/ supervisor,0.4951,0.0,0.0,200
+Unclear role definition,Limited career path,0.4945,0.0,0.0,203
+Dread another work day,Frequency considering leaving (0-4),0.4945,0.0,0.0,205
+I enjoy helping work,Work gives me satisfaction,0.4912,0.0,0.0,183
+Excess workload / uneven division,Org supports work-life balance,-0.4902,0.0,0.0,203
+Difficulty w/ supervisor,Career talks w/ leadership,-0.489,0.0,0.0,198
+Control over how I work,Skill development opportunity,0.4877,0.0,0.0,204
+Absorbed in work,Glad I chose this career,0.4864,0.0,0.0,183
+Full of energy,Dread another work day,-0.4859,0.0,0.0,239
+Org supports work-life balance,Emotionally drained,-0.4854,0.0,0.0,203
+Work is frustrating,Drained after work day,0.483,0.0,0.0,239
+Control over how I work,Free to voice concerns,0.4827,0.0,0.0,203
+Completely exhausted,Overwhelmed by endless workload,0.4824,0.0,0.0,183
+Excess workload / uneven division,Overwhelmed by endless workload,0.4811,0.0,0.0,156
+Drained after work day,Overwhelmed by endless workload,0.48,0.0,0.0,183
+Difficulty w/ supervisor,'Can't take it anymore',0.4792,0.0,0.0,200
+Excess workload / uneven division,Difficulty w/ colleagues,0.479,0.0,0.0,203
+Excess workload / uneven division,Often tired,0.4782,0.0,0.0,203
+Values misaligned w/ org,Free to voice concerns,-0.4773,0.0,0.0,200
+Excess workload / uneven division,Physically drained,0.4772,0.0,0.0,203
+Free to voice concerns,Full of energy,0.4766,0.0,0.0,203
+Difficulty w/ supervisor,Org supports work-life balance,-0.4765,0.0,0.0,200
+Supervisor support,Skill development opportunity,0.4762,0.0,0.0,199
+Difficulty w/ supervisor,Emotionally drained,0.4762,0.0,0.0,200
+Job demands exceed training,Client boundaries / emotional load,0.4761,0.0,0.0,186
+Difficulty w/ supervisor,Frequency considering leaving (0-4),0.4756,0.0,0.0,200
+Values misaligned w/ org,Frequency considering leaving (0-4),0.4747,0.0,0.0,201
+Free to voice concerns,Drained after work day,-0.4741,0.0,0.0,203
+Limited career path,Frequency considering leaving (0-4),0.4741,0.0,0.0,203
+Unclear role definition,Values misaligned w/ org,0.4731,0.0,0.0,201
+Colleague support,Org supports work-life balance,0.4729,0.0,0.0,203
+Feel stuck in helping work,Intrusive / frightening thoughts,0.472,0.0,0.0,183
+Free to voice concerns,Every work hour is an ordeal,-0.4716,0.0,0.0,203
+Org supports work-life balance,Drained after work day,-0.4716,0.0,0.0,203
+Affected by traumatised clients,Feel stuck in helping work,0.4714,0.0,0.0,183
+Free to voice concerns,Emotionally drained,-0.471,0.0,0.0,203
+Colleague support,Recognition,0.4708,0.0,0.0,205
+Recognition,Dread another work day,-0.47,0.0,0.0,205
+Difficulty w/ supervisor,Work is frustrating,0.4693,0.0,0.0,200
+Exhausted because I'm a helper,Overwhelmed by endless workload,0.4678,0.0,0.0,183
+Excess workload / uneven division,Drained after work day,0.4676,0.0,0.0,203
+Completely exhausted,Work is frustrating,0.4672,0.0,0.0,239
+Org supports work-life balance,'Can't take it anymore',-0.467,0.0,0.0,203
+Free to voice concerns,'Can't take it anymore',-0.4669,0.0,0.0,203
+Org supports work-life balance,Work emotionally draining,-0.4641,0.0,0.0,203
+Clear expectations,Control over how I work,0.4634,0.0,0.0,204
+Free to voice concerns,Work emotionally draining,-0.4631,0.0,0.0,203
+Difficulty w/ supervisor,Weak / about to get sick,0.4607,0.0,0.0,200
+Passionate about work,Dread another work day,-0.4603,0.0,0.0,239
+Free to voice concerns,Weak / about to get sick,-0.4599,0.0,0.0,203
+Limited career path,Career talks w/ leadership,-0.4593,0.0,0.0,199
+Skill development opportunity,Full of energy,0.4585,0.0,0.0,204
+Difficulty w/ supervisor,Work emotionally draining,0.4578,0.0,0.0,200
+Physically drained,Overwhelmed by endless workload,0.4561,0.0,0.0,183
+Control over how I work,Full of energy,0.456,0.0,0.0,205
+Weak / about to get sick,Work is frustrating,0.4553,0.0,0.0,239
+Excess workload / uneven division,Completely exhausted,0.4547,0.0,0.0,203
+Free to voice concerns,Dread another work day,-0.4534,0.0,0.0,203
+Overwhelmed by endless workload,Intrusive / frightening thoughts,0.4534,0.0,0.0,183
+Org supports work-life balance,Dread another work day,-0.4532,0.0,0.0,203
+Job demands exceed training,Pay / conditions unsustainable,0.4524,0.0,0.0,202
+Control over how I work,Work is frustrating,-0.4504,0.0,0.0,205
+Difficulty w/ colleagues,Values misaligned w/ org,0.4494,0.0,0.0,201
+Clear expectations,Recognition,0.4493,0.0,0.0,204
+Job demands exceed training,Work: about to collapse,0.4491,0.0,0.0,203
+Excess workload / uneven division,Work is frustrating,0.4482,0.0,0.0,203
+Excess workload / uneven division,Limited career path,0.4481,0.0,0.0,203
+Free to voice concerns,Frequency considering leaving (0-4),-0.4477,0.0,0.0,203
+Recognition,Drained after work day,-0.4461,0.0,0.0,205
+Difficulty w/ supervisor,Recognition,-0.4461,0.0,0.0,200
+Recognition,Every work hour is an ordeal,-0.4449,0.0,0.0,205
+Values misaligned w/ org,Org supports work-life balance,-0.4441,0.0,0.0,201
+Job demands exceed training,Difficulty w/ supervisor,0.4434,0.0,0.0,200
+Excess workload / uneven division,Work emotionally draining,0.4415,0.0,0.0,203
+Dread another work day,Overwhelmed by endless workload,0.4415,0.0,0.0,183
+Colleague support,Free to voice concerns,0.4412,0.0,0.0,203
+Work emotionally draining,Overwhelmed by endless workload,0.4402,0.0,0.0,183
+Unclear role definition,Difficulty w/ colleagues,0.4401,0.0,0.0,203
+Difficulty w/ supervisor,Work: about to collapse,0.4399,0.0,0.0,200
+Recognition,Frequency considering leaving (0-4),-0.439,0.0,0.0,205
+Limited career path,Free to voice concerns,-0.4389,0.0,0.0,202
+Physically drained,Every work hour is an ordeal,0.4385,0.0,0.0,239
+Values misaligned w/ org,Skill development opportunity,-0.4384,0.0,0.0,201
+Excess workload / uneven division,Weak / about to get sick,0.4375,0.0,0.0,203
+Often tired,Overwhelmed by endless workload,0.4367,0.0,0.0,183
+Org supports work-life balance,Every work hour is an ordeal,-0.4353,0.0,0.0,203
+Limited career path,Dread another work day,0.4341,0.0,0.0,203
+Feel stuck in helping work,Overwhelmed by endless workload,0.4324,0.0,0.0,183
+Unclear role definition,Pay / conditions unsustainable,0.4316,0.0,0.0,202
+Values misaligned w/ org,Recognition,-0.4294,0.0,0.0,201
+Discouraged by traumatised clients,Intrusive / frightening thoughts,0.4291,0.0,0.0,183
+Free to voice concerns,Passionate about work,0.4289,0.0,0.0,203
+Control over how I work,Passionate about work,0.4286,0.0,0.0,205
+Org supports work-life balance,Work is frustrating,-0.4285,0.0,0.0,203
+Difficulty w/ supervisor,Skill development opportunity,-0.4278,0.0,0.0,200
+Free to voice concerns,Completely exhausted,-0.4275,0.0,0.0,203
+Job demands exceed training,Work is frustrating,0.4272,0.0,0.0,203
+Completely exhausted,Exhausted because I'm a helper,0.4265,0.0,0.0,183
+Affected by traumatised clients,Intrusive / frightening thoughts,0.4262,0.0,0.0,183
+Control over how I work,Career talks w/ leadership,0.4241,0.0,0.0,200
+Job demands exceed training,Difficulty w/ colleagues,0.4238,0.0,0.0,203
+Free to voice concerns,Work: about to collapse,-0.4234,0.0,0.0,203
+Absorbed in work,I enjoy helping work,0.4224,0.0,0.0,183
+Recognition,Passionate about work,0.4214,0.0,0.0,205
+Org supports work-life balance,Often tired,-0.4214,0.0,0.0,203
+Free to voice concerns,Expect to stay 1 yr (1-5),0.4203,0.0,0.0,203
+Often tired,Every work hour is an ordeal,0.4201,0.0,0.0,239
+Excess workload / uneven division,Dread another work day,0.419,0.0,0.0,203
+Org supports work-life balance,Completely exhausted,-0.419,0.0,0.0,203
+Unclear role definition,Org supports work-life balance,-0.4181,0.0,0.0,203
+Skill development opportunity,Expect to stay 1 yr (1-5),0.4181,0.0,0.0,204
+Recognition,Expect to stay 1 yr (1-5),0.4177,0.0,0.0,205
+Values misaligned w/ org,Career talks w/ leadership,-0.4174,0.0,0.0,197
+Org supports work-life balance,Work: about to collapse,-0.4171,0.0,0.0,203
+Full of energy,I enjoy helping work,0.417,0.0,0.0,183
+Clear expectations,Absorbed in work,0.4163,0.0,0.0,204
+Work is frustrating,Overwhelmed by endless workload,0.416,0.0,0.0,183
+Weak / about to get sick,Overwhelmed by endless workload,0.4159,0.0,0.0,183
+Passionate about work,I enjoy helping work,0.4145,0.0,0.0,183
+Values misaligned w/ org,Emotionally drained,0.4141,0.0,0.0,201
+Excess workload / uneven division,Client boundaries / emotional load,0.4138,0.0,0.0,186
+Limited career path,Expect to stay 1 yr (1-5),-0.4136,0.0,0.0,203
+Feel stuck in helping work,Exhausted because I'm a helper,0.4126,0.0,0.0,183
+Clear expectations,Passionate about work,0.4125,0.0,0.0,204
+Control over how I work,Supervisor support,0.41,0.0,0.0,199
+Job demands exceed training,Values misaligned w/ org,0.4088,0.0,0.0,201
+Job demands exceed training,Limited career path,0.4085,0.0,0.0,203
+Limited career path,Work is frustrating,0.4077,0.0,0.0,203
+Org supports work-life balance,Weak / about to get sick,-0.4072,0.0,0.0,203
+Pay / conditions unsustainable,Weak / about to get sick,0.4065,0.0,0.0,202
+Recognition,Weak / about to get sick,-0.4059,0.0,0.0,205
+Job demands exceed training,'Can't take it anymore',0.4043,0.0,0.0,203
+Control over how I work,Colleague support,0.4032,0.0,0.0,205
+Excess workload / uneven division,Every work hour is an ordeal,0.4031,0.0,0.0,203
+Colleague support,Career talks w/ leadership,0.4018,0.0,0.0,200
+Org supports work-life balance,Full of energy,0.4012,0.0,0.0,203
+Values misaligned w/ org,Dread another work day,0.4012,0.0,0.0,201
+Drained after work day,Frequency considering leaving (0-4),0.4009,0.0,0.0,205
+Difficulty w/ supervisor,Pay / conditions unsustainable,0.4001,0.0,0.0,199
+Job demands exceed training,Emotionally drained,0.3998,0.0,0.0,203
+Recognition,Work emotionally draining,-0.3997,0.0,0.0,205
+Control over how I work,Work gives me satisfaction,0.3992,0.0,0.0,157
+Control over how I work,Dread another work day,-0.3985,0.0,0.0,205
+Absorbed in work,Dread another work day,-0.3977,0.0,0.0,239
+Recognition,Work is frustrating,-0.3961,0.0,0.0,205
+Skill development opportunity,Passionate about work,0.3958,0.0,0.0,204
+Physically drained,Exhausted because I'm a helper,0.3951,0.0,0.0,183
+Work: about to collapse,Affected by traumatised clients,0.3945,0.0,0.0,183
+Clear expectations,Free to voice concerns,0.3945,0.0,0.0,202
+Free to voice concerns,Work is frustrating,-0.3943,0.0,0.0,203
+Supervisor support,Every work hour is an ordeal,-0.3941,0.0,0.0,199
+Drained after work day,Exhausted because I'm a helper,0.394,0.0,0.0,183
+Limited career path,Full of energy,-0.3937,0.0,0.0,203
+Values misaligned w/ org,Every work hour is an ordeal,0.3937,0.0,0.0,201
+Recognition,Emotionally drained,-0.3935,0.0,0.0,205
+Unclear role definition,Career talks w/ leadership,-0.3933,0.0,0.0,199
+Job demands exceed training,Work emotionally draining,0.3929,0.0,0.0,203
+Full of energy,Drained after work day,-0.3923,0.0,0.0,239
+Control over how I work,Every work hour is an ordeal,-0.3907,0.0,0.0,205
+Client boundaries / emotional load,Work: about to collapse,0.3899,0.0,0.0,187
+Work emotionally draining,Exhausted because I'm a helper,0.3892,0.0,0.0,183
+Control over how I work,Absorbed in work,0.3884,0.0,0.0,205
+Unclear role definition,Free to voice concerns,-0.3881,0.0,0.0,202
+Excess workload / uneven division,Values misaligned w/ org,0.3879,0.0,0.0,201
+Values misaligned w/ org,Drained after work day,0.3879,0.0,0.0,201
+Job demands exceed training,Colleague support,-0.3876,0.0,0.0,203
+Unclear role definition,Frequency considering leaving (0-4),0.3875,0.0,0.0,203
+Difficulty w/ supervisor,Colleague support,-0.3875,0.0,0.0,200
+Difficulty w/ supervisor,Control over how I work,-0.3868,0.0,0.0,200
+Full of energy,Emotionally drained,-0.3866,0.0,0.0,239
+Often tired,Work is frustrating,0.3864,0.0,0.0,239
+Skill development opportunity,Dread another work day,-0.386,0.0,0.0,204
+Limited career path,Recognition,-0.3858,0.0,0.0,203
+Limited career path,Every work hour is an ordeal,0.3858,0.0,0.0,203
+Client boundaries / emotional load,Work emotionally draining,0.3857,0.0,0.0,187
+Every work hour is an ordeal,Frequency considering leaving (0-4),0.3852,0.0,0.0,205
+Values misaligned w/ org,Work emotionally draining,0.3847,0.0,0.0,201
+Org supports work-life balance,Physically drained,-0.3842,0.0,0.0,203
+Dread another work day,Work gives me satisfaction,-0.3841,0.0,0.0,183
+Limited career path,'Can't take it anymore',0.3837,0.0,0.0,203
+Values misaligned w/ org,Full of energy,-0.3833,0.0,0.0,201
+Values misaligned w/ org,Work is frustrating,0.3828,0.0,0.0,201
+Client boundaries / emotional load,Physically drained,0.3827,0.0,0.0,187
+Difficulty w/ supervisor,Completely exhausted,0.381,0.0,0.0,200
+Difficulty w/ colleagues,Colleague support,-0.3809,0.0,0.0,204
+Difficulty w/ colleagues,Client boundaries / emotional load,0.3804,0.0,0.0,187
+Limited career path,Emotionally drained,0.3797,0.0,0.0,203
+'Can't take it anymore',Frequency considering leaving (0-4),0.3796,0.0,0.0,205
+Client boundaries / emotional load,Emotionally drained,0.3794,0.0,0.0,187
+Recognition,'Can't take it anymore',-0.3793,0.0,0.0,205
+Difficulty w/ supervisor,Drained after work day,0.3784,0.0,0.0,200
+Limited career path,Org supports work-life balance,-0.378,0.0,0.0,203
+Full of energy,Frequency considering leaving (0-4),-0.3774,0.0,0.0,205
+Every work hour is an ordeal,Exhausted because I'm a helper,0.3774,0.0,0.0,183
+Passionate about work,Every work hour is an ordeal,-0.3769,0.0,0.0,239
+Values misaligned w/ org,Control over how I work,-0.376,0.0,0.0,201
+Career talks w/ leadership,Expect to stay 1 yr (1-5),0.3753,0.0,0.0,200
+Limited career path,Weak / about to get sick,0.3735,0.0,0.0,203
+Free to voice concerns,Often tired,-0.3726,0.0,0.0,203
+Colleague support,Skill development opportunity,0.3723,0.0,0.0,204
+Job demands exceed training,Every work hour is an ordeal,0.3719,0.0,0.0,203
+Skill development opportunity,Work gives me satisfaction,0.3719,0.0,0.0,156
+Values misaligned w/ org,Supervisor support,-0.3713,0.0,0.0,197
+Full of energy,Every work hour is an ordeal,-0.3712,0.0,0.0,239
+Values misaligned w/ org,Weak / about to get sick,0.3709,0.0,0.0,201
+Every work hour is an ordeal,Overwhelmed by endless workload,0.3705,0.0,0.0,183
+Unclear role definition,Dread another work day,0.3704,0.0,0.0,203
+Full of energy,Work emotionally draining,-0.3699,0.0,0.0,239
+Clear expectations,Full of energy,0.3698,0.0,0.0,204
+Unclear role definition,Work: about to collapse,0.3691,0.0,0.0,203
+Control over how I work,'Can't take it anymore',-0.3691,0.0,0.0,205
+Values misaligned w/ org,Passionate about work,-0.369,0.0,0.0,201
+Skill development opportunity,Frequency considering leaving (0-4),-0.3671,0.0,0.0,204
+Clear expectations,Skill development opportunity,0.3659,0.0,0.0,203
+Job demands exceed training,Dread another work day,0.364,0.0,0.0,203
+Unclear role definition,Weak / about to get sick,0.3627,0.0,0.0,203
+Client boundaries / emotional load,Weak / about to get sick,0.3612,0.0,0.0,187
+Difficulty w/ supervisor,Expect to stay 1 yr (1-5),-0.3609,0.0,0.0,200
+Dread another work day,Expect to stay 1 yr (1-5),-0.3608,0.0,0.0,205
+Discouraged by traumatised clients,Exhausted because I'm a helper,0.3597,0.0,0.0,183
+Recognition,Work gives me satisfaction,0.3581,0.0,0.0,157
+Full of energy,Work is frustrating,-0.3576,0.0,0.0,239
+Unclear role definition,Completely exhausted,0.3575,0.0,0.0,203
+'Can't take it anymore',Feel stuck in helping work,0.3573,0.0,0.0,183
+Work: about to collapse,Exhausted because I'm a helper,0.3572,0.0,0.0,183
+Supervisor support,Dread another work day,-0.3564,0.0,0.0,199
+Job demands exceed training,Drained after work day,0.3555,0.0,0.0,203
+Unclear role definition,Emotionally drained,0.3544,0.0,0.0,203
+Pay / conditions unsustainable,Org supports work-life balance,-0.3542,0.0,0.0,202
+Work: about to collapse,Intrusive / frightening thoughts,0.3534,0.0,0.0,183
+Difficulty w/ colleagues,Weak / about to get sick,0.3532,0.0,0.0,204
+Full of energy,Expect to stay 1 yr (1-5),0.3529,0.0,0.0,205
+Limited career path,Work gives me satisfaction,-0.3528,0.0,0.0,156
+Difficulty w/ colleagues,Work emotionally draining,0.3526,0.0,0.0,204
+Job demands exceed training,Free to voice concerns,-0.3521,0.0,0.0,202
+Recognition,Absorbed in work,0.3519,0.0,0.0,205
+Unclear role definition,Work emotionally draining,0.3516,0.0,0.0,203
+Pay / conditions unsustainable,Emotionally drained,0.3513,0.0,0.0,202
+Client boundaries / emotional load,Work is frustrating,0.3512,0.0,0.0,187
+Work is frustrating,Feel stuck in helping work,0.3512,0.0,0.0,183
+Job demands exceed training,Weak / about to get sick,0.3511,0.0,0.0,203
+Values misaligned w/ org,Absorbed in work,-0.35,0.0,0.0,201
+Free to voice concerns,Absorbed in work,0.3495,0.0,0.0,203
+Weak / about to get sick,Frequency considering leaving (0-4),0.3494,0.0,0.0,205
+Work: about to collapse,Frequency considering leaving (0-4),0.3491,0.0,0.0,205
+Clear expectations,Career talks w/ leadership,0.3491,0.0,0.0,200
+Job demands exceed training,Often tired,0.3488,0.0,0.0,203
+Skill development opportunity,Every work hour is an ordeal,-0.3487,0.0,0.0,204
+Client boundaries / emotional load,Feel stuck in helping work,0.3483,0.0,0.0,147
+Client boundaries / emotional load,Affected by traumatised clients,0.3482,0.0,0.0,147
+Difficulty w/ colleagues,Org supports work-life balance,-0.3471,0.0,0.0,203
+Client boundaries / emotional load,Discouraged by traumatised clients,0.3468,0.0,0.0,147
+Unclear role definition,'Can't take it anymore',0.3468,0.0,0.0,203
+Career talks w/ leadership,Full of energy,0.3467,0.0,0.0,200
+Difficulty w/ colleagues,Limited career path,0.3461,0.0,0.0,203
+Emotionally drained,Feel stuck in helping work,0.346,0.0,0.0,183
+Limited career path,Work: about to collapse,0.3458,0.0,0.0,203
+Emotionally drained,Exhausted because I'm a helper,0.3455,0.0,0.0,183
+Values misaligned w/ org,'Can't take it anymore',0.3443,0.0,0.0,201
+Values misaligned w/ org,Colleague support,-0.3441,0.0,0.0,201
+Job demands exceed training,Recognition,-0.3438,0.0,0.0,203
+Control over how I work,Glad I chose this career,0.3427,0.0,0.0,157
+Org supports work-life balance,Expect to stay 1 yr (1-5),0.3425,0.0,0.0,203
+Career talks w/ leadership,Dread another work day,-0.3421,0.0,0.0,200
+Absorbed in work,Every work hour is an ordeal,-0.3415,0.0,0.0,239
+Exhausted because I'm a helper,Intrusive / frightening thoughts,0.341,0.0,0.0,183
+Unclear role definition,Supervisor support,-0.3408,0.0,0.0,199
+Limited career path,Work emotionally draining,0.3406,0.0,0.0,203
+Physically drained,Affected by traumatised clients,0.3397,0.0,0.0,183
+Client boundaries / emotional load,Values misaligned w/ org,0.3396,0.0,0.0,184
+Affected by traumatised clients,Overwhelmed by endless workload,0.3389,0.0,0.0,183
+Pay / conditions unsustainable,Often tired,0.3388,0.0,0.0,202
+Control over how I work,Weak / about to get sick,-0.3387,0.0,0.0,205
+Client boundaries / emotional load,Drained after work day,0.3384,0.0,0.0,187
+Completely exhausted,Frequency considering leaving (0-4),0.3382,0.0,0.0,205
+Energy for friends/family (rev.),Overwhelmed by endless workload,-0.338,0.0,0.0,183
+Client boundaries / emotional load,'Can't take it anymore',0.3377,0.0,0.0,187
+Full of energy,'Can't take it anymore',-0.3372,0.0,0.0,239
+Colleague support,Every work hour is an ordeal,-0.3371,0.0,0.0,205
+Physically drained,Work is frustrating,0.3367,0.0,0.0,239
+Work is frustrating,Work gives me satisfaction,-0.3361,0.0,0.0,183
+Work: about to collapse,Feel stuck in helping work,0.3357,0.0,0.0,183
+Difficulty w/ colleagues,Work: about to collapse,0.3356,0.0,0.0,204
+Recognition,Work: about to collapse,-0.3347,0.0,0.0,205
+Unclear role definition,Colleague support,-0.334,0.0,0.0,203
+Limited career path,Colleague support,-0.3339,0.0,0.0,203
+Unclear role definition,Recognition,-0.3331,0.0,0.0,203
+Org supports work-life balance,Passionate about work,0.3325,0.0,0.0,203
+Unclear role definition,Every work hour is an ordeal,0.3321,0.0,0.0,203
+Completely exhausted,Affected by traumatised clients,0.3318,0.0,0.0,183
+Often tired,Exhausted because I'm a helper,0.3317,0.0,0.0,183
+Client boundaries / emotional load,Limited career path,0.3317,0.0,0.0,186
+Unclear role definition,Client boundaries / emotional load,0.3316,0.0,0.0,186
+Passionate about work,Drained after work day,-0.3311,0.0,0.0,239
+Job demands exceed training,Org supports work-life balance,-0.3311,0.0,0.0,203
+Passionate about work,Frequency considering leaving (0-4),-0.3309,0.0,0.0,205
+Pay / conditions unsustainable,Work: about to collapse,0.3303,0.0,0.0,202
+Difficulty w/ supervisor,Full of energy,-0.3303,0.0,0.0,200
+Values misaligned w/ org,Work: about to collapse,0.3298,0.0,0.0,201
+Unclear role definition,Drained after work day,0.3291,0.0,0.0,203
+Limited career path,Control over how I work,-0.3289,0.0,0.0,203
+Pay / conditions unsustainable,Dread another work day,0.3289,0.0,0.0,202
+Job demands exceed training,Completely exhausted,0.3284,0.0,0.0,203
+Client boundaries / emotional load,Completely exhausted,0.3284,0.0,0.0,187
+Limited career path,Drained after work day,0.3279,0.0,0.0,203
+Recognition,Completely exhausted,-0.3276,0.0,0.0,205
+Skill development opportunity,Glad I chose this career,0.3275,0.0,0.0001,156
+Every work hour is an ordeal,Intrusive / frightening thoughts,0.3273,0.0,0.0,183
+Passionate about work,Emotionally drained,-0.327,0.0,0.0,239
+Work is frustrating,Frequency considering leaving (0-4),0.3269,0.0,0.0,205
+Values misaligned w/ org,Completely exhausted,0.3269,0.0,0.0,201
+Work emotionally draining,Feel stuck in helping work,0.3266,0.0,0.0,183
+Work emotionally draining,Frequency considering leaving (0-4),0.326,0.0,0.0,205
+Pay / conditions unsustainable,Drained after work day,0.3255,0.0,0.0,202
+Limited career path,Supervisor support,-0.3253,0.0,0.0,199
+Pay / conditions unsustainable,Recognition,-0.3248,0.0,0.0,202
+Passionate about work,Expect to stay 1 yr (1-5),0.3247,0.0,0.0,205
+Full of energy,Weak / about to get sick,-0.3235,0.0,0.0,239
+Limited career path,Completely exhausted,0.3235,0.0,0.0,203
+Pay / conditions unsustainable,Physically drained,0.3235,0.0,0.0,202
+Difficulty w/ colleagues,Work is frustrating,0.3233,0.0,0.0,204
+Clear expectations,Supervisor support,0.3229,0.0,0.0,199
+Excess workload / uneven division,Recognition,-0.322,0.0,0.0,203
+Career talks w/ leadership,Work emotionally draining,-0.3213,0.0,0.0,200
+Dread another work day,Exhausted because I'm a helper,0.3205,0.0,0.0,183
+Excess workload / uneven division,Free to voice concerns,-0.3203,0.0,0.0,202
+Pay / conditions unsustainable,Free to voice concerns,-0.3201,0.0,0.0,201
+Difficulty w/ colleagues,Emotionally drained,0.3195,0.0,0.0,204
+Excess workload / uneven division,Exhausted because I'm a helper,0.3194,0.0,0.0001,156
+Full of energy,Work: about to collapse,-0.3191,0.0,0.0,239
+Client boundaries / emotional load,Org supports work-life balance,-0.3186,0.0,0.0,186
+Weak / about to get sick,Feel stuck in helping work,0.3183,0.0,0.0,183
+Org supports work-life balance,Frequency considering leaving (0-4),-0.3183,0.0,0.0,203
+Unclear role definition,Expect to stay 1 yr (1-5),-0.3177,0.0,0.0,203
+Pay / conditions unsustainable,'Can't take it anymore',0.3175,0.0,0.0,202
+Values misaligned w/ org,Expect to stay 1 yr (1-5),-0.3174,0.0,0.0,201
+Pay / conditions unsustainable,Values misaligned w/ org,0.3172,0.0,0.0,200
+Absorbed in work,Expect to stay 1 yr (1-5),0.3171,0.0,0.0,205
+Unclear role definition,Skill development opportunity,-0.3165,0.0,0.0,203
+Skill development opportunity,Work is frustrating,-0.3162,0.0,0.0,204
+Passionate about work,Work emotionally draining,-0.316,0.0,0.0,239
+Career talks w/ leadership,Passionate about work,0.3157,0.0,0.0,200
+Career talks w/ leadership,Work is frustrating,-0.3155,0.0,0.0,200
+Skill development opportunity,Absorbed in work,0.3141,0.0,0.0,204
+Often tired,Affected by traumatised clients,0.3135,0.0,0.0,183
+Unclear role definition,Work is frustrating,0.3133,0.0,0.0,203
+Limited career path,Passionate about work,-0.3127,0.0,0.0,203
+Full of energy,Often tired,-0.3124,0.0,0.0,239
+Feel stuck in helping work,Work gives me satisfaction,-0.3112,0.0,0.0,183
+Dread another work day,Glad I chose this career,-0.31,0.0,0.0,183
+Job demands exceed training,Frequency considering leaving (0-4),0.3098,0.0,0.0,203
+Job demands exceed training,Physically drained,0.3093,0.0,0.0,203
+Career talks w/ leadership,Frequency considering leaving (0-4),-0.3092,0.0,0.0,200
+Clear expectations,Org supports work-life balance,0.3088,0.0,0.0,202
+Difficulty w/ supervisor,Passionate about work,-0.3087,0.0,0.0,200
+Free to voice concerns,Physically drained,-0.3084,0.0,0.0,203
+Full of energy,Completely exhausted,-0.3081,0.0,0.0,239
+Job demands exceed training,Overwhelmed by endless workload,0.3067,0.0001,0.0002,156
+Completely exhausted,Feel stuck in helping work,0.3061,0.0,0.0001,183
+Passionate about work,Work is frustrating,-0.3061,0.0,0.0,239
+Difficulty w/ colleagues,Pay / conditions unsustainable,0.306,0.0,0.0,202
+Career talks w/ leadership,Every work hour is an ordeal,-0.3054,0.0,0.0,200
+Control over how I work,Work: about to collapse,-0.3053,0.0,0.0,205
+Work emotionally draining,Intrusive / frightening thoughts,0.3051,0.0,0.0001,183
+'Can't take it anymore',Exhausted because I'm a helper,0.3048,0.0,0.0001,183
+Work emotionally draining,Affected by traumatised clients,0.3046,0.0,0.0001,183
+Emotionally drained,Energy for friends/family (rev.),-0.3042,0.0,0.0,239
+Pay / conditions unsustainable,Frequency considering leaving (0-4),0.3038,0.0,0.0,202
+Client boundaries / emotional load,Pay / conditions unsustainable,0.3037,0.0,0.0001,185
+Supervisor support,'Can't take it anymore',-0.3035,0.0,0.0,199
+Skill development opportunity,Work emotionally draining,-0.3034,0.0,0.0,204
+Control over how I work,Drained after work day,-0.3027,0.0,0.0,205
+Pay / conditions unsustainable,Every work hour is an ordeal,0.3025,0.0,0.0,202
+Excess workload / uneven division,Frequency considering leaving (0-4),0.3012,0.0,0.0,203
+Difficulty w/ supervisor,Absorbed in work,-0.3011,0.0,0.0,200
+Unclear role definition,Physically drained,0.3001,0.0,0.0,203
+Weak / about to get sick,Intrusive / frightening thoughts,0.2992,0.0,0.0001,183
+Full of energy,Energy for friends/family (rev.),0.2992,0.0,0.0,239
+Free to voice concerns,Glad I chose this career,0.299,0.0002,0.0003,155
+Emotionally drained,Intrusive / frightening thoughts,0.2988,0.0,0.0001,183
+Excess workload / uneven division,Colleague support,-0.2978,0.0,0.0,203
+Supervisor support,Work is frustrating,-0.2978,0.0,0.0,199
+Recognition,Glad I chose this career,0.2971,0.0002,0.0003,157
+Job demands exceed training,Supervisor support,-0.296,0.0,0.0,199
+Job demands exceed training,Control over how I work,-0.2956,0.0,0.0,203
+Values misaligned w/ org,Intrusive / frightening thoughts,0.2952,0.0002,0.0004,154
+Emotionally drained,Affected by traumatised clients,0.2951,0.0001,0.0001,183
+Difficulty w/ colleagues,Recognition,-0.2951,0.0,0.0,204
+'Can't take it anymore',Intrusive / frightening thoughts,0.2948,0.0001,0.0001,183
+Colleague support,Dread another work day,-0.2946,0.0,0.0,205
+Control over how I work,Work emotionally draining,-0.2939,0.0,0.0,205
+Discouraged by traumatised clients,Overwhelmed by endless workload,0.2938,0.0001,0.0001,183
+Emotionally drained,Frequency considering leaving (0-4),0.292,0.0,0.0,205
+Work: about to collapse,Discouraged by traumatised clients,0.2909,0.0001,0.0001,183
+Work is frustrating,Intrusive / frightening thoughts,0.2906,0.0001,0.0001,183
+Completely exhausted,Intrusive / frightening thoughts,0.2901,0.0001,0.0001,183
+Absorbed in work,Drained after work day,-0.2898,0.0,0.0,239
+Excess workload / uneven division,Full of energy,-0.2894,0.0,0.0001,203
+Drained after work day,Intrusive / frightening thoughts,0.2891,0.0001,0.0001,183
+Colleague support,Full of energy,0.2881,0.0,0.0001,205
+Supervisor support,Expect to stay 1 yr (1-5),0.288,0.0,0.0001,199
+Client boundaries / emotional load,Intrusive / frightening thoughts,0.2873,0.0004,0.0007,147
+Unclear role definition,Control over how I work,-0.2868,0.0,0.0001,203
+Clear expectations,Colleague support,0.2866,0.0,0.0001,204
+Unclear role definition,Often tired,0.2864,0.0,0.0001,203
+Skill development opportunity,'Can't take it anymore',-0.2855,0.0,0.0001,204
+Supervisor support,Frequency considering leaving (0-4),-0.2853,0.0,0.0001,199
+Difficulty w/ colleagues,'Can't take it anymore',0.2846,0.0,0.0001,204
+Recognition,Often tired,-0.2839,0.0,0.0001,205
+Difficulty w/ supervisor,Physically drained,0.2839,0.0,0.0001,200
+Skill development opportunity,Weak / about to get sick,-0.2835,0.0,0.0001,204
+'Can't take it anymore',Affected by traumatised clients,0.2833,0.0001,0.0002,183
+Colleague support,Work: about to collapse,-0.2828,0.0,0.0001,205
+Client boundaries / emotional load,Recognition,-0.2828,0.0001,0.0002,187
+Every work hour is an ordeal,Expect to stay 1 yr (1-5),-0.2824,0.0,0.0001,205
+Colleague support,Weak / about to get sick,-0.2823,0.0,0.0001,205
+Free to voice concerns,Overwhelmed by endless workload,-0.282,0.0004,0.0006,155
+Often tired,Frequency considering leaving (0-4),0.2819,0.0,0.0001,205
+Weak / about to get sick,Exhausted because I'm a helper,0.2812,0.0001,0.0002,183
+Difficulty w/ colleagues,Drained after work day,0.2807,0.0,0.0001,204
+Org supports work-life balance,Overwhelmed by endless workload,-0.2807,0.0004,0.0006,156
+Absorbed in work,Emotionally drained,-0.2802,0.0,0.0,239
+Supervisor support,Full of energy,0.2801,0.0001,0.0001,199
+Free to voice concerns,Work gives me satisfaction,0.28,0.0004,0.0007,155
+Feel stuck in helping work,Glad I chose this career,-0.2781,0.0001,0.0002,183
+Every work hour is an ordeal,Work gives me satisfaction,-0.2774,0.0001,0.0003,183
+Supervisor support,Emotionally drained,-0.2774,0.0001,0.0001,199
+Limited career path,Discouraged by traumatised clients,0.2774,0.0005,0.0007,156
+Client boundaries / emotional load,Often tired,0.2772,0.0001,0.0002,187
+Work is frustrating,Discouraged by traumatised clients,0.2766,0.0002,0.0003,183
+Recognition,Overwhelmed by endless workload,-0.2756,0.0005,0.0008,157
+Limited career path,Overwhelmed by endless workload,0.2754,0.0005,0.0008,156
+Values misaligned w/ org,Work gives me satisfaction,-0.2754,0.0005,0.0009,154
+Passionate about work,'Can't take it anymore',-0.2753,0.0,0.0,239
+Colleague support,Passionate about work,0.2749,0.0001,0.0001,205
+Colleague support,Emotionally drained,-0.2747,0.0001,0.0001,205
+Client boundaries / emotional load,Exhausted because I'm a helper,0.2741,0.0008,0.0012,147
+Supervisor support,Work: about to collapse,-0.274,0.0001,0.0002,199
+Absorbed in work,Work emotionally draining,-0.2737,0.0,0.0,239
+Values misaligned w/ org,Overwhelmed by endless workload,0.2732,0.0006,0.001,154
+Overwhelmed by endless workload,Glad I chose this career,-0.2729,0.0002,0.0003,183
+Career talks w/ leadership,Work gives me satisfaction,0.2727,0.0006,0.001,153
+Pay / conditions unsustainable,Work is frustrating,0.2726,0.0001,0.0002,202
+Clear expectations,Glad I chose this career,0.2723,0.0006,0.0009,156
+Pay / conditions unsustainable,Full of energy,-0.272,0.0001,0.0002,202
+Recognition,Physically drained,-0.2718,0.0001,0.0001,205
+Difficulty w/ colleagues,Every work hour is an ordeal,0.2717,0.0001,0.0002,204
+Control over how I work,Emotionally drained,-0.2708,0.0001,0.0002,205
+Career talks w/ leadership,Absorbed in work,0.2706,0.0001,0.0002,200
+Physically drained,Feel stuck in helping work,0.2704,0.0002,0.0004,183
+Control over how I work,Expect to stay 1 yr (1-5),0.2701,0.0001,0.0002,205
+Client boundaries / emotional load,Overwhelmed by endless workload,0.27,0.0009,0.0015,147
+Absorbed in work,Work is frustrating,-0.2691,0.0,0.0,239
+Colleague support,'Can't take it anymore',-0.2687,0.0001,0.0002,205
+Control over how I work,Frequency considering leaving (0-4),-0.2686,0.0001,0.0002,205
+Passionate about work,Completely exhausted,-0.2685,0.0,0.0001,239
+Clear expectations,Dread another work day,-0.2683,0.0001,0.0002,204
+Pay / conditions unsustainable,Completely exhausted,0.2667,0.0001,0.0002,202
+Clear expectations,Work gives me satisfaction,0.2663,0.0008,0.0012,156
+Emotionally drained,Work gives me satisfaction,-0.2661,0.0003,0.0005,183
+Drained after work day,Affected by traumatised clients,0.266,0.0003,0.0005,183
+Limited career path,Often tired,0.266,0.0001,0.0002,203
+Difficulty w/ colleagues,Free to voice concerns,-0.2645,0.0001,0.0003,202
+Every work hour is an ordeal,Feel stuck in helping work,0.2638,0.0003,0.0005,183
+Passionate about work,Weak / about to get sick,-0.2634,0.0,0.0001,239
+Overwhelmed by endless workload,Frequency considering leaving (0-4),0.262,0.0009,0.0014,157
+Drained after work day,Energy for friends/family (rev.),-0.2618,0.0,0.0001,239
+Supervisor support,Passionate about work,0.2615,0.0002,0.0003,199
+Drained after work day,Work gives me satisfaction,-0.2614,0.0004,0.0006,183
+Pay / conditions unsustainable,Expect to stay 1 yr (1-5),-0.2608,0.0002,0.0003,202
+Emotionally drained,Discouraged by traumatised clients,0.2608,0.0004,0.0006,183
+Physically drained,Intrusive / frightening thoughts,0.26,0.0004,0.0006,183
+Excess workload / uneven division,Supervisor support,-0.2598,0.0002,0.0004,199
+Every work hour is an ordeal,Glad I chose this career,-0.2593,0.0004,0.0007,183
+Values misaligned w/ org,Feel stuck in helping work,0.2588,0.0012,0.0018,154
+Completely exhausted,Energy for friends/family (rev.),-0.2581,0.0001,0.0001,239
+Job demands exceed training,Career talks w/ leadership,-0.2579,0.0002,0.0004,199
+Work emotionally draining,Energy for friends/family (rev.),-0.2578,0.0001,0.0001,239
+Supervisor support,Drained after work day,-0.2574,0.0002,0.0004,199
+Career talks w/ leadership,Glad I chose this career,0.2574,0.0013,0.002,153
+Work emotionally draining,Work gives me satisfaction,-0.2572,0.0004,0.0007,183
+Supervisor support,Weak / about to get sick,-0.2563,0.0003,0.0004,199
+Full of energy,Overwhelmed by endless workload,-0.2561,0.0005,0.0008,183
+Skill development opportunity,Emotionally drained,-0.2554,0.0002,0.0004,204
+Work gives me satisfaction,Expect to stay 1 yr (1-5),0.2552,0.0013,0.0019,157
+Work is frustrating,Exhausted because I'm a helper,0.2545,0.0005,0.0008,183
+Physically drained,Frequency considering leaving (0-4),0.2536,0.0002,0.0004,205
+Physically drained,Discouraged by traumatised clients,0.2531,0.0005,0.0009,183
+Supervisor support,Work emotionally draining,-0.253,0.0003,0.0005,199
+Limited career path,Absorbed in work,-0.2528,0.0003,0.0005,203
+Pay / conditions unsustainable,Discouraged by traumatised clients,0.2525,0.0015,0.0023,155
+Weak / about to get sick,Discouraged by traumatised clients,0.2518,0.0006,0.0009,183
+Often tired,Energy for friends/family (rev.),-0.2518,0.0001,0.0002,239
+Difficulty w/ colleagues,Skill development opportunity,-0.2515,0.0003,0.0005,203
+Clear expectations,Every work hour is an ordeal,-0.2507,0.0003,0.0005,204
+Client boundaries / emotional load,Work gives me satisfaction,-0.2506,0.0022,0.0032,147
+Unclear role definition,Overwhelmed by endless workload,0.2501,0.0016,0.0025,156
+Affected by traumatised clients,Exhausted because I'm a helper,0.2498,0.0006,0.001,183
+Career talks w/ leadership,Weak / about to get sick,-0.2497,0.0004,0.0006,200
+Career talks w/ leadership,Emotionally drained,-0.2496,0.0004,0.0006,200
+Unclear role definition,Full of energy,-0.2495,0.0003,0.0006,203
+Pay / conditions unsustainable,Work emotionally draining,0.2488,0.0004,0.0006,202
+Absorbed in work,Work: about to collapse,-0.2487,0.0001,0.0002,239
+Pay / conditions unsustainable,Overwhelmed by endless workload,0.2485,0.0018,0.0027,155
+Passionate about work,Work: about to collapse,-0.2482,0.0001,0.0002,239
+Colleague support,Work emotionally draining,-0.2464,0.0004,0.0006,205
+Absorbed in work,Frequency considering leaving (0-4),-0.2458,0.0004,0.0006,205
+Limited career path,Physically drained,0.2452,0.0004,0.0007,203
+Difficulty w/ colleagues,Discouraged by traumatised clients,0.2452,0.002,0.0029,157
+Weak / about to get sick,Work gives me satisfaction,-0.2448,0.0008,0.0013,183
+Excess workload / uneven division,Feel stuck in helping work,0.2446,0.0021,0.0031,156
+Colleague support,Glad I chose this career,0.2444,0.002,0.003,157
+Physically drained,Energy for friends/family (rev.),-0.244,0.0001,0.0002,239
+Difficulty w/ supervisor,Often tired,0.244,0.0005,0.0008,200
+Pay / conditions unsustainable,Skill development opportunity,-0.2436,0.0005,0.0008,202
+Colleague support,Work is frustrating,-0.2434,0.0004,0.0007,205
+Clear expectations,I enjoy helping work,0.2434,0.0022,0.0032,156
+Passionate about work,Energy for friends/family (rev.),0.243,0.0001,0.0003,239
+Supervisor support,Absorbed in work,0.2429,0.0005,0.0009,199
+Work gives me satisfaction,Frequency considering leaving (0-4),-0.2416,0.0023,0.0034,157
+Unclear role definition,Clear expectations,-0.2411,0.0005,0.0009,202
+Absorbed in work,Weak / about to get sick,-0.2406,0.0002,0.0003,239
+Org supports work-life balance,Absorbed in work,0.2396,0.0006,0.0009,203
+Difficulty w/ colleagues,Supervisor support,-0.2393,0.0007,0.0011,199
+Org supports work-life balance,Energy for friends/family (rev.),0.2389,0.0006,0.001,203
+Work emotionally draining,Discouraged by traumatised clients,0.238,0.0012,0.0018,183
+I enjoy helping work,Exhausted because I'm a helper,-0.2378,0.0012,0.0018,183
+Work is frustrating,Affected by traumatised clients,0.2368,0.0012,0.0019,183
+'Can't take it anymore',Expect to stay 1 yr (1-5),-0.2368,0.0006,0.001,205
+Control over how I work,Completely exhausted,-0.2357,0.0007,0.0011,205
+Excess workload / uneven division,Work gives me satisfaction,-0.2352,0.0031,0.0045,156
+Work gives me satisfaction,Intrusive / frightening thoughts,-0.235,0.0014,0.0021,183
+Often tired,Work gives me satisfaction,-0.2349,0.0014,0.0021,183
+Colleague support,Absorbed in work,0.2347,0.0007,0.0011,205
+Difficulty w/ colleagues,Frequency considering leaving (0-4),0.234,0.0008,0.0012,204
+Pay / conditions unsustainable,Work gives me satisfaction,-0.234,0.0034,0.0048,155
+Job demands exceed training,Full of energy,-0.2333,0.0008,0.0013,203
+Absorbed in work,Completely exhausted,-0.2326,0.0003,0.0005,239
+Difficulty w/ supervisor,Clear expectations,-0.2322,0.0009,0.0015,200
+Values misaligned w/ org,Discouraged by traumatised clients,0.231,0.0039,0.0056,154
+Unclear role definition,Passionate about work,-0.2307,0.0009,0.0014,203
+Difficulty w/ supervisor,Client boundaries / emotional load,0.23,0.0017,0.0025,184
+Difficulty w/ colleagues,Control over how I work,-0.23,0.0009,0.0015,204
+'Can't take it anymore',Work gives me satisfaction,-0.2298,0.0018,0.0026,183
+Excess workload / uneven division,Expect to stay 1 yr (1-5),-0.2296,0.001,0.0015,203
+Excess workload / uneven division,Control over how I work,-0.2294,0.001,0.0015,203
+Limited career path,Intrusive / frightening thoughts,0.2287,0.0041,0.0058,156
+Absorbed in work,'Can't take it anymore',-0.2287,0.0004,0.0006,239
+Career talks w/ leadership,'Can't take it anymore',-0.2282,0.0012,0.0018,200
+Drained after work day,Feel stuck in helping work,0.2266,0.002,0.003,183
+Difficulty w/ colleagues,Dread another work day,0.226,0.0012,0.0018,204
+'Can't take it anymore',Energy for friends/family (rev.),-0.2249,0.0005,0.0008,239
+Client boundaries / emotional load,Colleague support,-0.2243,0.002,0.003,187
+Skill development opportunity,Completely exhausted,-0.2239,0.0013,0.002,204
+Full of energy,Exhausted because I'm a helper,-0.2238,0.0023,0.0034,183
+Dread another work day,Intrusive / frightening thoughts,0.2237,0.0023,0.0034,183
+Passionate about work,Often tired,-0.2235,0.0005,0.0008,239
+Difficulty w/ colleagues,Intrusive / frightening thoughts,0.2231,0.005,0.0069,157
+Full of energy,Physically drained,-0.223,0.0005,0.0008,239
+Org supports work-life balance,Work gives me satisfaction,0.2229,0.0052,0.0072,156
+Values misaligned w/ org,Clear expectations,-0.2225,0.0015,0.0023,200
+Glad I chose this career,Expect to stay 1 yr (1-5),0.2221,0.0052,0.0072,157
+Weak / about to get sick,Affected by traumatised clients,0.2219,0.0025,0.0037,183
+Energy for friends/family (rev.),Feel stuck in helping work,-0.2217,0.0026,0.0037,183
+Excess workload / uneven division,Skill development opportunity,-0.2213,0.0015,0.0023,203
+Job demands exceed training,Skill development opportunity,-0.2206,0.0016,0.0024,203
+Values misaligned w/ org,Physically drained,0.2206,0.0017,0.0025,201
+Work: about to collapse,Glad I chose this career,-0.2205,0.0027,0.0039,183
+Absorbed in work,Exhausted because I'm a helper,-0.2204,0.0027,0.0039,183
+Client boundaries / emotional load,Control over how I work,-0.2203,0.0024,0.0036,187
+Energy for friends/family (rev.),Affected by traumatised clients,-0.2199,0.0028,0.004,183
+Work is frustrating,Expect to stay 1 yr (1-5),-0.2198,0.0015,0.0023,205
+Limited career path,Glad I chose this career,-0.2198,0.0058,0.008,156
+Values misaligned w/ org,Exhausted because I'm a helper,0.2192,0.0063,0.0086,154
+Dread another work day,Feel stuck in helping work,0.2189,0.0029,0.0042,183
+Job demands exceed training,Expect to stay 1 yr (1-5),-0.2178,0.0018,0.0027,203
+Pay / conditions unsustainable,Intrusive / frightening thoughts,0.2178,0.0065,0.0088,155
+Pay / conditions unsustainable,Career talks w/ leadership,-0.2177,0.0021,0.0031,198
+Client boundaries / emotional load,Full of energy,-0.2175,0.0028,0.004,187
+Work: about to collapse,Work gives me satisfaction,-0.2153,0.0034,0.0049,183
+Drained after work day,Expect to stay 1 yr (1-5),-0.2138,0.0021,0.0031,205
+Work gives me satisfaction,Overwhelmed by endless workload,-0.2132,0.0038,0.0053,183
+Difficulty w/ colleagues,Completely exhausted,0.2127,0.0023,0.0033,204
+Excess workload / uneven division,Intrusive / frightening thoughts,0.2114,0.0081,0.0109,156
+Job demands exceed training,Intrusive / frightening thoughts,0.2112,0.0081,0.011,156
+Drained after work day,Discouraged by traumatised clients,0.211,0.0041,0.0059,183
+Job demands exceed training,Feel stuck in helping work,0.2109,0.0082,0.0111,156
+Exhausted because I'm a helper,Glad I chose this career,-0.2105,0.0042,0.006,183
+Feel stuck in helping work,I enjoy helping work,-0.2099,0.0043,0.0061,183
+Every work hour is an ordeal,Affected by traumatised clients,0.2097,0.0044,0.0062,183
+Absorbed in work,Often tired,-0.2096,0.0011,0.0017,239
+Skill development opportunity,Work: about to collapse,-0.2089,0.0027,0.0039,204
+Org supports work-life balance,Feel stuck in helping work,-0.2081,0.0091,0.0123,156
+Unclear role definition,Absorbed in work,-0.2078,0.0029,0.0042,203
+Free to voice concerns,Energy for friends/family (rev.),0.2075,0.003,0.0043,203
+Passionate about work,Exhausted because I'm a helper,-0.2069,0.005,0.0069,183
+Difficulty w/ colleagues,Career talks w/ leadership,-0.2062,0.0035,0.0049,199
+Limited career path,Feel stuck in helping work,0.2056,0.01,0.0134,156
+Colleague support,Drained after work day,-0.2054,0.0031,0.0045,205
+Overwhelmed by endless workload,Expect to stay 1 yr (1-5),-0.2054,0.0098,0.0132,157
+Clear expectations,Expect to stay 1 yr (1-5),0.2054,0.0032,0.0046,204
+Skill development opportunity,Drained after work day,-0.2046,0.0033,0.0048,204
+Job demands exceed training,Passionate about work,-0.2035,0.0036,0.0051,203
+Client boundaries / emotional load,Free to voice concerns,-0.2032,0.0055,0.0076,185
+Pay / conditions unsustainable,Feel stuck in helping work,0.2023,0.0116,0.0153,155
+Client boundaries / emotional load,Every work hour is an ordeal,0.2022,0.0055,0.0076,187
+Career talks w/ leadership,Completely exhausted,-0.2011,0.0043,0.0061,200
+Energy for friends/family (rev.),Exhausted because I'm a helper,-0.2009,0.0064,0.0087,183
+Client boundaries / emotional load,Dread another work day,0.2002,0.006,0.0082,187
+Every work hour is an ordeal,Energy for friends/family (rev.),-0.2,0.0019,0.0028,239
+Values misaligned w/ org,Often tired,0.1997,0.0045,0.0063,201
+Completely exhausted,Discouraged by traumatised clients,0.1993,0.0068,0.0093,183
+Difficulty w/ colleagues,Full of energy,-0.1993,0.0043,0.006,204
+Excess workload / uneven division,Career talks w/ leadership,-0.1985,0.0049,0.0069,199
+Every work hour is an ordeal,Discouraged by traumatised clients,0.1979,0.0072,0.0098,183
+Job demands exceed training,Work gives me satisfaction,-0.1968,0.0138,0.018,156
+Work: about to collapse,Energy for friends/family (rev.),-0.1965,0.0023,0.0033,239
+Control over how I work,Feel stuck in helping work,-0.1964,0.0137,0.0179,157
+Org supports work-life balance,Glad I chose this career,0.1956,0.0144,0.0187,156
+Limited career path,Clear expectations,-0.1953,0.0053,0.0074,202
+Pay / conditions unsustainable,Control over how I work,-0.1949,0.0055,0.0075,202
+Pay / conditions unsustainable,Colleague support,-0.1947,0.0055,0.0076,202
+Pay / conditions unsustainable,Supervisor support,-0.1941,0.0061,0.0084,198
+Control over how I work,Often tired,-0.1936,0.0054,0.0075,205
+Often tired,Discouraged by traumatised clients,0.1928,0.0089,0.012,183
+Clear expectations,Work is frustrating,-0.1925,0.0058,0.008,204
+Passionate about work,Intrusive / frightening thoughts,-0.1905,0.0098,0.0131,183
+Work gives me satisfaction,Exhausted because I'm a helper,-0.1895,0.0102,0.0136,183
+Work emotionally draining,Glad I chose this career,-0.1895,0.0102,0.0136,183
+Org supports work-life balance,Affected by traumatised clients,-0.1888,0.0183,0.0235,156
+Difficulty w/ supervisor,Work gives me satisfaction,-0.1884,0.0197,0.0252,153
+Skill development opportunity,Overwhelmed by endless workload,-0.1878,0.0189,0.0243,156
+Intrusive / frightening thoughts,Glad I chose this career,-0.1866,0.0114,0.0151,183
+Career talks w/ leadership,Work: about to collapse,-0.1862,0.0083,0.0112,200
+Unclear role definition,Work gives me satisfaction,-0.1861,0.02,0.0256,156
+Client boundaries / emotional load,Glad I chose this career,-0.186,0.0241,0.0302,147
+Recognition,Intrusive / frightening thoughts,-0.1854,0.0201,0.0256,157
+Emotionally drained,Glad I chose this career,-0.185,0.0122,0.016,183
+Completely exhausted,Work gives me satisfaction,-0.1847,0.0123,0.0162,183
+Unclear role definition,Intrusive / frightening thoughts,0.1844,0.0212,0.0271,156
+Work: about to collapse,Expect to stay 1 yr (1-5),-0.1838,0.0083,0.0112,205
+Career talks w/ leadership,Drained after work day,-0.1834,0.0093,0.0125,200
+Control over how I work,Overwhelmed by endless workload,-0.1825,0.0222,0.0282,157
+Intrusive / frightening thoughts,Frequency considering leaving (0-4),0.1824,0.0222,0.0283,157
+Colleague support,Expect to stay 1 yr (1-5),0.1821,0.009,0.012,205
+Colleague support,Frequency considering leaving (0-4),-0.182,0.009,0.0121,205
+Energy for friends/family (rev.),Glad I chose this career,0.1815,0.0139,0.0182,183
+Org supports work-life balance,Intrusive / frightening thoughts,-0.1813,0.0235,0.0297,156
+Absorbed in work,Energy for friends/family (rev.),0.1812,0.005,0.0069,239
+Limited career path,Exhausted because I'm a helper,0.181,0.0238,0.0299,156
+Free to voice concerns,Intrusive / frightening thoughts,-0.1801,0.0249,0.0312,155
+Dread another work day,Energy for friends/family (rev.),-0.18,0.0052,0.0073,239
+Excess workload / uneven division,Glad I chose this career,-0.1789,0.0254,0.0318,156
+'Can't take it anymore',Glad I chose this career,-0.1789,0.0154,0.02,183
+Often tired,Expect to stay 1 yr (1-5),-0.1786,0.0104,0.0138,205
+Affected by traumatised clients,Work gives me satisfaction,-0.1781,0.0158,0.0205,183
+Weak / about to get sick,Glad I chose this career,-0.1772,0.0164,0.0212,183
+Control over how I work,Physically drained,-0.1764,0.0114,0.0151,205
+I enjoy helping work,Discouraged by traumatised clients,-0.1763,0.017,0.0219,183
+Difficulty w/ colleagues,Physically drained,0.1762,0.0117,0.0155,204
+Job demands exceed training,Absorbed in work,-0.1761,0.0119,0.0157,203
+Difficulty w/ supervisor,Intrusive / frightening thoughts,0.1755,0.03,0.037,153
+Often tired,Feel stuck in helping work,0.1753,0.0176,0.0227,183
+Supervisor support,Glad I chose this career,0.1737,0.0317,0.0391,153
+Values misaligned w/ org,Glad I chose this career,-0.1735,0.0314,0.0387,154
+Emotionally drained,Expect to stay 1 yr (1-5),-0.1731,0.013,0.0171,205
+Supervisor support,Completely exhausted,-0.1726,0.0148,0.0192,199
+Recognition,Energy for friends/family (rev.),0.1723,0.0135,0.0176,205
+Passionate about work,Physically drained,-0.1715,0.0079,0.0107,239
+Difficulty w/ supervisor,Overwhelmed by endless workload,0.1701,0.0355,0.0435,153
+Absorbed in work,Feel stuck in helping work,-0.1697,0.0216,0.0276,183
+Affected by traumatised clients,Glad I chose this career,-0.1686,0.0225,0.0286,183
+Clear expectations,Work emotionally draining,-0.1683,0.0161,0.0208,204
+'Can't take it anymore',Discouraged by traumatised clients,0.1679,0.0231,0.0292,183
+Excess workload / uneven division,Passionate about work,-0.1676,0.0168,0.0218,203
+Job demands exceed training,Exhausted because I'm a helper,0.1674,0.0367,0.0449,156
+Affected by traumatised clients,I enjoy helping work,-0.1672,0.0236,0.0298,183
+Passionate about work,Overwhelmed by endless workload,-0.1671,0.0238,0.0299,183
+Completely exhausted,Expect to stay 1 yr (1-5),-0.1666,0.017,0.0219,205
+Client boundaries / emotional load,Energy for friends/family (rev.),-0.1663,0.023,0.0291,187
+Weak / about to get sick,Energy for friends/family (rev.),-0.1662,0.0101,0.0134,239
+Excess workload / uneven division,Energy for friends/family (rev.),-0.1659,0.018,0.0231,203
+Drained after work day,Glad I chose this career,-0.1659,0.0248,0.031,183
+Discouraged by traumatised clients,Work gives me satisfaction,-0.1649,0.0257,0.032,183
+I enjoy helping work,Intrusive / frightening thoughts,-0.1648,0.0258,0.0321,183
+Exhausted because I'm a helper,Frequency considering leaving (0-4),0.1638,0.0403,0.049,157
+Full of energy,Feel stuck in helping work,-0.1635,0.027,0.0336,183
+Control over how I work,Exhausted because I'm a helper,-0.163,0.0414,0.0501,157
+Difficulty w/ colleagues,Feel stuck in helping work,0.1628,0.0416,0.0503,157
+Pay / conditions unsustainable,Glad I chose this career,-0.1615,0.0448,0.0539,155
+Difficulty w/ colleagues,Overwhelmed by endless workload,0.1612,0.0437,0.0527,157
+Often tired,Intrusive / frightening thoughts,0.1611,0.0293,0.0363,183
+Absorbed in work,Physically drained,-0.1603,0.0131,0.0172,239
+Clear expectations,Frequency considering leaving (0-4),-0.1591,0.0231,0.0292,204
+Work emotionally draining,Expect to stay 1 yr (1-5),-0.1584,0.0233,0.0294,205
+Energy for friends/family (rev.),Intrusive / frightening thoughts,-0.1583,0.0323,0.0397,183
+Skill development opportunity,Intrusive / frightening thoughts,-0.1577,0.0493,0.0592,156
+Job demands exceed training,Affected by traumatised clients,0.1573,0.0498,0.0598,156
+Clear expectations,Drained after work day,-0.157,0.0249,0.0312,204
+Supervisor support,Often tired,-0.1567,0.0271,0.0337,199
+Supervisor support,Physically drained,-0.1542,0.0297,0.0367,199
+Glad I chose this career,Frequency considering leaving (0-4),-0.1541,0.0541,0.0645,157
+Physically drained,Work gives me satisfaction,-0.1536,0.0378,0.0462,183
+Every work hour is an ordeal,I enjoy helping work,-0.1529,0.0388,0.0474,183
+Difficulty w/ colleagues,Passionate about work,-0.1528,0.0291,0.0361,204
+Weak / about to get sick,Expect to stay 1 yr (1-5),-0.1526,0.029,0.036,205
+Absorbed in work,Overwhelmed by endless workload,-0.1516,0.0405,0.049,183
+Dread another work day,Affected by traumatised clients,0.1506,0.0418,0.0505,183
+Pay / conditions unsustainable,Passionate about work,-0.1495,0.0337,0.0414,202
+Difficulty w/ colleagues,Absorbed in work,-0.1488,0.0337,0.0414,204
+Excess workload / uneven division,Discouraged by traumatised clients,0.1463,0.0684,0.0807,156
+Career talks w/ leadership,Often tired,-0.1462,0.0389,0.0474,200
+Work is frustrating,Glad I chose this career,-0.1458,0.049,0.0589,183
+Job demands exceed training,Clear expectations,-0.1454,0.0389,0.0474,202
+Full of energy,Intrusive / frightening thoughts,-0.1446,0.0509,0.0609,183
+Energy for friends/family (rev.),Work gives me satisfaction,0.1442,0.0514,0.0615,183
+Clear expectations,Emotionally drained,-0.1437,0.0403,0.049,204
+Absorbed in work,Intrusive / frightening thoughts,-0.1436,0.0525,0.0627,183
+Physically drained,Expect to stay 1 yr (1-5),-0.1435,0.0402,0.0488,205
+Client boundaries / emotional load,I enjoy helping work,-0.1422,0.0858,0.1002,147
+Control over how I work,Affected by traumatised clients,-0.1417,0.0767,0.0902,157
+Client boundaries / emotional load,Passionate about work,-0.1411,0.0541,0.0645,187
+Unclear role definition,Exhausted because I'm a helper,0.1401,0.0811,0.0951,156
+Unclear role definition,Feel stuck in helping work,0.1394,0.0826,0.0968,156
+Job demands exceed training,Discouraged by traumatised clients,0.1393,0.0829,0.0971,156
+Pay / conditions unsustainable,Affected by traumatised clients,0.1384,0.0859,0.1003,155
+Control over how I work,Intrusive / frightening thoughts,-0.1375,0.086,0.1003,157
+Clear expectations,'Can't take it anymore',-0.137,0.0507,0.0608,204
+Dread another work day,I enjoy helping work,-0.137,0.0645,0.0763,183
+Skill development opportunity,Feel stuck in helping work,-0.1364,0.0895,0.1042,156
+Free to voice concerns,Feel stuck in helping work,-0.1357,0.0923,0.1071,155
+Recognition,Feel stuck in helping work,-0.134,0.0943,0.1092,157
+Pay / conditions unsustainable,Clear expectations,-0.1337,0.0584,0.0693,201
+Job demands exceed training,Glad I chose this career,-0.1331,0.0977,0.113,156
+Control over how I work,Energy for friends/family (rev.),0.1328,0.0576,0.0686,205
+Energy for friends/family (rev.),Expect to stay 1 yr (1-5),0.1325,0.0583,0.0693,205
+Clear expectations,Weak / about to get sick,-0.1316,0.0607,0.072,204
+Difficulty w/ colleagues,Often tired,0.131,0.0618,0.0732,204
+Supervisor support,Work gives me satisfaction,0.1308,0.1072,0.1235,153
+Values misaligned w/ org,Affected by traumatised clients,0.13,0.1081,0.1245,154
+Weak / about to get sick,I enjoy helping work,-0.1299,0.0797,0.0938,183
+Passionate about work,Feel stuck in helping work,-0.1296,0.0803,0.0943,183
+Colleague support,Completely exhausted,-0.129,0.0653,0.0772,205
+Excess workload / uneven division,Affected by traumatised clients,0.1273,0.1131,0.1298,156
+Free to voice concerns,Affected by traumatised clients,-0.127,0.1153,0.132,155
+Recognition,Exhausted because I'm a helper,-0.1266,0.114,0.1306,157
+Excess workload / uneven division,Absorbed in work,-0.1258,0.0736,0.0868,203
+Unclear role definition,Glad I chose this career,-0.1251,0.1196,0.1367,156
+Dread another work day,Discouraged by traumatised clients,0.125,0.0918,0.1067,183
+Colleague support,Affected by traumatised clients,-0.1242,0.1213,0.1383,157
+Client boundaries / emotional load,Supervisor support,-0.1241,0.0941,0.1091,183
+Difficulty w/ supervisor,Feel stuck in helping work,0.1238,0.1274,0.1448,153
+Pay / conditions unsustainable,Exhausted because I'm a helper,0.1228,0.1278,0.1449,155
+Completely exhausted,Glad I chose this career,-0.1226,0.0984,0.1136,183
+Client boundaries / emotional load,Skill development opportunity,-0.1206,0.101,0.1166,186
+Exhausted because I'm a helper,Expect to stay 1 yr (1-5),-0.1196,0.1359,0.1528,157
+Pay / conditions unsustainable,Absorbed in work,-0.1195,0.0902,0.1049,202
+Difficulty w/ colleagues,Glad I chose this career,-0.1189,0.138,0.1549,157
+Control over how I work,Discouraged by traumatised clients,-0.1189,0.1382,0.1549,157
+Colleague support,Work gives me satisfaction,0.1177,0.1421,0.159,157
+Work is frustrating,I enjoy helping work,-0.1176,0.1127,0.1295,183
+Control over how I work,I enjoy helping work,0.1164,0.1465,0.1637,157
+Difficulty w/ supervisor,Glad I chose this career,-0.1159,0.1537,0.1715,153
+Colleague support,Intrusive / frightening thoughts,-0.1143,0.154,0.1717,157
+Colleague support,Feel stuck in helping work,-0.1137,0.1562,0.1739,157
+Energy for friends/family (rev.),I enjoy helping work,0.1137,0.1255,0.1429,183
+Energy for friends/family (rev.),Discouraged by traumatised clients,-0.113,0.1276,0.1448,183
+Client boundaries / emotional load,Career talks w/ leadership,-0.113,0.1279,0.1449,183
+Colleague support,Overwhelmed by endless workload,-0.1124,0.161,0.1791,157
+Difficulty w/ colleagues,Energy for friends/family (rev.),-0.1123,0.1097,0.1261,204
+I enjoy helping work,Overwhelmed by endless workload,-0.1116,0.1325,0.1496,183
+Discouraged by traumatised clients,Glad I chose this career,-0.1107,0.1358,0.1528,183
+Feel stuck in helping work,Frequency considering leaving (0-4),0.1096,0.1719,0.191,157
+Clear expectations,Work: about to collapse,-0.1089,0.1211,0.1383,204
+Intrusive / frightening thoughts,Expect to stay 1 yr (1-5),-0.1087,0.1752,0.1944,157
+Discouraged by traumatised clients,Frequency considering leaving (0-4),0.108,0.1782,0.1974,157
+Client boundaries / emotional load,Absorbed in work,-0.1079,0.1416,0.1586,187
+Difficulty w/ supervisor,Exhausted because I'm a helper,0.1072,0.1874,0.2073,153
+Difficulty w/ colleagues,Expect to stay 1 yr (1-5),-0.1071,0.1273,0.1448,204
+Colleague support,Often tired,-0.1063,0.1294,0.1464,205
+Values misaligned w/ org,Energy for friends/family (rev.),-0.1061,0.1339,0.151,201
+Colleague support,Physically drained,-0.1059,0.1307,0.1478,205
+Free to voice concerns,Exhausted because I'm a helper,-0.1052,0.1925,0.2127,155
+Job demands exceed training,Energy for friends/family (rev.),-0.1046,0.1376,0.1547,203
+Difficulty w/ supervisor,I enjoy helping work,0.1027,0.2064,0.227,153
+Difficulty w/ colleagues,Exhausted because I'm a helper,0.0989,0.2179,0.2391,157
+Feel stuck in helping work,Expect to stay 1 yr (1-5),-0.0964,0.2297,0.2516,157
+Org supports work-life balance,Discouraged by traumatised clients,-0.096,0.233,0.2549,156
+Supervisor support,Discouraged by traumatised clients,0.0959,0.2385,0.2605,153
+Skill development opportunity,Often tired,-0.0951,0.1761,0.1952,204
+Often tired,Glad I chose this career,-0.0949,0.2014,0.2218,183
+Absorbed in work,Discouraged by traumatised clients,-0.0949,0.2014,0.2218,183
+Affected by traumatised clients,Frequency considering leaving (0-4),0.0941,0.2409,0.2626,157
+Drained after work day,I enjoy helping work,-0.0917,0.2168,0.2382,183
+Career talks w/ leadership,Intrusive / frightening thoughts,-0.0908,0.2642,0.2872,153
+Difficulty w/ colleagues,Affected by traumatised clients,0.0885,0.2704,0.2929,157
+Limited career path,Affected by traumatised clients,0.0876,0.2769,0.2992,156
+Physically drained,Glad I chose this career,-0.087,0.2417,0.2632,183
+Excess workload / uneven division,Clear expectations,-0.0858,0.2248,0.2464,202
+Difficulty w/ supervisor,Discouraged by traumatised clients,0.0855,0.2935,0.3169,153
+Clear expectations,Feel stuck in helping work,-0.0833,0.301,0.3243,156
+Difficulty w/ colleagues,Clear expectations,-0.0831,0.2387,0.2605,203
+Career talks w/ leadership,Physically drained,-0.083,0.2424,0.2637,200
+Work is frustrating,Energy for friends/family (rev.),-0.083,0.2011,0.2218,239
+Client boundaries / emotional load,Frequency considering leaving (0-4),0.0816,0.2666,0.2894,187
+Supervisor support,Intrusive / frightening thoughts,-0.0816,0.316,0.3401,153
+Work: about to collapse,I enjoy helping work,-0.081,0.2759,0.2985,183
+Pay / conditions unsustainable,Energy for friends/family (rev.),-0.0783,0.2678,0.2904,202
+Recognition,Affected by traumatised clients,-0.0772,0.3363,0.3611,157
+Org supports work-life balance,Exhausted because I'm a helper,-0.0768,0.3405,0.3648,156
+Career talks w/ leadership,Affected by traumatised clients,0.0756,0.3529,0.3773,153
+Clear expectations,Discouraged by traumatised clients,-0.0751,0.3517,0.3764,156
+Clear expectations,Energy for friends/family (rev.),0.0734,0.2971,0.3204,204
+Skill development opportunity,I enjoy helping work,0.0727,0.3672,0.3914,156
+Supervisor support,I enjoy helping work,-0.0722,0.375,0.3987,153
+Unclear role definition,Discouraged by traumatised clients,0.0712,0.3773,0.4008,156
+Clear expectations,Completely exhausted,-0.0703,0.3178,0.3416,204
+Recognition,I enjoy helping work,0.0697,0.3856,0.4087,157
+Free to voice concerns,Discouraged by traumatised clients,-0.0691,0.3927,0.4158,155
+Often tired,I enjoy helping work,-0.068,0.3607,0.3852,183
+Emotionally drained,I enjoy helping work,-0.0677,0.3627,0.3869,183
+Skill development opportunity,Physically drained,-0.0673,0.339,0.3637,204
+Supervisor support,Overwhelmed by endless workload,-0.0667,0.4124,0.4357,153
+Full of energy,Discouraged by traumatised clients,-0.0665,0.3714,0.3953,183
+Excess workload / uneven division,I enjoy helping work,-0.0634,0.4317,0.4552,156
+'Can't take it anymore',I enjoy helping work,-0.062,0.4043,0.4276,183
+Unclear role definition,Energy for friends/family (rev.),-0.0619,0.3807,0.4039,203
+Career talks w/ leadership,Discouraged by traumatised clients,0.0606,0.4569,0.4807,153
+Unclear role definition,I enjoy helping work,0.0571,0.4791,0.5024,156
+Limited career path,Energy for friends/family (rev.),-0.057,0.4196,0.4428,203
+Clear expectations,Often tired,-0.0549,0.4358,0.459,204
+Work emotionally draining,I enjoy helping work,-0.0535,0.4719,0.4956,183
+Skill development opportunity,Energy for friends/family (rev.),0.0506,0.4721,0.4956,204
+Colleague support,Energy for friends/family (rev.),0.0492,0.4836,0.5066,205
+Career talks w/ leadership,Overwhelmed by endless workload,-0.0491,0.5467,0.5703,153
+Colleague support,I enjoy helping work,0.0482,0.5486,0.5717,157
+Absorbed in work,Affected by traumatised clients,-0.0477,0.521,0.5452,183
+Career talks w/ leadership,Feel stuck in helping work,-0.0475,0.5595,0.5825,153
+Client boundaries / emotional load,Clear expectations,0.0468,0.5247,0.5485,187
+Limited career path,I enjoy helping work,-0.0438,0.587,0.6104,156
+Supervisor support,Energy for friends/family (rev.),-0.0437,0.5402,0.5642,199
+Job demands exceed training,I enjoy helping work,0.0426,0.5973,0.6205,156
+Skill development opportunity,Affected by traumatised clients,0.0422,0.6013,0.624,156
+Recognition,Discouraged by traumatised clients,-0.0412,0.6083,0.6306,157
+Pay / conditions unsustainable,I enjoy helping work,-0.0392,0.6283,0.6506,155
+Values misaligned w/ org,I enjoy helping work,-0.039,0.6312,0.6529,154
+Difficulty w/ colleagues,Work gives me satisfaction,-0.0384,0.6331,0.6543,157
+Discouraged by traumatised clients,Expect to stay 1 yr (1-5),-0.0378,0.6386,0.6593,157
+Free to voice concerns,I enjoy helping work,0.0366,0.6515,0.6719,155
+Supervisor support,Affected by traumatised clients,0.0365,0.654,0.6738,153
+Clear expectations,Intrusive / frightening thoughts,-0.036,0.6554,0.6745,156
+Unclear role definition,Affected by traumatised clients,0.0343,0.6708,0.6896,156
+Career talks w/ leadership,I enjoy helping work,-0.0326,0.6888,0.7074,153
+Difficulty w/ colleagues,I enjoy helping work,-0.0313,0.6969,0.7128,157
+Clear expectations,Overwhelmed by endless workload,0.0308,0.703,0.7175,156
+Completely exhausted,I enjoy helping work,-0.0292,0.6948,0.7114,183
+Passionate about work,Discouraged by traumatised clients,-0.0289,0.6977,0.7128,183
+Colleague support,Discouraged by traumatised clients,-0.0287,0.7208,0.7342,157
+Career talks w/ leadership,Energy for friends/family (rev.),0.0281,0.6933,0.711,200
+Difficulty w/ supervisor,Energy for friends/family (rev.),-0.028,0.6938,0.711,200
+Physically drained,I enjoy helping work,-0.0272,0.7144,0.7284,183
+Supervisor support,Exhausted because I'm a helper,0.0265,0.7449,0.7566,153
+Skill development opportunity,Exhausted because I'm a helper,-0.0262,0.7451,0.7566,156
+Clear expectations,Physically drained,-0.0238,0.735,0.7479,204
+Career talks w/ leadership,Exhausted because I'm a helper,0.0232,0.7761,0.7864,153
+Skill development opportunity,Discouraged by traumatised clients,-0.0216,0.7887,0.7983,156
+Energy for friends/family (rev.),Frequency considering leaving (0-4),-0.0207,0.7684,0.7794,205
+Supervisor support,Feel stuck in helping work,0.0196,0.8104,0.8182,153
+Affected by traumatised clients,Expect to stay 1 yr (1-5),-0.0193,0.8108,0.8182,157
+Client boundaries / emotional load,Expect to stay 1 yr (1-5),-0.0178,0.8095,0.8182,187
+Clear expectations,Affected by traumatised clients,0.0154,0.8485,0.8554,156
+I enjoy helping work,Frequency considering leaving (0-4),0.0135,0.8665,0.8726,157
+I enjoy helping work,Expect to stay 1 yr (1-5),0.0127,0.8745,0.879,157
+Passionate about work,Affected by traumatised clients,0.0121,0.8706,0.876,183
+Org supports work-life balance,I enjoy helping work,0.0095,0.9059,0.9096,156
+Full of energy,Affected by traumatised clients,-0.0082,0.9121,0.9148,183
+Colleague support,Exhausted because I'm a helper,-0.0079,0.9217,0.9236,157
+Difficulty w/ supervisor,Affected by traumatised clients,0.0026,0.975,0.9759,153
+Clear expectations,Exhausted because I'm a helper,0.0006,0.9943,0.9943,156

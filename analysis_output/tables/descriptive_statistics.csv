@@ -1,0 +1,63 @@
+﻿,count,mean,std,min,25%,50%,75%,max,missing
+Excess workload / uneven division,203.0,1.823,1.218,0.0,1.0,2.0,3.0,4.0,36
+Unclear role definition,203.0,1.739,1.249,0.0,1.0,2.0,3.0,4.0,36
+Job demands exceed training,203.0,1.433,1.152,0.0,0.0,1.0,2.0,4.0,36
+Difficulty w/ colleagues,204.0,1.069,1.094,0.0,0.0,1.0,2.0,4.0,35
+Difficulty w/ supervisor,200.0,1.385,1.259,0.0,0.0,1.0,2.0,4.0,39
+Client boundaries / emotional load,187.0,1.374,1.15,0.0,1.0,1.0,2.0,4.0,52
+Limited career path,203.0,1.759,1.307,0.0,1.0,2.0,3.0,4.0,36
+Pay / conditions unsustainable,202.0,1.594,1.243,0.0,1.0,1.0,2.0,4.0,37
+Values misaligned w/ org,201.0,1.109,1.139,0.0,0.0,1.0,2.0,4.0,38
+Clear expectations,204.0,3.858,0.879,1.0,3.0,4.0,4.0,5.0,35
+Control over how I work,205.0,3.927,0.907,1.0,4.0,4.0,5.0,5.0,34
+Colleague support,205.0,3.927,0.913,1.0,4.0,4.0,5.0,5.0,34
+Supervisor support,199.0,3.608,1.213,1.0,3.0,4.0,4.0,5.0,40
+Recognition,205.0,3.429,1.142,1.0,3.0,4.0,4.0,5.0,34
+Org supports work-life balance,203.0,3.217,1.14,1.0,2.0,3.0,4.0,5.0,36
+Free to voice concerns,203.0,3.118,1.292,1.0,2.0,3.0,4.0,5.0,36
+Skill development opportunity,204.0,3.402,1.09,1.0,3.0,3.5,4.0,5.0,35
+Career talks w/ leadership,200.0,2.82,1.271,1.0,2.0,3.0,4.0,5.0,39
+Full of energy,239.0,4.531,1.239,1.0,4.0,4.0,5.0,7.0,0
+Passionate about work,239.0,4.724,1.286,1.0,4.0,5.0,5.0,7.0,0
+Absorbed in work,239.0,4.707,1.273,1.0,4.0,5.0,6.0,7.0,0
+Often tired,239.0,3.711,0.877,1.0,3.0,4.0,4.0,5.0,0
+Physically drained,239.0,3.285,0.997,1.0,3.0,3.0,4.0,5.0,0
+Emotionally drained,239.0,3.326,1.03,1.0,3.0,3.0,4.0,5.0,0
+'Can't take it anymore',239.0,2.728,1.095,1.0,2.0,3.0,3.0,5.0,0
+Completely exhausted,239.0,3.1,1.084,1.0,2.0,3.0,4.0,5.0,0
+Weak / about to get sick,239.0,2.707,1.095,1.0,2.0,3.0,3.0,5.0,0
+Work emotionally draining,239.0,3.167,1.133,1.0,2.0,3.0,4.0,5.0,0
+Work: about to collapse,239.0,2.941,1.151,1.0,2.0,3.0,4.0,5.0,0
+Work is frustrating,239.0,3.096,0.968,1.0,3.0,3.0,4.0,5.0,0
+Drained after work day,239.0,3.389,1.055,1.0,3.0,3.0,4.0,5.0,0
+Dread another work day,239.0,2.987,1.179,1.0,2.0,3.0,4.0,5.0,0
+Every work hour is an ordeal,239.0,2.456,1.072,1.0,2.0,2.0,3.0,5.0,0
+Energy for friends/family (rev.),239.0,3.213,1.029,1.0,3.0,3.0,4.0,5.0,0
+Affected by traumatised clients,183.0,2.361,0.813,1.0,2.0,2.0,3.0,5.0,56
+Feel stuck in helping work,183.0,2.47,0.831,1.0,2.0,2.0,3.0,5.0,56
+I enjoy helping work,183.0,4.082,0.804,2.0,4.0,4.0,5.0,5.0,56
+Discouraged by traumatised clients,183.0,2.568,0.928,1.0,2.0,3.0,3.0,5.0,56
+Work gives me satisfaction,183.0,3.383,0.941,1.0,3.0,3.0,4.0,5.0,56
+Exhausted because I'm a helper,183.0,2.732,1.084,1.0,2.0,3.0,3.0,5.0,56
+Overwhelmed by endless workload,183.0,2.913,1.111,1.0,2.0,3.0,4.0,5.0,56
+Intrusive / frightening thoughts,183.0,2.137,0.96,1.0,1.0,2.0,3.0,5.0,56
+Glad I chose this career,183.0,3.76,1.02,1.0,3.0,4.0,5.0,5.0,56
+Job-demand index (0-4),203.0,1.478,0.861,0.0,0.778,1.444,2.0,3.667,36
+Job-resource index (1-5),204.0,3.483,0.823,1.333,2.889,3.556,4.0,5.0,35
+Personal burnout (0-100),239.0,53.574,21.723,0.0,37.5,50.0,66.667,100.0,0
+Work-related burnout (0-100),239.0,49.372,20.655,0.0,35.714,46.429,64.286,96.429,0
+Work engagement UWES-3 (1-7),239.0,4.654,1.185,1.0,4.0,4.667,5.333,7.0,0
+ProQOL compassion satisfaction,183.0,3.741,0.782,1.333,3.167,3.667,4.333,5.0,56
+ProQOL burnout,183.0,2.705,0.809,1.0,2.0,2.667,3.333,5.0,56
+ProQOL secondary traumatic stress,183.0,2.355,0.743,1.0,2.0,2.333,2.667,5.0,56
+Frequency considering leaving (0-4),205.0,1.449,1.113,0.0,1.0,1.0,2.0,4.0,34
+Expect to stay 1 yr (1-5),205.0,3.551,1.045,1.0,3.0,4.0,4.0,5.0,34
+Job-search behaviours (0-3),205.0,1.059,1.013,0.0,0.0,1.0,2.0,3.0,34
+Actual weekly hours (midpoint),185.0,42.297,12.521,15.0,30.0,45.0,45.0,65.0,54
+Years in helping work (ordinal),239.0,2.925,1.643,0.0,1.0,3.0,4.0,5.0,0
+Tenure at org (ordinal),205.0,2.161,1.543,0.0,1.0,2.0,3.0,5.0,34
+Org size (ordinal),205.0,3.229,1.892,0.0,1.0,4.0,5.0,5.0,34
+Age (ordinal),237.0,2.654,1.423,0.0,2.0,3.0,4.0,5.0,2
+Searched for jobs,205.0,0.585,0.494,0.0,0.0,1.0,1.0,1.0,34
+Updated resume,205.0,0.298,0.458,0.0,0.0,0.0,1.0,1.0,34
+Applied elsewhere,205.0,0.176,0.381,0.0,0.0,0.0,0.0,1.0,34

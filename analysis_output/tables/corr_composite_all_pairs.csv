@@ -1,0 +1,121 @@
+﻿var_1,var_2,spearman_rho,p_value,q_value_FDR,n
+Personal burnout (0-100),Work-related burnout (0-100),0.8642,0.0,0.0,239
+Years in helping work (ordinal),Age (ordinal),0.6749,0.0,0.0,237
+Work engagement UWES-3 (1-7),ProQOL compassion satisfaction,0.6573,0.0,0.0,183
+Job-demand index (0-4),Work-related burnout (0-100),0.6131,0.0,0.0,203
+Frequency considering leaving (0-4),Expect to stay 1 yr (1-5),-0.6042,0.0,0.0,205
+Job-demand index (0-4),Job-resource index (1-5),-0.5953,0.0,0.0,203
+Job-demand index (0-4),Personal burnout (0-100),0.5887,0.0,0.0,203
+Work-related burnout (0-100),ProQOL burnout,0.5766,0.0,0.0,183
+Personal burnout (0-100),ProQOL burnout,0.5651,0.0,0.0,183
+ProQOL burnout,ProQOL secondary traumatic stress,0.5609,0.0,0.0,183
+Job-resource index (1-5),Work-related burnout (0-100),-0.5358,0.0,0.0,204
+Years in helping work (ordinal),Tenure at org (ordinal),0.5268,0.0,0.0,205
+Frequency considering leaving (0-4),Job-search behaviours (0-3),0.5085,0.0,0.0,205
+Job-resource index (1-5),Work engagement UWES-3 (1-7),0.4944,0.0,0.0,204
+Job-demand index (0-4),Frequency considering leaving (0-4),0.4853,0.0,0.0,203
+Expect to stay 1 yr (1-5),Job-search behaviours (0-3),-0.4811,0.0,0.0,205
+Work-related burnout (0-100),Work engagement UWES-3 (1-7),-0.4571,0.0,0.0,239
+Job-resource index (1-5),Expect to stay 1 yr (1-5),0.4503,0.0,0.0,204
+Job-resource index (1-5),Personal burnout (0-100),-0.4486,0.0,0.0,204
+Job-resource index (1-5),Frequency considering leaving (0-4),-0.4412,0.0,0.0,204
+Work-related burnout (0-100),Frequency considering leaving (0-4),0.4375,0.0,0.0,205
+Tenure at org (ordinal),Age (ordinal),0.4136,0.0,0.0,203
+Job-demand index (0-4),ProQOL burnout,0.4057,0.0,0.0,156
+Work-related burnout (0-100),ProQOL secondary traumatic stress,0.3854,0.0,0.0,183
+Personal burnout (0-100),Frequency considering leaving (0-4),0.375,0.0,0.0,205
+Personal burnout (0-100),ProQOL secondary traumatic stress,0.3705,0.0,0.0,183
+Job-demand index (0-4),Work engagement UWES-3 (1-7),-0.3646,0.0,0.0,203
+Job-demand index (0-4),Expect to stay 1 yr (1-5),-0.3618,0.0,0.0,203
+Personal burnout (0-100),Actual weekly hours (midpoint),0.3612,0.0,0.0,185
+Work engagement UWES-3 (1-7),Expect to stay 1 yr (1-5),0.3424,0.0,0.0,205
+Job-resource index (1-5),ProQOL compassion satisfaction,0.3391,0.0,0.0001,156
+Personal burnout (0-100),Work engagement UWES-3 (1-7),-0.3285,0.0,0.0,239
+Work-related burnout (0-100),ProQOL compassion satisfaction,-0.3266,0.0,0.0,183
+Work engagement UWES-3 (1-7),Frequency considering leaving (0-4),-0.3254,0.0,0.0,205
+Job-demand index (0-4),Job-search behaviours (0-3),0.3186,0.0,0.0,203
+ProQOL compassion satisfaction,ProQOL burnout,-0.3091,0.0,0.0001,183
+Job-demand index (0-4),ProQOL secondary traumatic stress,0.3027,0.0001,0.0004,156
+Job-resource index (1-5),Job-search behaviours (0-3),-0.2973,0.0,0.0001,204
+Work-related burnout (0-100),Actual weekly hours (midpoint),0.2935,0.0001,0.0002,185
+Work-related burnout (0-100),Expect to stay 1 yr (1-5),-0.286,0.0,0.0001,205
+ProQOL burnout,Actual weekly hours (midpoint),0.2807,0.0007,0.002,143
+Job-demand index (0-4),ProQOL compassion satisfaction,-0.2559,0.0013,0.0035,156
+Work engagement UWES-3 (1-7),ProQOL burnout,-0.2502,0.0006,0.0019,183
+ProQOL burnout,Frequency considering leaving (0-4),0.2465,0.0019,0.0047,157
+ProQOL compassion satisfaction,ProQOL secondary traumatic stress,-0.2337,0.0015,0.0038,183
+Work engagement UWES-3 (1-7),Org size (ordinal),-0.2235,0.0013,0.0035,205
+Work-related burnout (0-100),Job-search behaviours (0-3),0.2228,0.0013,0.0035,205
+ProQOL compassion satisfaction,Org size (ordinal),-0.2165,0.0065,0.0148,157
+Personal burnout (0-100),ProQOL compassion satisfaction,-0.2125,0.0039,0.0091,183
+ProQOL compassion satisfaction,Expect to stay 1 yr (1-5),0.2094,0.0085,0.0185,157
+Personal burnout (0-100),Expect to stay 1 yr (1-5),-0.2087,0.0027,0.0067,205
+Expect to stay 1 yr (1-5),Age (ordinal),0.2036,0.0036,0.0087,203
+Job-search behaviours (0-3),Org size (ordinal),0.202,0.0037,0.0088,205
+Job-resource index (1-5),ProQOL burnout,-0.195,0.0147,0.029,156
+ProQOL burnout,Expect to stay 1 yr (1-5),-0.1943,0.0148,0.029,157
+ProQOL secondary traumatic stress,Actual weekly hours (midpoint),0.1925,0.0213,0.0393,143
+Personal burnout (0-100),Job-search behaviours (0-3),0.1894,0.0065,0.0148,205
+Job-demand index (0-4),Actual weekly hours (midpoint),0.1889,0.0102,0.0211,184
+Work-related burnout (0-100),Org size (ordinal),0.1851,0.0079,0.0175,205
+Job-resource index (1-5),Org size (ordinal),-0.1821,0.0091,0.0192,204
+Expect to stay 1 yr (1-5),Years in helping work (ordinal),0.1773,0.011,0.0223,205
+Work engagement UWES-3 (1-7),Age (ordinal),0.1691,0.0091,0.0192,237
+ProQOL compassion satisfaction,Frequency considering leaving (0-4),-0.1658,0.038,0.0671,157
+Expect to stay 1 yr (1-5),Tenure at org (ordinal),0.1651,0.018,0.0348,205
+Work engagement UWES-3 (1-7),Actual weekly hours (midpoint),0.1639,0.0258,0.0468,185
+Work engagement UWES-3 (1-7),Job-search behaviours (0-3),-0.1637,0.019,0.0357,205
+Personal burnout (0-100),Org size (ordinal),0.1637,0.019,0.0357,205
+Job-search behaviours (0-3),Actual weekly hours (midpoint),-0.1543,0.036,0.0645,185
+ProQOL compassion satisfaction,Age (ordinal),0.151,0.0418,0.0717,182
+ProQOL secondary traumatic stress,Frequency considering leaving (0-4),0.148,0.0643,0.1043,157
+ProQOL burnout,Job-search behaviours (0-3),0.1471,0.0659,0.1055,157
+Job-demand index (0-4),Org size (ordinal),0.1443,0.04,0.0696,203
+Actual weekly hours (midpoint),Tenure at org (ordinal),0.1431,0.0519,0.0866,185
+Job-search behaviours (0-3),Years in helping work (ordinal),-0.1419,0.0424,0.0717,205
+ProQOL secondary traumatic stress,Age (ordinal),0.136,0.0672,0.1061,182
+Frequency considering leaving (0-4),Org size (ordinal),0.1354,0.0528,0.0869,205
+Job-resource index (1-5),Actual weekly hours (midpoint),-0.1319,0.0736,0.1147,185
+ProQOL secondary traumatic stress,Years in helping work (ordinal),0.1285,0.0831,0.1278,183
+ProQOL compassion satisfaction,Years in helping work (ordinal),0.1271,0.0864,0.1313,183
+ProQOL compassion satisfaction,Actual weekly hours (midpoint),0.1192,0.1561,0.2128,143
+Expect to stay 1 yr (1-5),Org size (ordinal),-0.1187,0.0901,0.1351,205
+ProQOL burnout,Org size (ordinal),0.1178,0.1417,0.1991,157
+ProQOL burnout,Age (ordinal),-0.1156,0.1201,0.1757,182
+Years in helping work (ordinal),Org size (ordinal),0.1134,0.1055,0.1562,205
+ProQOL secondary traumatic stress,Job-search behaviours (0-3),0.1124,0.1612,0.2173,157
+Tenure at org (ordinal),Org size (ordinal),0.106,0.1304,0.1885,205
+Org size (ordinal),Age (ordinal),0.1032,0.1427,0.1991,203
+ProQOL compassion satisfaction,Job-search behaviours (0-3),-0.1004,0.2109,0.2742,157
+Job-resource index (1-5),ProQOL secondary traumatic stress,-0.1004,0.2125,0.2742,156
+Work-related burnout (0-100),Age (ordinal),-0.0964,0.1388,0.1983,237
+Work engagement UWES-3 (1-7),ProQOL secondary traumatic stress,-0.0951,0.2005,0.2655,183
+Work engagement UWES-3 (1-7),Years in helping work (ordinal),0.0935,0.1495,0.2062,239
+Job-demand index (0-4),Age (ordinal),-0.0852,0.2292,0.2925,201
+Job-search behaviours (0-3),Age (ordinal),-0.0842,0.2325,0.2937,203
+Work-related burnout (0-100),Years in helping work (ordinal),-0.0829,0.2013,0.2655,239
+ProQOL compassion satisfaction,Tenure at org (ordinal),0.0826,0.3038,0.3709,157
+Job-search behaviours (0-3),Tenure at org (ordinal),-0.081,0.248,0.31,205
+Frequency considering leaving (0-4),Tenure at org (ordinal),0.0794,0.2575,0.3185,205
+ProQOL burnout,Years in helping work (ordinal),-0.0735,0.323,0.3837,183
+Expect to stay 1 yr (1-5),Actual weekly hours (midpoint),0.0723,0.3282,0.3862,185
+Personal burnout (0-100),Tenure at org (ordinal),0.0718,0.306,0.3709,205
+Work engagement UWES-3 (1-7),Tenure at org (ordinal),0.07,0.3186,0.3824,205
+Frequency considering leaving (0-4),Age (ordinal),-0.0543,0.4419,0.5099,203
+ProQOL secondary traumatic stress,Tenure at org (ordinal),0.0539,0.5022,0.5632,157
+Personal burnout (0-100),Years in helping work (ordinal),-0.051,0.4329,0.5044,239
+Job-resource index (1-5),Tenure at org (ordinal),0.0508,0.4708,0.5355,204
+Frequency considering leaving (0-4),Years in helping work (ordinal),-0.0504,0.473,0.5355,205
+Actual weekly hours (midpoint),Org size (ordinal),0.0485,0.512,0.5689,185
+Frequency considering leaving (0-4),Actual weekly hours (midpoint),-0.0464,0.5304,0.5839,185
+ProQOL secondary traumatic stress,Expect to stay 1 yr (1-5),-0.0398,0.6207,0.6772,157
+Job-demand index (0-4),Years in helping work (ordinal),-0.0317,0.6531,0.706,203
+Actual weekly hours (midpoint),Age (ordinal),0.0314,0.6728,0.7208,183
+Actual weekly hours (midpoint),Years in helping work (ordinal),0.0304,0.6808,0.723,185
+ProQOL burnout,Tenure at org (ordinal),0.0263,0.7437,0.7693,157
+Personal burnout (0-100),Age (ordinal),-0.0233,0.721,0.7589,237
+Job-resource index (1-5),Years in helping work (ordinal),0.0231,0.7427,0.7693,204
+ProQOL secondary traumatic stress,Org size (ordinal),0.0214,0.7905,0.8058,157
+Job-demand index (0-4),Tenure at org (ordinal),0.0186,0.7923,0.8058,203
+Work-related burnout (0-100),Tenure at org (ordinal),-0.0073,0.9175,0.9252,205
+Job-resource index (1-5),Age (ordinal),0.0034,0.9615,0.9615,202
