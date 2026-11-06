@@ -591,6 +591,23 @@ def fig_profile(d, out: Out):
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     out.save_fig(fig, "01_respondent_profile.png")
 
+    # custom charts for gender, age, org size (for presentation)
+
+    fig2, axes2 = plt.subplots(1, 1, figsize=(16, 12))
+    barh_counts(axes2, d["gender"], "Gender", color=PALETTE[4])
+    out.save_fig(fig2, "01_respondent_profile_gender.png")
+
+    fig3, axes3 = plt.subplots(1, 1, figsize=(16, 12))
+    barh_counts(axes3, d["age_cat"].astype(object), "Age", order=AGE_LABEL, color=PALETTE[5])
+    out.save_fig(fig3, "01_respondent_profile_age.png")
+
+    fig4, axes4 = plt.subplots(1, 1, figsize=(16, 12))
+    barh_counts(axes4, d['org_size_cat'].astype(object), "Organization size (full-time staff)",
+                order=SIZE_LABEL[::-1][::-1], color=PALETTE[2])
+    out.save_fig(fig4, "01_respondent_profile_org_size.png")
+
+
+
 
 def likert_stack(ax, data: pd.DataFrame, levels, level_labels, cmap, title):
     pct = pd.DataFrame({lv: (data == lv).sum() / data.notna().sum() * 100 for lv in levels})
