@@ -1,28 +1,28 @@
 ﻿key,variable,rho,p,n,q
-demands_idx,Job-demand index (0-4),0.5897,0.0,219,0.0
-r_wlb,Org supports work-life balance,-0.5258,0.0,219,0.0
-d_workload,Excess workload / uneven division,0.5213,0.0,219,0.0
-resources_idx,Job-resource index (1-5),-0.5138,0.0,220,0.0
-r_voice,Free to voice concerns,-0.5048,0.0,219,0.0
-d_supervisor,Difficulty w/ supervisor,0.5004,0.0,214,0.0
-r_recognition,Recognition,-0.4847,0.0,221,0.0
-d_skill,Job demands exceed training,0.4619,0.0,219,0.0
-engagement,Work engagement UWES-3 (1-7),-0.4589,0.0,260,0.0
-d_values,Values misaligned w/ org,0.4401,0.0,217,0.0
-r_autonomy,Control over how I work,-0.3983,0.0,221,0.0
-d_client,Client boundaries / emotional load,0.3923,0.0,202,0.0
-d_career,Limited career path,0.3917,0.0,218,0.0
-d_role,Unclear role definition,0.3781,0.0,219,0.0
-d_coworker,Difficulty w/ colleagues,0.3411,0.0,219,0.0
-proqol_cs,ProQOL compassion satisfaction,-0.3263,0.0,193,0.0
-r_supervisor,Supervisor support,-0.3257,0.0,214,0.0
-r_skilldev,Skill development opportunity,-0.3158,0.0,219,0.0
-r_coworker,Colleague support,-0.3153,0.0,221,0.0
-d_pay,Pay / conditions unsustainable,0.3139,0.0,218,0.0
-r_careertalk,Career talks w/ leadership,-0.3044,0.0,213,0.0
-hours_actual,Actual weekly hours (midpoint),0.2475,0.0004,200,0.0005
-r_clear,Clear expectations,-0.2186,0.0011,219,0.0013
-org_size,Org size (ordinal),0.1717,0.0105,221,0.0119
-helping_yrs,Years in helping work (ordinal),-0.0622,0.3174,260,0.3428
-age_ord,Age (ordinal),-0.0605,0.3332,258,0.346
-org_tenure,Tenure at org (ordinal),-0.0016,0.9806,221,0.9806
+demands_idx,Job-demand index (0-4),0.5867,0.0,228,0.0
+r_wlb,Org supports work-life balance,-0.5151,0.0,228,0.0
+resources_idx,Job-resource index (1-5),-0.5139,0.0,229,0.0
+r_voice,Free to voice concerns,-0.5059,0.0,228,0.0
+d_workload,Excess workload / uneven division,0.494,0.0,227,0.0
+d_supervisor,Difficulty w/ supervisor,0.4934,0.0,222,0.0
+r_recognition,Recognition,-0.4721,0.0,230,0.0
+engagement,Work engagement UWES-3 (1-7),-0.4648,0.0,269,0.0
+d_skill,Job demands exceed training,0.4624,0.0,228,0.0
+d_values,Values misaligned w/ org,0.4503,0.0,226,0.0
+d_career,Limited career path,0.4049,0.0,227,0.0
+d_client,Client boundaries / emotional load,0.3978,0.0,211,0.0
+r_autonomy,Control over how I work,-0.3975,0.0,230,0.0
+d_role,Unclear role definition,0.3637,0.0,228,0.0
+proqol_cs,ProQOL compassion satisfaction,-0.3351,0.0,198,0.0
+d_coworker,Difficulty w/ colleagues,0.3339,0.0,228,0.0
+r_supervisor,Supervisor support,-0.3282,0.0,221,0.0
+r_skilldev,Skill development opportunity,-0.3267,0.0,228,0.0
+d_pay,Pay / conditions unsustainable,0.3112,0.0,227,0.0
+r_coworker,Colleague support,-0.3067,0.0,230,0.0
+r_careertalk,Career talks w/ leadership,-0.3052,0.0,220,0.0
+hours_actual,Actual weekly hours (midpoint),0.2681,0.0001,209,0.0001
+r_clear,Clear expectations,-0.2247,0.0006,228,0.0007
+org_size,Org size (ordinal),0.1911,0.0036,230,0.0041
+helping_yrs,Years in helping work (ordinal),-0.0628,0.3045,269,0.3289
+age_ord,Age (ordinal),-0.0569,0.3544,267,0.3681
+org_tenure,Tenure at org (ordinal),-0.003,0.9645,230,0.9645

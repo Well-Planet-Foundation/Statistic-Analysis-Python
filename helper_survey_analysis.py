@@ -557,7 +557,7 @@ def random_forest_leave(d: pd.DataFrame, features: list[str], target: str = "hig
 # --------------------------------------------------------------------------- #
 # 3. Plots
 # --------------------------------------------------------------------------- #
-def barh_counts(ax, series: pd.Series, title: str, order=None, color=None, top: int | None = None):
+def barh_counts(ax, series: pd.Series, title: str, order=None, color=None, titlesize=12, fontsize=8, top: int | None = None):
     s = series.dropna()
     vc = s.value_counts()
     if order is not None:
@@ -567,9 +567,9 @@ def barh_counts(ax, series: pd.Series, title: str, order=None, color=None, top: 
     vc = vc[::-1]
     ax.barh(vc.index.astype(str), vc.values, color=color or PALETTE[0])
     for i, v in enumerate(vc.values):
-        ax.text(v + vc.max() * 0.01, i, f"{v} ({v / len(s) * 100:.0f}%)", va="center", fontsize=8)
+        ax.text(v + vc.max() * 0.01, i, f"{v} ({v / len(s) * 100:.0f}%)", va="center", fontsize=fontsize)
     ax.set_xlim(0, vc.max() * 1.28)
-    ax.set_title(f"{title} (n={len(s)})", fontsize=10, loc="left", fontweight="bold")
+    ax.set_title(f"{title} (n={len(s)})", fontsize=titlesize, loc="left", fontweight="bold")
     ax.grid(axis="y", visible=False)
 
 
@@ -593,15 +593,15 @@ def fig_profile(d, out: Out):
 
     # custom charts for gender, age, org size (for presentation)
 
-    fig2, axes2 = plt.subplots(1, 1, figsize=(16, 12))
+    fig2, axes2 = plt.subplots(1, 1, figsize=(5, 5))
     barh_counts(axes2, d["gender"], "Gender", color=PALETTE[4])
     out.save_fig(fig2, "01_respondent_profile_gender.png")
 
-    fig3, axes3 = plt.subplots(1, 1, figsize=(16, 12))
+    fig3, axes3 = plt.subplots(1, 1, figsize=(5, 5))
     barh_counts(axes3, d["age_cat"].astype(object), "Age", order=AGE_LABEL, color=PALETTE[5])
     out.save_fig(fig3, "01_respondent_profile_age.png")
 
-    fig4, axes4 = plt.subplots(1, 1, figsize=(16, 12))
+    fig4, axes4 = plt.subplots(1, 1, figsize=(5, 5))
     barh_counts(axes4, d['org_size_cat'].astype(object), "Organization size (full-time staff)",
                 order=SIZE_LABEL[::-1][::-1], color=PALETTE[2])
     out.save_fig(fig4, "01_respondent_profile_org_size.png")

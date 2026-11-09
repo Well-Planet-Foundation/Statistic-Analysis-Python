@@ -1,100 +1,100 @@
 ﻿segment,outcome,test,statistic,p_value,effect_size,n,group_means,q_value_FDR
-Respondent type,Work engagement UWES-3 (1-7),Kruskal-Wallis H,34.028,0.0,0.131,260,Freelancer / independent=5.69; Org + personal projects=4.74; Org-affiliated=4.49,0.0
-Role,Frequency considering leaving (0-4),Kruskal-Wallis H,26.302,3e-05,0.121,219,Admin / project / finance=1.43; Founder / decision-maker=0.47; Frontline helper=1.65; HR / training=1.2; Mid-level manager=1.03,0.00136
-Role,Work engagement UWES-3 (1-7),Kruskal-Wallis H,25.152,5e-05,0.115,219,Admin / project / finance=4.25; Founder / decision-maker=5.7; Frontline helper=4.3; HR / training=5.0; Mid-level manager=4.83,0.00155
-Actual weekly hours,Personal burnout (0-100),Kruskal-Wallis H,24.52,6e-05,0.123,200,21-40=46.96; 41-50=52.27; 51-60=67.5; 61+=66.67; <=20=46.47,0.00155
-Role,Work-related burnout (0-100),Kruskal-Wallis H,23.52,0.0001,0.108,219,Admin / project / finance=47.97; Founder / decision-maker=33.27; Frontline helper=55.37; HR / training=47.86; Mid-level manager=45.97,0.00197
-Role,Job-resource index (1-5),Kruskal-Wallis H,20.301,0.00044,0.094,218,Admin / project / finance=3.55; Founder / decision-maker=4.19; Frontline helper=3.33; HR / training=4.06; Mid-level manager=3.63,0.00718
-Age,ProQOL compassion satisfaction,Kruskal-Wallis H,20.335,0.00108,0.106,192,18-24=3.86; 25-29=3.47; 30-34=3.94; 35-39=3.52; 40-49=3.92; 50+=4.13,0.01529
-Org size,Frequency considering leaving (0-4),Kruskal-Wallis H,18.114,0.00281,0.082,221,1-4=1.79; 11-15=1.39; 16-30=1.11; 31-50=1.24; 5-10=0.9; 51+=1.63,0.03172
-Actual weekly hours,Work-related burnout (0-100),Kruskal-Wallis H,16.103,0.00288,0.081,200,21-40=45.95; 41-50=47.66; 51-60=61.79; 61+=58.57; <=20=42.03,0.03172
-Role,Job-demand index (0-4),Kruskal-Wallis H,15.522,0.00373,0.072,217,Admin / project / finance=1.31; Founder / decision-maker=1.1; Frontline helper=1.66; HR / training=0.88; Mid-level manager=1.21,0.03695
-Org type,Work engagement UWES-3 (1-7),Kruskal-Wallis H,16.638,0.00524,0.077,217,Association / society=4.77; Foundation=4.41; Government / commissioned=4.05; Other=4.83; Social enterprise=5.06; Social welfare agency=4.68,0.04717
-Respondent type,Personal burnout (0-100),Kruskal-Wallis H,9.49,0.0087,0.037,260,Freelancer / independent=43.91; Org + personal projects=48.11; Org-affiliated=55.4,0.06504
-Org type,Job-resource index (1-5),Kruskal-Wallis H,15.332,0.00903,0.071,216,Association / society=3.65; Foundation=3.46; Government / commissioned=3.2; Other=3.46; Social enterprise=4.01; Social welfare agency=3.45,0.06504
-Actual weekly hours,ProQOL burnout,Kruskal-Wallis H,13.469,0.0092,0.09,150,21-40=2.4; 41-50=2.69; 51-60=3.04; 61+=3.12; <=20=2.62,0.06504
-Org size,Work engagement UWES-3 (1-7),Kruskal-Wallis H,14.971,0.01049,0.068,221,1-4=4.97; 11-15=4.64; 16-30=4.79; 31-50=4.54; 5-10=4.85; 51+=4.16,0.0692
-Respondent type,ProQOL compassion satisfaction,Kruskal-Wallis H,8.539,0.01399,0.044,193,Freelancer / independent=4.09; Org + personal projects=3.87; Org-affiliated=3.65,0.08654
-Age,Work engagement UWES-3 (1-7),Kruskal-Wallis H,14.102,0.01498,0.055,258,18-24=4.27; 25-29=4.6; 30-34=4.77; 35-39=4.5; 40-49=4.8; 50+=5.35,0.08721
-Tenure at org,ProQOL compassion satisfaction,Kruskal-Wallis H,13.737,0.01737,0.084,164,1-3 yrs=3.47; 15+ yrs=4.18; 3-5 yrs=3.71; 5-8 yrs=3.49; 8-15 yrs=3.62; <1 yr=3.9,0.09328
-Respondent type,Work-related burnout (0-100),Kruskal-Wallis H,8.046,0.0179,0.031,260,Freelancer / independent=39.19; Org + personal projects=45.78; Org-affiliated=51.02,0.09328
-Role,Personal burnout (0-100),Kruskal-Wallis H,11.621,0.0204,0.053,219,Admin / project / finance=52.36; Founder / decision-maker=42.76; Frontline helper=58.46; HR / training=59.17; Mid-level manager=50.0,0.09967
-Actual weekly hours,Job-demand index (0-4),Kruskal-Wallis H,11.538,0.02114,0.058,199,21-40=1.38; 41-50=1.36; 51-60=1.83; 61+=1.71; <=20=1.08,0.09967
-Org size,Job-resource index (1-5),Kruskal-Wallis H,13.027,0.02313,0.059,220,1-4=3.62; 11-15=3.55; 16-30=3.82; 31-50=3.39; 5-10=3.79; 51+=3.31,0.10409
-Org size,Job-demand index (0-4),Kruskal-Wallis H,12.548,0.028,0.058,219,1-4=1.52; 11-15=1.62; 16-30=1.11; 31-50=1.43; 5-10=1.16; 51+=1.62,0.12053
-Org type,Frequency considering leaving (0-4),Kruskal-Wallis H,11.312,0.04552,0.052,217,Association / society=1.39; Foundation=1.65; Government / commissioned=1.47; Other=1.12; Social enterprise=0.83; Social welfare agency=1.37,0.18631
-Org type,ProQOL compassion satisfaction,Kruskal-Wallis H,11.228,0.04705,0.07,162,Association / society=3.96; Foundation=3.58; Government / commissioned=3.46; Other=4.22; Social enterprise=3.59; Social welfare agency=3.69,0.18631
-Agreed weekly hours,Frequency considering leaving (0-4),Kruskal-Wallis H,7.454,0.05874,0.034,221,21-40=1.49; 41+=1.06; <=20=1.62; No agreement=0.96,0.22364
-Role,ProQOL secondary traumatic stress,Kruskal-Wallis H,7.37,0.06099,0.046,161,Admin / project / finance=1.97; Founder / decision-maker=2.06; Frontline helper=2.38; Mid-level manager=2.48,0.22364
-Agreed weekly hours,Work-related burnout (0-100),Kruskal-Wallis H,6.869,0.07619,0.031,221,21-40=51.03; 41+=57.37; <=20=42.41; No agreement=44.57,0.26937
-Tenure at org,Job-demand index (0-4),Kruskal-Wallis H,9.416,0.09357,0.043,219,1-3 yrs=1.57; 15+ yrs=1.2; 3-5 yrs=1.41; 5-8 yrs=1.72; 8-15 yrs=1.5; <1 yr=1.24,0.3034
-Org type,Job-demand index (0-4),Kruskal-Wallis H,9.404,0.09401,0.044,215,Association / society=1.28; Foundation=1.57; Government / commissioned=1.68; Other=1.58; Social enterprise=1.22; Social welfare agency=1.37,0.3034
-Role,ProQOL compassion satisfaction,Kruskal-Wallis H,6.368,0.09501,0.04,161,Admin / project / finance=3.67; Founder / decision-maker=4.03; Frontline helper=3.59; Mid-level manager=3.96,0.3034
-Org size,ProQOL compassion satisfaction,Kruskal-Wallis H,8.995,0.10925,0.055,164,1-4=4.08; 11-15=3.62; 16-30=3.74; 31-50=3.63; 5-10=3.84; 51+=3.53,0.32517
-Actual weekly hours,Job-resource index (1-5),Kruskal-Wallis H,7.52,0.11084,0.038,200,21-40=3.47; 41-50=3.56; 51-60=3.28; 61+=3.33; <=20=3.97,0.32517
-Tenure at org,Job-resource index (1-5),Kruskal-Wallis H,8.91,0.11272,0.041,220,1-3 yrs=3.4; 15+ yrs=3.52; 3-5 yrs=3.73; 5-8 yrs=3.24; 8-15 yrs=3.66; <1 yr=3.45,0.32517
-Actual weekly hours,Work engagement UWES-3 (1-7),Kruskal-Wallis H,7.427,0.11496,0.037,200,21-40=4.17; 41-50=4.6; 51-60=4.53; 61+=4.89; <=20=4.23,0.32517
-Org size,Work-related burnout (0-100),Kruskal-Wallis H,8.445,0.13338,0.038,221,1-4=48.81; 11-15=50.47; 16-30=46.05; 31-50=49.49; 5-10=43.77; 51+=54.81,0.36678
-Tenure at org,Personal burnout (0-100),Kruskal-Wallis H,8.119,0.14982,0.037,221,1-3 yrs=57.13; 15+ yrs=52.92; 3-5 yrs=51.3; 5-8 yrs=61.72; 8-15 yrs=55.51; <1 yr=48.25,0.40087
-Agreed weekly hours,Personal burnout (0-100),Kruskal-Wallis H,5.22,0.15637,0.024,221,21-40=54.21; 41+=63.54; <=20=43.23; No agreement=55.98,0.40738
-Tenure at org,Work engagement UWES-3 (1-7),Kruskal-Wallis H,7.848,0.1648,0.036,221,1-3 yrs=4.32; 15+ yrs=5.07; 3-5 yrs=4.42; 5-8 yrs=4.4; 8-15 yrs=4.59; <1 yr=4.71,0.41531
-Role,ProQOL burnout,Kruskal-Wallis H,5.042,0.16878,0.032,161,Admin / project / finance=2.47; Founder / decision-maker=2.45; Frontline helper=2.82; Mid-level manager=2.55,0.41531
-Respondent type,Frequency considering leaving (0-4),Mann-Whitney U,1819.5,0.172,0.169,221,Org + personal projects=1.05; Org-affiliated=1.45,0.41531
-Respondent type,ProQOL secondary traumatic stress,Kruskal-Wallis H,3.385,0.18402,0.018,193,Freelancer / independent=2.43; Org + personal projects=2.56; Org-affiliated=2.3,0.43377
-Age,Job-demand index (0-4),Kruskal-Wallis H,6.976,0.22242,0.032,217,18-24=1.52; 25-29=1.34; 30-34=1.65; 35-39=1.59; 40-49=1.29; 50+=1.3,0.49614
-Org type,Work-related burnout (0-100),Kruskal-Wallis H,6.904,0.22786,0.032,217,Association / society=47.89; Foundation=53.14; Government / commissioned=53.94; Other=43.75; Social enterprise=44.64; Social welfare agency=48.12,0.49614
-Tenure at org,Work-related burnout (0-100),Kruskal-Wallis H,6.886,0.22926,0.031,221,1-3 yrs=55.15; 15+ yrs=48.57; 3-5 yrs=46.58; 5-8 yrs=53.91; 8-15 yrs=49.42; <1 yr=46.54,0.49614
-Tenure at org,Frequency considering leaving (0-4),Kruskal-Wallis H,6.866,0.2308,0.031,221,1-3 yrs=1.51; 15+ yrs=1.5; 3-5 yrs=1.17; 5-8 yrs=1.69; 8-15 yrs=1.45; <1 yr=1.23,0.49614
-Gender,Personal burnout (0-100),Mann-Whitney U,6274.0,0.23554,0.102,252,Female=54.06; Male=50.71,0.49614
-Agreed weekly hours,Work engagement UWES-3 (1-7),Kruskal-Wallis H,4.098,0.25106,0.019,221,21-40=4.49; 41+=4.42; <=20=4.04; No agreement=4.93,0.51232
-Age,ProQOL secondary traumatic stress,Kruskal-Wallis H,6.508,0.2599,0.034,192,18-24=2.06; 25-29=2.16; 30-34=2.31; 35-39=2.39; 40-49=2.53; 50+=2.38,0.51232
-Years in helping work,Job-demand index (0-4),Kruskal-Wallis H,6.496,0.26088,0.03,219,1-3 yrs=1.49; 15+ yrs=1.26; 3-5 yrs=1.54; 5-8 yrs=1.47; 8-15 yrs=1.64; <1 yr=1.2,0.51232
-Actual weekly hours,ProQOL secondary traumatic stress,Kruskal-Wallis H,5.236,0.26392,0.035,150,21-40=2.22; 41-50=2.26; 51-60=2.6; 61+=2.45; <=20=2.19,0.51232
-Org size,ProQOL secondary traumatic stress,Kruskal-Wallis H,6.38,0.27101,0.039,164,1-4=2.59; 11-15=2.23; 16-30=2.26; 31-50=2.4; 5-10=2.09; 51+=2.35,0.51597
-Org size,Personal burnout (0-100),Kruskal-Wallis H,6.154,0.29155,0.028,221,1-4=52.6; 11-15=54.53; 16-30=48.9; 31-50=54.17; 5-10=49.15; 51+=58.77,0.53548
-Gender,ProQOL compassion satisfaction,Mann-Whitney U,2843.5,0.29245,0.104,186,Female=3.7; Male=3.85,0.53548
-Gender,Job-demand index (0-4),Mann-Whitney U,4386.0,0.29749,0.098,212,Female=1.51; Male=1.39,0.53548
-Region,ProQOL secondary traumatic stress,Kruskal-Wallis H,2.223,0.32899,0.012,188,New Taipei=2.17; Other counties/cities=2.4; Taipei=2.36,0.58161
-Gender,ProQOL burnout,Mann-Whitney U,2883.0,0.35401,0.091,186,Female=2.68; Male=2.79,0.61486
-Agreed weekly hours,ProQOL burnout,Kruskal-Wallis H,1.983,0.37099,0.012,160,21-40=2.69; 41+=3.03; No agreement=2.7,0.62632
-Gender,Work-related burnout (0-100),Mann-Whitney U,6129.5,0.37326,0.077,252,Female=49.39; Male=47.03,0.62632
-Region,Work engagement UWES-3 (1-7),Kruskal-Wallis H,1.763,0.41415,0.007,253,New Taipei=4.67; Other counties/cities=4.56; Taipei=4.79,0.68335
-Agreed weekly hours,ProQOL secondary traumatic stress,Kruskal-Wallis H,1.493,0.47403,0.009,160,21-40=2.3; 41+=2.54; No agreement=2.39,0.74851
-Actual weekly hours,Frequency considering leaving (0-4),Kruskal-Wallis H,3.494,0.47881,0.018,200,21-40=1.44; 41-50=1.3; 51-60=1.67; 61+=1.2; <=20=1.38,0.74851
-Respondent type,ProQOL burnout,Kruskal-Wallis H,1.47,0.47959,0.008,193,Freelancer / independent=2.55; Org + personal projects=2.82; Org-affiliated=2.71,0.74851
-Actual weekly hours,ProQOL compassion satisfaction,Kruskal-Wallis H,3.461,0.48388,0.023,150,21-40=3.6; 41-50=3.63; 51-60=3.69; 61+=3.88; <=20=3.29,0.74851
-Agreed weekly hours,Job-resource index (1-5),Kruskal-Wallis H,2.35,0.50294,0.011,220,21-40=3.47; 41+=3.4; <=20=3.75; No agreement=3.71,0.76601
-Age,Frequency considering leaving (0-4),Kruskal-Wallis H,4.215,0.51894,0.019,219,18-24=1.8; 25-29=1.19; 30-34=1.6; 35-39=1.38; 40-49=1.37; 50+=1.37,0.76756
-Region,Frequency considering leaving (0-4),Kruskal-Wallis H,1.281,0.5271,0.006,217,New Taipei=1.49; Other counties/cities=1.47; Taipei=1.34,0.76756
-Years in helping work,ProQOL compassion satisfaction,Kruskal-Wallis H,4.113,0.5332,0.021,193,1-3 yrs=3.63; 15+ yrs=3.89; 3-5 yrs=3.65; 5-8 yrs=3.7; 8-15 yrs=3.75; <1 yr=3.64,0.76756
-Age,ProQOL burnout,Kruskal-Wallis H,4.101,0.53497,0.021,192,18-24=2.83; 25-29=2.8; 30-34=2.59; 35-39=2.8; 40-49=2.54; 50+=2.59,0.76756
-Years in helping work,ProQOL secondary traumatic stress,Kruskal-Wallis H,3.776,0.58217,0.02,193,1-3 yrs=2.19; 15+ yrs=2.55; 3-5 yrs=2.24; 5-8 yrs=2.39; 8-15 yrs=2.32; <1 yr=2.2,0.82335
-Gender,ProQOL secondary traumatic stress,Mann-Whitney U,3328.0,0.6177,0.049,186,Female=2.35; Male=2.27,0.85782
-Age,Job-resource index (1-5),Kruskal-Wallis H,3.497,0.62387,0.016,218,18-24=3.53; 25-29=3.62; 30-34=3.46; 35-39=3.41; 40-49=3.64; 50+=3.41,0.85782
-Years in helping work,Personal burnout (0-100),Kruskal-Wallis H,3.279,0.65706,0.013,260,1-3 yrs=51.17; 15+ yrs=51.06; 3-5 yrs=52.55; 5-8 yrs=58.14; 8-15 yrs=52.86; <1 yr=53.37,0.89099
-Region,ProQOL burnout,Kruskal-Wallis H,0.808,0.66748,0.004,188,New Taipei=2.65; Other counties/cities=2.77; Taipei=2.65,0.89099
-Gender,Frequency considering leaving (0-4),Mann-Whitney U,4188.5,0.68759,0.036,214,Female=1.45; Male=1.33,0.89099
-Age,Work-related burnout (0-100),Kruskal-Wallis H,3.001,0.69982,0.012,258,18-24=54.41; 25-29=47.99; 30-34=49.5; 35-39=49.4; 40-49=48.18; 50+=43.71,0.89099
-Gender,Job-resource index (1-5),Mann-Whitney U,3883.0,0.7221,0.034,213,Female=3.48; Male=3.5,0.89099
-Respondent type,Job-demand index (0-4),Mann-Whitney U,2068.0,0.72657,0.046,219,Org + personal projects=1.43; Org-affiliated=1.47,0.89099
-Region,ProQOL compassion satisfaction,Kruskal-Wallis H,0.619,0.73378,0.003,188,New Taipei=3.74; Other counties/cities=3.69; Taipei=3.78,0.89099
-Org size,ProQOL burnout,Kruskal-Wallis H,2.706,0.74517,0.017,164,1-4=2.86; 11-15=2.65; 16-30=2.72; 31-50=2.61; 5-10=2.52; 51+=2.8,0.89099
-Org type,ProQOL secondary traumatic stress,Kruskal-Wallis H,2.555,0.76815,0.016,162,Association / society=2.25; Foundation=2.4; Government / commissioned=2.41; Other=2.33; Social enterprise=2.19; Social welfare agency=2.16,0.89099
-Region,Job-resource index (1-5),Kruskal-Wallis H,0.501,0.77826,0.002,216,New Taipei=3.47; Other counties/cities=3.45; Taipei=3.54,0.89099
-Region,Work-related burnout (0-100),Kruskal-Wallis H,0.492,0.78181,0.002,253,New Taipei=47.74; Other counties/cities=50.07; Taipei=49.4,0.89099
-Years in helping work,ProQOL burnout,Kruskal-Wallis H,2.424,0.78789,0.013,193,1-3 yrs=2.73; 15+ yrs=2.63; 3-5 yrs=2.73; 5-8 yrs=2.81; 8-15 yrs=2.65; <1 yr=2.67,0.89099
-Tenure at org,ProQOL secondary traumatic stress,Kruskal-Wallis H,2.384,0.79389,0.015,164,1-3 yrs=2.28; 15+ yrs=2.25; 3-5 yrs=2.37; 5-8 yrs=2.44; 8-15 yrs=2.38; <1 yr=2.12,0.89099
-Tenure at org,ProQOL burnout,Kruskal-Wallis H,2.341,0.80029,0.014,164,1-3 yrs=2.66; 15+ yrs=2.71; 3-5 yrs=2.71; 5-8 yrs=2.93; 8-15 yrs=2.72; <1 yr=2.59,0.89099
-Region,Job-demand index (0-4),Kruskal-Wallis H,0.442,0.80184,0.002,215,New Taipei=1.5; Other counties/cities=1.44; Taipei=1.53,0.89099
-Age,Personal burnout (0-100),Kruskal-Wallis H,2.329,0.80205,0.009,258,18-24=55.39; 25-29=50.52; 30-34=53.83; 35-39=53.97; 40-49=52.28; 50+=53.33,0.89099
-Years in helping work,Work engagement UWES-3 (1-7),Kruskal-Wallis H,2.323,0.8029,0.009,260,1-3 yrs=4.68; 15+ yrs=4.84; 3-5 yrs=4.54; 5-8 yrs=4.65; 8-15 yrs=4.75; <1 yr=4.48,0.89099
-Gender,Work engagement UWES-3 (1-7),Mann-Whitney U,5576.0,0.80999,0.021,252,Female=4.68; Male=4.71,0.89099
-Years in helping work,Work-related burnout (0-100),Kruskal-Wallis H,1.759,0.88134,0.007,260,1-3 yrs=50.36; 15+ yrs=46.78; 3-5 yrs=50.0; 5-8 yrs=51.66; 8-15 yrs=46.93; <1 yr=48.13,0.95185
-Agreed weekly hours,ProQOL compassion satisfaction,Kruskal-Wallis H,0.221,0.89551,0.001,160,21-40=3.69; 41+=3.67; No agreement=3.58,0.95185
-Agreed weekly hours,Job-demand index (0-4),Kruskal-Wallis H,0.54,0.90991,0.002,219,21-40=1.47; 41+=1.5; <=20=1.28; No agreement=1.51,0.95185
-Org type,ProQOL burnout,Kruskal-Wallis H,1.47,0.91651,0.009,162,Association / society=2.67; Foundation=2.83; Government / commissioned=2.67; Other=2.44; Social enterprise=2.78; Social welfare agency=2.67,0.95185
-Org type,Personal burnout (0-100),Kruskal-Wallis H,1.46,0.91766,0.007,217,Association / society=53.23; Foundation=56.98; Government / commissioned=55.19; Other=56.25; Social enterprise=52.31; Social welfare agency=52.19,0.95185
-Respondent type,Job-resource index (1-5),Mann-Whitney U,2152.0,0.92819,0.012,220,Org + personal projects=3.52; Org-affiliated=3.5,0.95185
-Years in helping work,Job-resource index (1-5),Kruskal-Wallis H,1.322,0.93262,0.006,220,1-3 yrs=3.46; 15+ yrs=3.52; 3-5 yrs=3.64; 5-8 yrs=3.46; 8-15 yrs=3.46; <1 yr=3.57,0.95185
-Region,Personal burnout (0-100),Kruskal-Wallis H,0.105,0.94876,0.0,253,New Taipei=53.25; Other counties/cities=53.61; Taipei=53.54,0.95844
-Years in helping work,Frequency considering leaving (0-4),Kruskal-Wallis H,0.589,0.98849,0.003,221,1-3 yrs=1.55; 15+ yrs=1.4; 3-5 yrs=1.25; 5-8 yrs=1.35; 8-15 yrs=1.45; <1 yr=1.4,0.98849
+Respondent type,Work engagement UWES-3 (1-7),Kruskal-Wallis H,34.517,0.0,0.129,269,Freelancer / independent=5.69; Org + personal projects=4.83; Org-affiliated=4.5,0.0
+Role,Frequency considering leaving (0-4),Kruskal-Wallis H,28.239,1e-05,0.124,228,Admin / project / finance=1.38; Founder / decision-maker=0.43; Frontline helper=1.62; HR / training=1.2; Mid-level manager=1.03,0.00041
+Role,Work engagement UWES-3 (1-7),Kruskal-Wallis H,27.454,2e-05,0.121,228,Admin / project / finance=4.29; Founder / decision-maker=5.7; Frontline helper=4.31; HR / training=5.0; Mid-level manager=4.86,0.00041
+Role,Work-related burnout (0-100),Kruskal-Wallis H,27.398,2e-05,0.121,228,Admin / project / finance=47.53; Founder / decision-maker=32.48; Frontline helper=55.18; HR / training=47.86; Mid-level manager=45.76,0.00041
+Actual weekly hours,Personal burnout (0-100),Kruskal-Wallis H,26.458,3e-05,0.127,209,21-40=45.83; 41-50=52.34; 51-60=66.54; 61+=66.67; <=20=46.73,0.00051
+Role,Job-resource index (1-5),Kruskal-Wallis H,21.531,0.00025,0.095,227,Admin / project / finance=3.56; Founder / decision-maker=4.23; Frontline helper=3.36; HR / training=4.06; Mid-level manager=3.63,0.0041
+Age,ProQOL compassion satisfaction,Kruskal-Wallis H,22.08,0.00051,0.113,197,18-24=3.86; 25-29=3.47; 30-34=3.96; 35-39=3.52; 40-49=3.95; 50+=4.13,0.00715
+Actual weekly hours,Work-related burnout (0-100),Kruskal-Wallis H,18.619,0.00093,0.09,209,21-40=44.67; 41-50=47.57; 51-60=61.61; 61+=58.57; <=20=42.6,0.01156
+Org type,Frequency considering leaving (0-4),Kruskal-Wallis H,21.723,0.00136,0.095,230,Association / society=1.32; Community / regional team=0.0; Foundation=1.62; Government / commissioned=1.46; Other=1.12; Social enterprise=0.83; Social welfare agency=1.3,0.01494
+Org type,Job-resource index (1-5),Kruskal-Wallis H,21.471,0.00151,0.094,229,Association / society=3.7; Community / regional team=4.22; Foundation=3.49; Government / commissioned=3.2; Other=3.46; Social enterprise=4.01; Social welfare agency=3.51,0.01494
+Role,Job-demand index (0-4),Kruskal-Wallis H,16.167,0.0028,0.072,226,Admin / project / finance=1.28; Founder / decision-maker=1.11; Frontline helper=1.67; HR / training=0.88; Mid-level manager=1.25,0.02421
+Org size,Frequency considering leaving (0-4),Kruskal-Wallis H,17.837,0.00316,0.078,230,1-4=1.63; 11-15=1.39; 16-30=1.05; 31-50=1.23; 5-10=0.88; 51+=1.61,0.02421
+Actual weekly hours,ProQOL burnout,Kruskal-Wallis H,15.884,0.00318,0.103,155,21-40=2.4; 41-50=2.69; 51-60=3.08; 61+=3.12; <=20=2.62,0.02421
+Org type,Work engagement UWES-3 (1-7),Kruskal-Wallis H,18.792,0.00453,0.082,230,Association / society=4.81; Community / regional team=5.13; Foundation=4.42; Government / commissioned=4.07; Other=4.83; Social enterprise=5.06; Social welfare agency=4.7,0.03022
+Org size,Work engagement UWES-3 (1-7),Kruskal-Wallis H,16.958,0.00458,0.074,230,1-4=5.06; 11-15=4.64; 16-30=4.79; 31-50=4.52; 5-10=4.86; 51+=4.18,0.03022
+Actual weekly hours,Job-demand index (0-4),Kruskal-Wallis H,13.892,0.00765,0.067,208,21-40=1.34; 41-50=1.37; 51-60=1.87; 61+=1.71; <=20=1.09,0.04732
+Respondent type,Personal burnout (0-100),Kruskal-Wallis H,9.32,0.00947,0.035,269,Freelancer / independent=43.91; Org + personal projects=47.5; Org-affiliated=55.02,0.05216
+Org size,Job-resource index (1-5),Kruskal-Wallis H,15.215,0.00948,0.067,229,1-4=3.7; 11-15=3.55; 16-30=3.87; 31-50=3.44; 5-10=3.8; 51+=3.32,0.05216
+Age,Work engagement UWES-3 (1-7),Kruskal-Wallis H,14.868,0.01094,0.056,267,18-24=4.27; 25-29=4.61; 30-34=4.77; 35-39=4.5; 40-49=4.85; 50+=5.33,0.05702
+Role,Personal burnout (0-100),Kruskal-Wallis H,12.522,0.01387,0.055,228,Admin / project / finance=51.71; Founder / decision-maker=42.06; Frontline helper=58.02; HR / training=59.17; Mid-level manager=50.26,0.06864
+Respondent type,ProQOL compassion satisfaction,Kruskal-Wallis H,8.138,0.0171,0.041,198,Freelancer / independent=4.09; Org + personal projects=3.9; Org-affiliated=3.67,0.0806
+Respondent type,Work-related burnout (0-100),Kruskal-Wallis H,8.0,0.01831,0.03,269,Freelancer / independent=39.19; Org + personal projects=45.0; Org-affiliated=50.73,0.0824
+Agreed weekly hours,Work-related burnout (0-100),Kruskal-Wallis H,9.369,0.02477,0.041,230,21-40=50.85; 41+=57.56; <=20=40.87; No agreement=43.65,0.10661
+Tenure at org,ProQOL compassion satisfaction,Kruskal-Wallis H,12.331,0.03052,0.073,169,1-3 yrs=3.49; 15+ yrs=4.18; 3-5 yrs=3.71; 5-8 yrs=3.58; 8-15 yrs=3.62; <1 yr=3.93,0.12397
+Role,ProQOL secondary traumatic stress,Kruskal-Wallis H,8.853,0.03131,0.054,166,Admin / project / finance=1.97; Founder / decision-maker=2.0; Frontline helper=2.4; Mid-level manager=2.48,0.12397
+Org type,ProQOL compassion satisfaction,Kruskal-Wallis H,11.902,0.03616,0.072,166,Association / society=3.98; Foundation=3.6; Government / commissioned=3.46; Other=4.22; Social enterprise=3.59; Social welfare agency=3.73,0.13696
+Agreed weekly hours,Frequency considering leaving (0-4),Kruskal-Wallis H,8.463,0.03735,0.037,230,21-40=1.47; 41+=1.06; <=20=1.44; No agreement=0.89,0.13696
+Org size,Job-demand index (0-4),Kruskal-Wallis H,11.645,0.03998,0.051,228,1-4=1.53; 11-15=1.62; 16-30=1.21; 31-50=1.47; 5-10=1.14; 51+=1.6,0.14137
+Org size,ProQOL compassion satisfaction,Kruskal-Wallis H,11.418,0.0437,0.068,169,1-4=4.14; 11-15=3.62; 16-30=3.82; 31-50=3.63; 5-10=3.84; 51+=3.53,0.14917
+Role,ProQOL compassion satisfaction,Kruskal-Wallis H,7.84,0.04944,0.048,166,Admin / project / finance=3.67; Founder / decision-maker=4.13; Frontline helper=3.6; Mid-level manager=3.96,0.16316
+Role,ProQOL burnout,Kruskal-Wallis H,7.162,0.06691,0.043,166,Admin / project / finance=2.47; Founder / decision-maker=2.38; Frontline helper=2.84; Mid-level manager=2.55,0.21367
+Org type,Job-demand index (0-4),Kruskal-Wallis H,11.543,0.07298,0.051,228,Association / society=1.31; Community / regional team=0.85; Foundation=1.57; Government / commissioned=1.67; Other=1.58; Social enterprise=1.22; Social welfare agency=1.35,0.21772
+Tenure at org,Job-demand index (0-4),Kruskal-Wallis H,9.962,0.07632,0.044,228,1-3 yrs=1.59; 15+ yrs=1.25; 3-5 yrs=1.39; 5-8 yrs=1.7; 8-15 yrs=1.5; <1 yr=1.22,0.21772
+Respondent type,Frequency considering leaving (0-4),Mann-Whitney U,2036.0,0.07763,0.205,230,Org + personal projects=0.96; Org-affiliated=1.42,0.21772
+Org size,Work-related burnout (0-100),Kruskal-Wallis H,9.881,0.07867,0.043,230,1-4=46.69; 11-15=50.47; 16-30=46.43; 31-50=50.0; 5-10=43.39; 51+=54.57,0.21772
+Agreed weekly hours,Work engagement UWES-3 (1-7),Kruskal-Wallis H,6.782,0.07917,0.03,230,21-40=4.49; 41+=4.39; <=20=4.15; No agreement=5.04,0.21772
+Agreed weekly hours,Personal burnout (0-100),Kruskal-Wallis H,6.003,0.11148,0.026,230,21-40=53.88; 41+=63.73; <=20=43.52; No agreement=53.86,0.29829
+Tenure at org,Work engagement UWES-3 (1-7),Kruskal-Wallis H,8.753,0.11933,0.038,230,1-3 yrs=4.32; 15+ yrs=5.11; 3-5 yrs=4.44; 5-8 yrs=4.46; 8-15 yrs=4.59; <1 yr=4.74,0.31088
+Respondent type,ProQOL secondary traumatic stress,Kruskal-Wallis H,4.187,0.12327,0.021,198,Freelancer / independent=2.43; Org + personal projects=2.6; Org-affiliated=2.3,0.31292
+Tenure at org,Personal burnout (0-100),Kruskal-Wallis H,8.502,0.13067,0.037,230,1-3 yrs=56.81; 15+ yrs=53.17; 3-5 yrs=51.0; 5-8 yrs=60.36; 8-15 yrs=55.51; <1 yr=47.22,0.32341
+Actual weekly hours,ProQOL secondary traumatic stress,Kruskal-Wallis H,6.594,0.15895,0.043,155,21-40=2.22; 41-50=2.26; 51-60=2.62; 61+=2.45; <=20=2.19,0.38381
+Org size,Personal burnout (0-100),Kruskal-Wallis H,7.59,0.18033,0.033,230,1-4=51.54; 11-15=54.53; 16-30=47.62; 31-50=54.73; 5-10=48.65; 51+=58.46,0.42507
+Region,ProQOL secondary traumatic stress,Kruskal-Wallis H,3.372,0.18521,0.018,193,New Taipei=2.14; Other counties/cities=2.42; Taipei=2.37,0.42642
+Age,Job-demand index (0-4),Kruskal-Wallis H,7.336,0.19682,0.033,226,18-24=1.52; 25-29=1.32; 30-34=1.64; 35-39=1.59; 40-49=1.32; 50+=1.29,0.44284
+Tenure at org,Work-related burnout (0-100),Kruskal-Wallis H,7.244,0.20315,0.032,230,1-3 yrs=55.18; 15+ yrs=48.13; 3-5 yrs=46.43; 5-8 yrs=52.45; 8-15 yrs=49.42; <1 yr=45.89,0.44692
+Tenure at org,Frequency considering leaving (0-4),Kruskal-Wallis H,7.1,0.21331,0.031,230,1-3 yrs=1.5; 15+ yrs=1.48; 3-5 yrs=1.14; 5-8 yrs=1.57; 8-15 yrs=1.45; <1 yr=1.15,0.45642
+Org type,Work-related burnout (0-100),Kruskal-Wallis H,8.304,0.21669,0.036,230,Association / society=47.1; Community / regional team=42.86; Foundation=52.96; Government / commissioned=53.86; Other=43.75; Social enterprise=44.64; Social welfare agency=47.14,0.45642
+Gender,ProQOL burnout,Mann-Whitney U,3038.0,0.23117,0.115,191,Female=2.67; Male=2.81,0.47679
+Gender,ProQOL compassion satisfaction,Mann-Whitney U,3060.0,0.25861,0.108,191,Female=3.71; Male=3.87,0.5225
+Actual weekly hours,Work engagement UWES-3 (1-7),Kruskal-Wallis H,5.149,0.27236,0.025,209,21-40=4.27; 41-50=4.62; 51-60=4.51; 61+=4.89; <=20=4.29,0.53754
+Gender,Personal burnout (0-100),Mann-Whitney U,6726.5,0.28218,0.09,261,Female=53.6; Male=50.67,0.53754
+Tenure at org,Job-resource index (1-5),Kruskal-Wallis H,6.253,0.28234,0.027,229,1-3 yrs=3.42; 15+ yrs=3.53; 3-5 yrs=3.73; 5-8 yrs=3.35; 8-15 yrs=3.66; <1 yr=3.5,0.53754
+Years in helping work,Job-demand index (0-4),Kruskal-Wallis H,6.193,0.2879,0.027,228,1-3 yrs=1.49; 15+ yrs=1.26; 3-5 yrs=1.57; 5-8 yrs=1.49; 8-15 yrs=1.61; <1 yr=1.19,0.53778
+Actual weekly hours,Job-resource index (1-5),Kruskal-Wallis H,4.835,0.30465,0.023,209,21-40=3.56; 41-50=3.56; 51-60=3.37; 61+=3.33; <=20=3.9,0.55852
+Age,ProQOL secondary traumatic stress,Kruskal-Wallis H,5.588,0.34834,0.029,197,18-24=2.06; 25-29=2.16; 30-34=2.38; 35-39=2.39; 40-49=2.48; 50+=2.38,0.62701
+Agreed weekly hours,Job-resource index (1-5),Kruskal-Wallis H,3.184,0.36405,0.014,229,21-40=3.49; 41+=3.47; <=20=3.86; No agreement=3.72,0.64358
+Region,Work engagement UWES-3 (1-7),Kruskal-Wallis H,1.902,0.38636,0.007,262,New Taipei=4.74; Other counties/cities=4.56; Taipei=4.79,0.66186
+Agreed weekly hours,ProQOL burnout,Kruskal-Wallis H,3.025,0.38776,0.018,169,21-40=2.7; 41+=3.07; <=20=2.67; No agreement=2.64,0.66186
+Respondent type,ProQOL burnout,Kruskal-Wallis H,1.661,0.43583,0.008,198,Freelancer / independent=2.55; Org + personal projects=2.83; Org-affiliated=2.71,0.73131
+Gender,Job-demand index (0-4),Mann-Whitney U,4700.5,0.44761,0.07,221,Female=1.5; Male=1.42,0.73506
+Gender,Job-resource index (1-5),Mann-Whitney U,4120.0,0.45951,0.068,222,Female=3.5; Male=3.56,0.73506
+Gender,Work-related burnout (0-100),Mann-Whitney U,6546.0,0.46741,0.061,261,Female=48.99; Male=47.12,0.73506
+Org size,ProQOL secondary traumatic stress,Kruskal-Wallis H,4.591,0.46776,0.027,169,1-4=2.49; 11-15=2.23; 16-30=2.38; 31-50=2.43; 5-10=2.09; 51+=2.35,0.73506
+Region,Frequency considering leaving (0-4),Kruskal-Wallis H,1.485,0.47596,0.007,226,New Taipei=1.44; Other counties/cities=1.43; Taipei=1.3,0.73626
+Age,ProQOL burnout,Kruskal-Wallis H,4.256,0.51323,0.022,197,18-24=2.83; 25-29=2.8; 30-34=2.65; 35-39=2.8; 40-49=2.52; 50+=2.59,0.76863
+Actual weekly hours,ProQOL compassion satisfaction,Kruskal-Wallis H,3.27,0.51364,0.021,155,21-40=3.67; 41-50=3.63; 51-60=3.71; 61+=3.88; <=20=3.29,0.76863
+Age,Job-resource index (1-5),Kruskal-Wallis H,4.171,0.52513,0.018,227,18-24=3.53; 25-29=3.64; 30-34=3.57; 35-39=3.41; 40-49=3.65; 50+=3.39,0.76863
+Region,ProQOL burnout,Kruskal-Wallis H,1.278,0.52795,0.007,193,New Taipei=2.62; Other counties/cities=2.79; Taipei=2.65,0.76863
+Agreed weekly hours,ProQOL secondary traumatic stress,Kruskal-Wallis H,2.106,0.55068,0.013,169,21-40=2.31; 41+=2.57; <=20=2.2; No agreement=2.36,0.79011
+Years in helping work,ProQOL compassion satisfaction,Kruskal-Wallis H,3.767,0.58344,0.019,198,1-3 yrs=3.66; 15+ yrs=3.89; 3-5 yrs=3.65; 5-8 yrs=3.74; 8-15 yrs=3.77; <1 yr=3.64,0.82515
+Region,Work-related burnout (0-100),Kruskal-Wallis H,0.943,0.62412,0.004,262,New Taipei=46.93; Other counties/cities=50.03; Taipei=49.03,0.87025
+Age,Frequency considering leaving (0-4),Kruskal-Wallis H,3.373,0.64265,0.015,228,18-24=1.8; 25-29=1.16; 30-34=1.48; 35-39=1.38; 40-49=1.33; 50+=1.35,0.88258
+Years in helping work,Personal burnout (0-100),Kruskal-Wallis H,3.259,0.66013,0.012,269,1-3 yrs=50.48; 15+ yrs=51.06; 3-5 yrs=52.73; 5-8 yrs=57.59; 8-15 yrs=52.24; <1 yr=53.22,0.88258
+Years in helping work,ProQOL secondary traumatic stress,Kruskal-Wallis H,3.178,0.67263,0.016,198,1-3 yrs=2.22; 15+ yrs=2.55; 3-5 yrs=2.24; 5-8 yrs=2.36; 8-15 yrs=2.33; <1 yr=2.2,0.88258
+Actual weekly hours,Frequency considering leaving (0-4),Kruskal-Wallis H,2.283,0.68386,0.011,209,21-40=1.32; 41-50=1.3; 51-60=1.62; 61+=1.2; <=20=1.36,0.88258
+Org type,Personal burnout (0-100),Kruskal-Wallis H,3.916,0.68798,0.017,230,Association / society=52.59; Community / regional team=40.83; Foundation=56.47; Government / commissioned=55.08; Other=56.25; Social enterprise=52.31; Social welfare agency=51.88,0.88258
+Gender,Frequency considering leaving (0-4),Mann-Whitney U,4598.5,0.69461,0.034,223,Female=1.41; Male=1.29,0.88258
+Age,Work-related burnout (0-100),Kruskal-Wallis H,3.03,0.69537,0.011,267,18-24=54.41; 25-29=47.59; 30-34=49.09; 35-39=49.4; 40-49=47.53; 50+=43.96,0.88258
+Region,ProQOL compassion satisfaction,Kruskal-Wallis H,0.641,0.72579,0.003,193,New Taipei=3.78; Other counties/cities=3.7; Taipei=3.79,0.90509
+Org size,ProQOL burnout,Kruskal-Wallis H,2.732,0.7412,0.016,169,1-4=2.77; 11-15=2.65; 16-30=2.8; 31-50=2.67; 5-10=2.52; 51+=2.8,0.90509
+Org type,ProQOL secondary traumatic stress,Kruskal-Wallis H,2.71,0.74458,0.016,166,Association / society=2.23; Foundation=2.41; Government / commissioned=2.41; Other=2.33; Social enterprise=2.19; Social welfare agency=2.17,0.90509
+Age,Personal burnout (0-100),Kruskal-Wallis H,2.606,0.76047,0.01,267,18-24=55.39; 25-29=50.09; 30-34=52.95; 35-39=53.97; 40-49=51.89; 50+=53.21,0.90509
+Region,Job-resource index (1-5),Kruskal-Wallis H,0.525,0.76914,0.002,225,New Taipei=3.5; Other counties/cities=3.48; Taipei=3.56,0.90509
+Agreed weekly hours,Job-demand index (0-4),Kruskal-Wallis H,1.092,0.77899,0.005,228,21-40=1.46; 41+=1.54; <=20=1.23; No agreement=1.53,0.90509
+Years in helping work,ProQOL burnout,Kruskal-Wallis H,2.461,0.78231,0.012,198,1-3 yrs=2.76; 15+ yrs=2.63; 3-5 yrs=2.73; 5-8 yrs=2.8; 8-15 yrs=2.65; <1 yr=2.67,0.90509
+Respondent type,Job-demand index (0-4),Mann-Whitney U,2453.5,0.78832,0.033,228,Org + personal projects=1.44; Org-affiliated=1.47,0.90509
+Respondent type,Job-resource index (1-5),Mann-Whitney U,2631.5,0.79538,0.032,229,Org + personal projects=3.6; Org-affiliated=3.52,0.90509
+Gender,ProQOL secondary traumatic stress,Mann-Whitney U,3497.0,0.8438,0.019,191,Female=2.35; Male=2.31,0.93428
+Years in helping work,Work engagement UWES-3 (1-7),Kruskal-Wallis H,1.976,0.85242,0.007,269,1-3 yrs=4.68; 15+ yrs=4.84; 3-5 yrs=4.58; 5-8 yrs=4.67; 8-15 yrs=4.77; <1 yr=4.5,0.93428
+Years in helping work,Work-related burnout (0-100),Kruskal-Wallis H,1.735,0.88443,0.006,269,1-3 yrs=50.07; 15+ yrs=46.78; 3-5 yrs=49.67; 5-8 yrs=51.19; 8-15 yrs=46.43; <1 yr=48.21,0.93428
+Org type,ProQOL burnout,Kruskal-Wallis H,1.73,0.88508,0.01,166,Association / society=2.67; Foundation=2.84; Government / commissioned=2.67; Other=2.44; Social enterprise=2.78; Social welfare agency=2.65,0.93428
+Tenure at org,ProQOL burnout,Kruskal-Wallis H,1.685,0.89078,0.01,169,1-3 yrs=2.68; 15+ yrs=2.71; 3-5 yrs=2.71; 5-8 yrs=2.89; 8-15 yrs=2.72; <1 yr=2.61,0.93428
+Region,Personal burnout (0-100),Kruskal-Wallis H,0.231,0.89098,0.001,262,New Taipei=52.71; Other counties/cities=53.48; Taipei=52.99,0.93428
+Region,Job-demand index (0-4),Kruskal-Wallis H,0.202,0.90409,0.001,224,New Taipei=1.52; Other counties/cities=1.45; Taipei=1.51,0.93428
+Agreed weekly hours,ProQOL compassion satisfaction,Kruskal-Wallis H,0.563,0.90479,0.003,169,21-40=3.7; 41+=3.67; <=20=3.47; No agreement=3.74,0.93428
+Tenure at org,ProQOL secondary traumatic stress,Kruskal-Wallis H,1.561,0.90597,0.009,169,1-3 yrs=2.3; 15+ yrs=2.25; 3-5 yrs=2.37; 5-8 yrs=2.41; 8-15 yrs=2.38; <1 yr=2.19,0.93428
+Gender,Work engagement UWES-3 (1-7),Mann-Whitney U,6150.5,0.97214,0.003,261,Female=4.7; Male=4.7,0.99218
+Years in helping work,Frequency considering leaving (0-4),Kruskal-Wallis H,0.521,0.99135,0.002,230,1-3 yrs=1.5; 15+ yrs=1.4; 3-5 yrs=1.24; 5-8 yrs=1.31; 8-15 yrs=1.38; <1 yr=1.38,0.9929
+Years in helping work,Job-resource index (1-5),Kruskal-Wallis H,0.478,0.9929,0.002,229,1-3 yrs=3.51; 15+ yrs=3.52; 3-5 yrs=3.64; 5-8 yrs=3.51; 8-15 yrs=3.52; <1 yr=3.53,0.9929
