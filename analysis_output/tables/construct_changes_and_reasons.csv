@@ -1,0 +1,10 @@
+﻿construct,brief_items(0-based cols),revised_items(0-based cols),why
+WL,"9, 10, 14, 7, 8","9, 10, 11, 14, 8","Added col 11 (skills exceed training; r=.44-.59 with the other workload items, unassigned in the brief). Dropped col 7 (agreed hours): a contract term rather than load, item-rest r~.1, and 'no agreement' (n=32) is missing."
+OS,"12, 13r, 20, 21, 22, 23, 24","12r, 13r, 20, 21, 22, 23, 24","Col 12 (difficulty with colleagues) must be reversed like col 13: both are 'difficulty' items on a distress scale, and col 12 correlates NEGATIVELY (-.29 to -.41) with the other support items."
+RET,"27r, 28, 29, 30, 31","27r, 28, 29r, 30r, 31r","Cols 29-31 (searched / updated CV / applied) are coded 1 = yes = leaving, so they must be reversed like col 27. As briefed, alpha = 0.03 (no internal consistency); reversed, alpha = 0.73."
+ID,"32, 33, 34","32, 33, 34","Cols 32-34 are the UWES-3 work-engagement items (energy, passion, absorption), not 'personal values'. Renamed Inner Drive (ID); the notation key's 'PV = Personal Values' should be renamed."
+MA,17r,17r,"Col 17 literally asks about personal-values vs organisation-direction mismatch, so it is the best Mission/Value-alignment item. Single item."
+PAY,16r,16r,"Single item (col 16, reversed so high = less pay strain). No reliability can be computed."
+JR,"15r, 18, 19, 25, 26","15r, 18, 19, 25, 26",Unchanged. Note JR and OS correlate strongly (see construct heatmap) -> watch VIF.
+JS,"51, 53, 57","51, 53, 57","Cols 51/53/57 are ProQOL compassion-satisfaction items (enjoy helping / work satisfies me / glad I chose this job). The block was optional, so n drops to ~203."
+BO,"35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47r","35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47r","Unchanged: 13 CBI items, col 47 reversed (correct)."

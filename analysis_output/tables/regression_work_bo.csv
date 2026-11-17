@@ -1,19 +1,19 @@
 ﻿predictor,key,std_beta,ci_low,ci_high,p_value,VIF,q_value_FDR
-Difficulty w/ supervisor,d_supervisor,0.2675,0.0802,0.4548,0.0054,3.392,0.0323
-Excess workload / uneven division,d_workload,0.2628,0.1098,0.4158,0.0009,2.2632,0.0155
-Unclear role definition,d_role,-0.2474,-0.4087,-0.0861,0.0028,2.5156,0.0256
-Free to voice concerns,r_voice,-0.2298,-0.4024,-0.0571,0.0094,2.8823,0.0338
-Job demands exceed training,d_skill,0.2019,0.0518,0.352,0.0087,2.1778,0.0338
-Skill development opportunity,r_skilldev,0.154,-0.0181,0.3261,0.0792,2.8626,0.2229
-Recognition,r_recognition,-0.1445,-0.3289,0.0399,0.1238,3.2868,0.2229
-Limited career path,d_career,0.1275,-0.0303,0.2853,0.1126,2.4065,0.2229
-Values misaligned w/ org,d_values,0.1162,-0.0198,0.2521,0.0936,1.7877,0.2229
-Control over how I work,r_autonomy,-0.114,-0.2564,0.0283,0.1157,1.9588,0.2229
-Client boundaries / emotional load,d_client,0.0904,-0.0405,0.2214,0.1747,1.6572,0.2858
-Supervisor support,r_supervisor,0.0902,-0.1094,0.2898,0.3737,3.8516,0.4805
-Career talks w/ leadership,r_careertalk,0.0808,-0.0806,0.2423,0.3243,2.519,0.4713
-Org supports work-life balance,r_wlb,-0.063,-0.2335,0.1075,0.4666,2.8095,0.5256
-Clear expectations,r_clear,-0.0601,-0.1841,0.064,0.3404,1.4872,0.4713
-Pay / conditions unsustainable,d_pay,-0.0472,-0.184,0.0896,0.4964,1.809,0.5256
-Difficulty w/ colleagues,d_coworker,-0.0462,-0.1793,0.0869,0.4941,1.7126,0.5256
-Colleague support,r_coworker,0.0432,-0.1051,0.1914,0.5664,2.1256,0.5664
+Unclear role definition,d_role,-0.2663,-0.412,-0.1206,0.0004,2.4404,0.0035
+Excess workload / uneven division,d_workload,0.2638,0.1235,0.4041,0.0003,2.2639,0.0035
+Difficulty w/ supervisor,d_supervisor,0.2203,0.0485,0.3922,0.0122,3.3948,0.0581
+Job demands exceed training,d_skill,0.1694,0.0362,0.3026,0.0129,2.0392,0.0581
+Free to voice concerns,r_voice,-0.1596,-0.3165,-0.0026,0.0463,2.832,0.1195
+Client boundaries / emotional load,d_client,0.1413,0.0227,0.26,0.0198,1.6196,0.0714
+Control over how I work,r_autonomy,-0.1185,-0.2467,0.0097,0.0699,1.8907,0.1574
+Clear expectations,r_clear,-0.1147,-0.2277,-0.0018,0.0465,1.466,0.1195
+Career talks w/ leadership,r_careertalk,0.1053,-0.0379,0.2485,0.1486,2.3567,0.2465
+Limited career path,d_career,0.1045,-0.0383,0.2473,0.1507,2.3449,0.2465
+Values misaligned w/ org,d_values,0.0984,-0.0293,0.2261,0.1304,1.8756,0.2465
+Recognition,r_recognition,-0.0979,-0.2599,0.0641,0.2347,3.0165,0.3521
+Org supports work-life balance,r_wlb,-0.08,-0.2305,0.0705,0.2961,2.6047,0.41
+Colleague support,r_coworker,0.0691,-0.0683,0.2065,0.3227,2.1702,0.4149
+Skill development opportunity,r_skilldev,0.0661,-0.0855,0.2178,0.391,2.6442,0.4692
+Supervisor support,r_supervisor,0.0369,-0.1452,0.2189,0.6903,3.8108,0.7765
+Pay / conditions unsustainable,d_pay,0.0172,-0.1085,0.1428,0.788,1.8143,0.8045
+Difficulty w/ colleagues,d_coworker,-0.0159,-0.1422,0.1104,0.8045,1.8337,0.8045

@@ -1,0 +1,19 @@
+﻿construct,version,n_items,items,cronbach_alpha,n_complete
+WL,brief,5,"d_workload, d_role, d_client, hours_agreed_ord, hours_actual_ord",0.686,202
+WL,revised,5,"d_workload, d_role, d_skill, d_client, hours_actual_ord",0.77,222
+OS,brief,7,"d_coworker, d_supervisor(rev), r_coworker, r_supervisor, r_recognition, r_wlb, r_voice",0.755,257
+OS,revised,7,"d_coworker(rev), d_supervisor(rev), r_coworker, r_supervisor, r_recognition, r_wlb, r_voice",0.873,257
+JR,brief,5,"d_career(rev), r_clear, r_autonomy, r_skilldev, r_careertalk",0.771,256
+JR,revised,5,"d_career(rev), r_clear, r_autonomy, r_skilldev, r_careertalk",0.771,256
+PAY,brief,1,d_pay(rev),,266
+PAY,revised,1,d_pay(rev),,266
+MA,brief,1,d_values(rev),,265
+MA,revised,1,d_values(rev),,265
+ID,brief,3,"u_energy, u_passion, u_absorbed",0.934,318
+ID,revised,3,"u_energy, u_passion, u_absorbed",0.934,318
+BO,brief,13,"b1, b2, b3, b4, b5, b6, w1, w2, w3, w4, w5, w6, w7(rev)",0.946,318
+BO,revised,13,"b1, b2, b3, b4, b5, b6, w1, w2, w3, w4, w5, w6, w7(rev)",0.946,318
+JS,brief,3,"cs1, cs2, cs3",0.819,241
+JS,revised,3,"cs1, cs2, cs3",0.819,241
+RET,brief,5,"consider_leaving(rev), expect_stay, job_search, resume, applied",0.028,269
+RET,revised,5,"consider_leaving(rev), expect_stay, job_search(rev), resume(rev), applied(rev)",0.731,269

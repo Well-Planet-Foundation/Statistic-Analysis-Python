@@ -1,0 +1,32 @@
+﻿key,variable,rho,p,n,q
+WL,Workload (0-100),0.5588,0.0,267,0.0
+OS,Organizational support (0-100),-0.5334,0.0,267,0.0
+d_workload,Excess workload / uneven division,0.5223,0.0,266,0.0
+r_wlb,Org supports work-life balance,-0.5113,0.0,267,0.0
+r_voice,Free to voice concerns,-0.4806,0.0,267,0.0
+d_supervisor,Difficulty w/ supervisor,0.4537,0.0,261,0.0
+r_recognition,Recognition,-0.4488,0.0,269,0.0
+JR,Job resources (0-100),-0.4462,0.0,268,0.0
+d_skill,Job demands exceed training,0.4434,0.0,267,0.0
+ID,Inner drive / engagement (0-100),-0.437,0.0,318,0.0
+d_client,Client boundaries / emotional load,0.4352,0.0,249,0.0
+d_values,Values misaligned w/ org,0.4198,0.0,265,0.0
+MA,Mission alignment (0-100),-0.4198,0.0,265,0.0
+d_career,Limited career path,0.4022,0.0,266,0.0
+r_autonomy,Control over how I work,-0.3962,0.0,269,0.0
+PAY,"Pay (0-100, high = less strain)",-0.3729,0.0,266,0.0
+d_pay,Pay / conditions unsustainable,0.3729,0.0,266,0.0
+d_role,Unclear role definition,0.3703,0.0,267,0.0
+JS,Job satisfaction (0-100),-0.3454,0.0,241,0.0
+proqol_cs,ProQOL compassion satisfaction,-0.3454,0.0,241,0.0
+d_coworker,Difficulty w/ colleagues,0.337,0.0,267,0.0
+r_skilldev,Skill development opportunity,-0.3044,0.0,267,0.0
+r_supervisor,Supervisor support,-0.2903,0.0,260,0.0
+r_coworker,Colleague support,-0.2794,0.0,269,0.0
+r_careertalk,Career talks w/ leadership,-0.2639,0.0,259,0.0
+hours_actual,Actual weekly hours (midpoint),0.2551,0.0001,242,0.0001
+r_clear,Clear expectations,-0.2355,0.0001,267,0.0001
+SIZE,Org size (ordinal 0-5),0.1512,0.0131,269,0.0145
+helping_yrs,Years in helping work (ordinal),-0.0762,0.1754,318,0.1875
+age_ord,Age (ordinal),-0.0752,0.1823,316,0.1884
+org_tenure,Tenure at org (ordinal),0.0046,0.9396,269,0.9396

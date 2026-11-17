@@ -1,0 +1,44 @@
+﻿construct,item,question,column_0based,reverse_scored,item_rest_rho,alpha_if_item_deleted
+WL,d_workload,Excess workload / uneven division,9,False,0.685,0.684
+WL,d_role,Unclear role definition,10,False,0.646,0.7
+WL,d_skill,Job demands exceed training,11,False,0.638,0.698
+WL,d_client,Client boundaries / emotional load,14,False,0.458,0.745
+WL,hours_actual_ord,Actual weekly hours (band 1-5),8,False,0.309,0.801
+OS,d_coworker,Difficulty w/ colleagues,12,True,0.442,0.881
+OS,d_supervisor,Difficulty w/ supervisor,13,True,0.67,0.849
+OS,r_coworker,Colleague support,20,False,0.632,0.86
+OS,r_supervisor,Supervisor support,21,False,0.728,0.841
+OS,r_recognition,Recognition,22,False,0.712,0.845
+OS,r_wlb,Org supports work-life balance,23,False,0.664,0.854
+OS,r_voice,Free to voice concerns,24,False,0.689,0.848
+JR,d_career,Limited career path,15,True,0.501,0.759
+JR,r_clear,Clear expectations,18,False,0.443,0.765
+JR,r_autonomy,Control over how I work,19,False,0.533,0.742
+JR,r_skilldev,Skill development opportunity,25,False,0.713,0.671
+JR,r_careertalk,Career talks w/ leadership,26,False,0.623,0.707
+PAY,d_pay,Pay / conditions unsustainable,16,True,,
+MA,d_values,Values misaligned w/ org,17,True,,
+ID,u_energy,Full of energy,32,False,0.85,0.91
+ID,u_passion,Passionate about work,33,False,0.869,0.888
+ID,u_absorbed,Absorbed in work,34,False,0.841,0.911
+BO,b1,Often tired,35,False,0.711,0.943
+BO,b2,Physically drained,36,False,0.725,0.942
+BO,b3,Emotionally drained,37,False,0.83,0.939
+BO,b4,'Can't take it anymore',38,False,0.823,0.938
+BO,b5,Completely exhausted,39,False,0.83,0.939
+BO,b6,Weak / about to get sick,40,False,0.738,0.941
+BO,w1,Work emotionally draining,41,False,0.822,0.939
+BO,w2,Work: about to collapse,42,False,0.837,0.938
+BO,w3,Work is frustrating,43,False,0.632,0.944
+BO,w4,Drained after work day,44,False,0.814,0.939
+BO,w5,Dread another work day,45,False,0.775,0.94
+BO,w6,Every work hour is an ordeal,46,False,0.733,0.942
+BO,w7,Energy for friends/family (rev.),47,True,0.206,0.957
+JS,cs1,Enjoy helping work,51,False,0.605,0.806
+JS,cs2,Work gives me satisfaction,53,False,0.689,0.754
+JS,cs3,Glad I chose this career,57,False,0.749,0.673
+RET,consider_leaving,Frequency considering leaving (0-4),27,True,0.627,0.669
+RET,expect_stay,Expect to stay 1 yr (1-5),28,False,0.548,0.692
+RET,job_search,Searched for jobs,29,True,0.59,0.671
+RET,resume,Updated resume,30,True,0.464,0.694
+RET,applied,Applied elsewhere,31,True,0.444,0.695

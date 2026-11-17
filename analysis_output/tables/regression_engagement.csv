@@ -1,19 +1,19 @@
 ﻿predictor,key,std_beta,ci_low,ci_high,p_value,VIF,q_value_FDR
-Control over how I work,r_autonomy,0.2187,0.0485,0.389,0.0121,1.9588,0.2178
-Free to voice concerns,r_voice,0.1805,-0.026,0.387,0.0863,2.8823,0.3882
-Clear expectations,r_clear,0.1556,0.0073,0.304,0.0399,1.4872,0.3588
-Recognition,r_recognition,0.1556,-0.065,0.3761,0.1656,3.2868,0.5963
-Values misaligned w/ org,d_values,-0.1447,-0.3073,0.018,0.081,1.7877,0.3882
-Org supports work-life balance,r_wlb,-0.1325,-0.3364,0.0714,0.2012,2.8095,0.6037
-Limited career path,d_career,-0.0771,-0.2658,0.1116,0.4213,2.4065,0.8011
-Supervisor support,r_supervisor,-0.0746,-0.3133,0.1642,0.5383,3.8516,0.8011
-Unclear role definition,d_role,0.071,-0.1219,0.264,0.4685,2.5156,0.8011
-Client boundaries / emotional load,d_client,-0.0709,-0.2275,0.0857,0.3729,1.6572,0.8011
-Difficulty w/ supervisor,d_supervisor,-0.0684,-0.2925,0.1556,0.5474,3.392,0.8011
-Difficulty w/ colleagues,d_coworker,0.0452,-0.114,0.2044,0.5758,1.7126,0.8011
-Skill development opportunity,r_skilldev,0.0445,-0.1613,0.2503,0.6699,2.8626,0.8011
-Career talks w/ leadership,r_careertalk,-0.0378,-0.2308,0.1553,0.7001,2.519,0.8011
-Job demands exceed training,d_skill,0.0356,-0.1439,0.2151,0.6961,2.1778,0.8011
-Excess workload / uneven division,d_workload,-0.0343,-0.2173,0.1487,0.7121,2.2632,0.8011
-Pay / conditions unsustainable,d_pay,-0.0156,-0.1792,0.148,0.8509,1.809,0.901
-Colleague support,r_coworker,0.0077,-0.1696,0.1851,0.9317,2.1256,0.9317
+Recognition,r_recognition,0.2095,0.0195,0.3994,0.0309,3.0165,0.1863
+Control over how I work,r_autonomy,0.1782,0.0278,0.3286,0.0205,1.8907,0.1863
+Free to voice concerns,r_voice,0.1581,-0.026,0.3422,0.0919,2.832,0.3059
+Clear expectations,r_clear,0.1459,0.0134,0.2783,0.0311,1.466,0.1863
+Values misaligned w/ org,d_values,-0.1376,-0.2874,0.0122,0.0717,1.8756,0.3059
+Limited career path,d_career,-0.133,-0.3005,0.0345,0.1189,2.3449,0.3059
+Unclear role definition,d_role,0.1251,-0.0458,0.296,0.1504,2.4404,0.3385
+Org supports work-life balance,r_wlb,-0.118,-0.2946,0.0585,0.189,2.6047,0.3402
+Client boundaries / emotional load,d_client,-0.1118,-0.251,0.0274,0.1148,1.6196,0.3059
+Difficulty w/ colleagues,d_coworker,0.1029,-0.0452,0.251,0.1722,1.8337,0.3402
+Supervisor support,r_supervisor,-0.0909,-0.3044,0.1226,0.4024,3.8108,0.616
+Career talks w/ leadership,r_careertalk,-0.0702,-0.2381,0.0977,0.4107,2.3567,0.616
+Skill development opportunity,r_skilldev,0.0681,-0.1098,0.2459,0.4515,2.6442,0.6252
+Difficulty w/ supervisor,d_supervisor,-0.0505,-0.2521,0.151,0.6217,3.3948,0.7461
+Job demands exceed training,d_skill,0.0441,-0.1121,0.2003,0.5787,2.0392,0.744
+Pay / conditions unsustainable,d_pay,-0.0309,-0.1782,0.1165,0.6801,1.8143,0.7652
+Excess workload / uneven division,d_workload,-0.0281,-0.1927,0.1365,0.737,2.2639,0.7804
+Colleague support,r_coworker,0.0215,-0.1396,0.1826,0.7928,2.1702,0.7928
