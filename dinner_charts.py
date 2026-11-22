@@ -165,29 +165,86 @@ def generate_satisfaction_chart(out: Out):
     out.save_fig(fig, "03_satisfaction/satisfaction_by_org.png")
 
 
-def generate_satisfaction_by_resource_chart(out: Out):
-    """Slide 14: Satisfaction by Resource Used (Stacked Bar Chart)."""
-    data = {
-        "NPO EAP 工作坊\n(Workshop)": [0, 10, 6, 3],
-        "牌卡: 口袋裡的心理師\n(Psychologist Card)": [0, 6, 4, 2],
-        "牌卡: 職能與價值\n(Career/Value Card)": [0, 3, 3, 0],
-        "線上課程\n(Online Courses)": [0, 5, 6, 2],
-        "書籍閱覽\n(Books)": [0, 2, 1, 0],
-        "諮商補助金\n(Counseling Subsidy)": [0, 1, 1, 0],
-        "無特別印象 / 未使用\n(Unused / No Impression)": [1, 1, 0, 0]
-    }
-    df = pd.DataFrame(data, index=["未填答/無法回答\n(Unanswered)", "有點滿意\n(Somewhat)", "滿意\n(Satisfied)", "非常滿意\n(Very Satisfied)"]).T
+def generate_satisfaction_by_resource_by_org_charts(out: Out):
+    """Satisfaction by Resource Used, broken down individually per organization with uniform categories."""
     
-    out.save_tab(df, "satisfaction_by_resource.csv")
+    # Standardized list of all 7 resource categories to keep identical layout across all three charts
+    standard_resources = [
+        "NPO EAP 工作坊\n(Workshop)",
+        "牌卡: 口袋裡的心理師\n(Psychologist Card)",
+        "牌卡: 職能與價值\n(Career/Value Card)",
+        "線上課程\n(Online Courses)",
+        "書籍閱覽\n(Books)",
+        "諮商補助金\n(Counseling Subsidy)",
+        "無特別印象 / 未使用\n(Unused / No Impression)"
+    ]
+    satisfaction_columns = ["未填答/無法回答\n(Unanswered)", "有點滿意\n(Somewhat)", "滿意\n(Satisfied)", "非常滿意\n(Very Satisfied)"]
 
+    # 1. RE-THINK Satisfaction by Resource (Uniform 7 categories)
+    rethink_raw = {
+        "NPO EAP 工作坊\n(Workshop)": [0, 5, 2, 0],
+        "牌卡: 口袋裡的心理師\n(Psychologist Card)": [0, 3, 1, 0],
+        "牌卡: 職能與價值\n(Career/Value Card)": [0, 0, 0, 0],
+        "線上課程\n(Online Courses)": [0, 2, 1, 0],
+        "書籍閱覽\n(Books)": [0, 1, 0, 0],
+        "諮商補助金\n(Counseling Subsidy)": [0, 1, 0, 0],
+        "無特別印象 / 未使用\n(Unused / No Impression)": [1, 0, 0, 0]
+    }
+    rethink_df = pd.DataFrame(rethink_raw, index=satisfaction_columns)[standard_resources].T
+    
+    out.save_tab(rethink_df, "rethink_satisfaction_by_resource.csv")
     fig, ax = plt.subplots(figsize=MATRIX)
-    df.plot(kind="bar", stacked=True, ax=ax, color=["#d3d3d3", "#f6c85f", "#8fd19e", "#2e86ab"], edgecolor="white")
+    rethink_df.plot(kind="bar", stacked=True, ax=ax, color=["#d3d3d3", "#f6c85f", "#8fd19e", "#2e86ab"], edgecolor="white")
     ax.set_ylabel("使用人數 / Number of Users", fontsize=11)
-    ax.set_title("各項安心資源的滿意度分佈 (Slide 14)\nSatisfaction Distribution by Resource Used", loc="left", fontweight="bold", fontsize=12)
+    ax.set_title("RE-THINK — 各項安心資源的滿意度分佈\nRE-THINK — Satisfaction Distribution by Resource Used", loc="left", fontweight="bold", fontsize=12)
     ax.legend(frameon=False, loc="upper right", fontsize=9, title="滿意度 / Satisfaction")
     plt.xticks(rotation=25, ha="right", fontsize=10)
     ax.grid(axis="x", visible=False)
-    out.save_fig(fig, "03_satisfaction/satisfaction_by_resource.png")
+    out.save_fig(fig, "03_satisfaction/rethink_satisfaction_by_resource.png")
+
+    # 2. DFC Satisfaction by Resource (Uniform 7 categories)
+    dfc_raw = {
+        "NPO EAP 工作坊\n(Workshop)": [0, 3, 2, 2],
+        "牌卡: 口袋裡的心理師\n(Psychologist Card)": [0, 2, 2, 1],
+        "牌卡: 職能與價值\n(Career/Value Card)": [0, 0, 1, 0],
+        "線上課程\n(Online Courses)": [1, 2, 2, 1],
+        "書籍閱覽\n(Books)": [0, 1, 0, 0],
+        "諮商補助金\n(Counseling Subsidy)": [0, 0, 1, 0],
+        "無特別印象 / 未使用\n(Unused / No Impression)": [0, 1, 0, 0]
+    }
+    dfc_df = pd.DataFrame(dfc_raw, index=satisfaction_columns)[standard_resources].T
+    
+    out.save_tab(dfc_df, "dfc_satisfaction_by_resource.csv")
+    fig, ax = plt.subplots(figsize=MATRIX)
+    dfc_df.plot(kind="bar", stacked=True, ax=ax, color=["#d3d3d3", "#f6c85f", "#8fd19e", "#2e86ab"], edgecolor="white")
+    ax.set_ylabel("使用人數 / Number of Users", fontsize=11)
+    ax.set_title("台灣童心創意行動協會 (DFC) — 各項安心資源的滿意度分佈\nDesign for Change Taiwan — Satisfaction Distribution by Resource Used", loc="left", fontweight="bold", fontsize=12)
+    ax.legend(frameon=False, loc="upper right", fontsize=9, title="滿意度 / Satisfaction")
+    plt.xticks(rotation=25, ha="right", fontsize=10)
+    ax.grid(axis="x", visible=False)
+    out.save_fig(fig, "03_satisfaction/dfc_satisfaction_by_resource.png")
+
+    # 3. WFWP Taiwan Satisfaction by Resource (Uniform 7 categories)
+    wfwp_raw = {
+        "NPO EAP 工作坊\n(Workshop)": [0, 2, 0, 3],
+        "牌卡: 口袋裡的心理師\n(Psychologist Card)": [0, 1, 0, 2],
+        "牌卡: 職能與價值\n(Career/Value Card)": [0, 1, 0, 4],
+        "線上課程\n(Online Courses)": [0, 1, 0, 3],
+        "書籍閱覽\n(Books)": [0, 0, 0, 1],
+        "諮商補助金\n(Counseling Subsidy)": [0, 0, 0, 0],
+        "無特別印象 / 未使用\n(Unused / No Impression)": [0, 0, 0, 0]
+    }
+    wfwp_df = pd.DataFrame(wfwp_raw, index=satisfaction_columns)[standard_resources].T
+    
+    out.save_tab(wfwp_df, "wfwp_satisfaction_by_resource.csv")
+    fig, ax = plt.subplots(figsize=MATRIX)
+    wfwp_df.plot(kind="bar", stacked=True, ax=ax, color=["#d3d3d3", "#f6c85f", "#8fd19e", "#2e86ab"], edgecolor="white")
+    ax.set_ylabel("使用人數 / Number of Users", fontsize=11)
+    ax.set_title("世界和平婦女會台灣總會 — 各項安心資源的滿意度分佈\nWFWP Taiwan — Satisfaction Distribution by Resource Used", loc="left", fontweight="bold", fontsize=12)
+    ax.legend(frameon=False, loc="upper right", fontsize=9, title="滿意度 / Satisfaction")
+    plt.xticks(rotation=25, ha="right", fontsize=10)
+    ax.grid(axis="x", visible=False)
+    out.save_fig(fig, "03_satisfaction/wfwp_satisfaction_by_resource.png")
 
 
 def generate_impression_heatmap(out: Out):
@@ -233,7 +290,7 @@ def main():
     generate_satisfaction_chart(out)
 
     print("\n[4/4] 正在生成進階交叉分析圖表與矩陣 (Generating Advanced Cross-Tabulation Charts & Heatmaps)...")
-    generate_satisfaction_by_resource_chart(out)
+    generate_satisfaction_by_resource_by_org_charts(out)
     generate_impression_heatmap(out)
 
     print(f"\n完成！所有圖表與數據表已儲存至: {os.path.abspath(out.root)}\n")

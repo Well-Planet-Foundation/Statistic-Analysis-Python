@@ -1,0 +1,15 @@
+﻿predictor,key,std_beta,robust_se,ci_low,ci_high,p_value,VIF,q_value_FDR,label
+Workload (0-100),WL,0.3928,0.0644,0.266,0.5197,0.0,1.8121,0.0,"Workload
+工作負荷"
+Inner drive / engagement (0-100),ID,-0.2779,0.0586,-0.3932,-0.1626,0.0,1.5325,0.0,"Inner drive / engagement
+工作投入／內在動力"
+Organizational support (0-100),OS,-0.253,0.0821,-0.4147,-0.0913,0.0023,2.8306,0.0115,"Organisational support
+組織支持"
+Job resources (0-100),JR,0.0591,0.0781,-0.0947,0.2129,0.45,2.844,0.7184,"Job resources
+工作資源"
+"Pay (0-100, high = less strain)",PAY,-0.0227,0.0599,-0.1407,0.0953,0.7049,1.6382,0.8811,"Pay (less strain)
+薪資（壓力較小）"
+Org size (ordinal 0-5),SIZE,-0.016,0.0533,-0.1209,0.0889,0.7646,1.2026,0.8822,"Organisation size
+機構規模"
+Mission alignment (0-100),MA,-0.0098,0.069,-0.1456,0.126,0.8866,1.726,0.9499,"Mission alignment
+價值契合"
