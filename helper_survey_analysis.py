@@ -1,1576 +1,2121 @@
+#!/usr/bin/env python3
 """
-2026 Taiwan Helpers' Needs Survey (Well Planet) -- analysis pipeline  (v2)
-========================================================================
+2026 Taiwan Helpers' Needs Survey (Well Planet / WPI IQP) -- analysis pipeline, v3.0
+====================================================================================
 
-Reads the raw Google-Forms CSV export and produces
-  * a cleaned, anonymised, numerically-coded dataset
-  * the model constructs for Equations 1-3 (Burnout, Job satisfaction, Retention) with reliability diagnostics
-  * descriptive charts, correlation heatmaps (incl. partial correlations), group tests
-  * Eq.1-3 as robust standardised OLS + a bootstrap mediation analysis
-  * a Markdown summary of the key findings
-EVERY chart is written as its own PNG (figures/<section>/<name>.png) so it can be dropped straight into a document.
+PURPOSE
+-------
+Reproducible analysis of the Google-Forms export of the 2026 survey.  It
 
-Usage
+  1. loads and cleans the data **by 0-based column position, with a header-text check** on every
+     column so that a re-ordered export fails loudly instead of silently mis-scoring;
+  2. builds the nine constructs of a *simplified Job Demands-Resources (JD-R) model*
+     (WL, OS, JR, PAY, MA, ID, BO, JS, RET) under three explicitly named specifications;
+  3. reports psychometrics (alpha, omega, item-rest r) and an automatic coding audit;
+  4. estimates the three structural equations of the brief, **separately for organisation-based and
+     self-employed respondents**, with heteroskedasticity-robust (HC3) inference;
+  5. treats the non-ignorable-looking missingness in the optional job-satisfaction block with a
+     missingness model, multiple imputation (Rubin's rules) and a delta-adjusted tipping-point analysis;
+  6. fits parallel mediation (BCa bootstrap, unstandardised indirect effects) as an *associational* path model;
+  7. quantifies the **support gap**: what is provided (staff view vs decision-maker view), what is wanted,
+     and what is unmet;
+  8. validates the numbers against those printed in the IQP project report (Section 4.1.4);
+  9. writes tables (CSV), figures (PNG), a run manifest (JSON) and a Markdown report.
+
+THE SIMPLIFIED JD-R MODEL (equations from the brief; all columns are 0-based)
+-----------------------------------------------------------------------------
+  Eq.1  BO  = b0 + b1 WL + b2 OS + b3 JR + b4 PAY + b5 MA + b6 ID + g1 SIZE + g2 MISSION + e1
+  Eq.2  JS  = a0 + a1 WL + a2 OS + a3 JR + a4 PAY + a5 MA + a6 ID + g3 SIZE + g4 MISSION + e2
+  Eq.3  RET = d0 + d1 JS + d2 BO + g5 SIZE + g6 MISSION + e3
+  (Eq.3b = Eq.3 plus all six predictors; a sensitivity check on direct effects, never a causal decomposition.)
+
+  The brief's notation "PV (Personal Values)" is the UWES-3 work-engagement block (cols 32-34); it is called
+  ID ("inner drive") here.  "Job satisfaction" (cols 51, 53, 57) is the ProQOL *compassion satisfaction*
+  block; the name JS is kept for continuity with the brief, but it is not a general job-satisfaction scale.
+
+SPECIFICATIONS (see SPECS below)
+--------------------------------
+  brief_literal : item membership AND reverse-coding exactly as supplied.
+  primary       : the brief's membership; ONLY direction errors repaired (cols 12, 29, 30, 31 reversed).
+                  Every headline result uses this one.  Rationale: "minimal intervention" -- a sign error is
+                  a coding defect, whereas dropping/adding items is an analyst judgement.
+  extended      : primary + col 11 added to WL, col 7 dropped from WL (the v2 script's revisions); sensitivity.
+
+PRE-SPECIFIED INFERENTIAL FAMILIES (multiplicity control)
+---------------------------------------------------------
+  Primary family   : the 14 structural slopes of Eq.1-3 (6 + 6 + 2), per respondent group and per estimation
+                     method; Benjamini-Hochberg FDR is applied inside that family only.
+  Exploratory      : everything else (correlations, group contrasts, gap tests, subgroup tables).  Each table
+                     has its own FDR family and is labelled exploratory; none is confirmatory.
+
+USAGE
 -----
-    python helper_survey_analysis.py                       # auto-finds *.csv in cwd
     python helper_survey_analysis.py --input survey.csv --out results
-    python helper_survey_analysis.py --no-ml --boot 500    # faster run
+    python helper_survey_analysis.py --input survey.csv --out results --boot 5000 --m 50
+    python helper_survey_analysis.py --selftest            # numerical unit checks, no data needed
 
-Requirements: pandas, numpy, scipy, matplotlib, seaborn  (scikit-learn optional)
+REQUIREMENTS: Python >= 3.10, numpy, pandas, scipy, matplotlib, scikit-learn (for the imputation engine).
+statsmodels is NOT required; if it is installed the self-test cross-validates the internal OLS/HC3 against it.
 
-Privacy: e-mail addresses, free-text answers, timestamps and any non-county text typed in the county
-field (some respondents typed their names) are dropped and never written to any output file.
-Note the cleaned CSV still holds role/age/gender/county/org-size together: share it only with the research team.
+PRIVACY: e-mail, free text, timestamps and county names are never written.  The analysis dataset keeps coarse
+demographics (role, age band, gender, region, org size); share it only inside the research team.
 
-Chart labels are in English so no CJK font is required.
+CITING / REPRODUCIBILITY: the run manifest records the SHA-256 of the input file, package versions, the random
+seed and the command line.  Same input + same seed + same versions => identical tables.
 """
 from __future__ import annotations
 
 import argparse
-import glob
+import hashlib
+import json
+import logging
 import math
-import os
+import platform
 import re
 import sys
-import warnings
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable, Iterable, Sequence
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from scipy import stats
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from scipy import stats  # noqa: E402
 
-warnings.filterwarnings("ignore")
+try:  # imputation engine is optional at import time so --selftest works everywhere
+    from sklearn.experimental import enable_iterative_imputer  # noqa: F401
+    from sklearn.impute import IterativeImputer
+    from sklearn.linear_model import BayesianRidge
+except ImportError:  # pragma: no cover
+    IterativeImputer = None
 
-# --------------------------------------------------------------------------- #
-# Configuration
-# --------------------------------------------------------------------------- #
-MIN_PAIR_N = 20          # minimum pairwise-complete N for a correlation
-MIN_GROUP_N = 10         # minimum group size shown in the segment heatmap
-MIN_TEST_GROUP_N = 5     # minimum group size included in Kruskal-Wallis tests
-ALPHA = 0.05
-# Commonly used CBI cut-offs on the 0-100 scale (adjust if your protocol differs)
-BURNOUT_BINS = [-0.1, 49.99, 74.99, 100.0]
+__version__ = "3.0"
+LOG = logging.getLogger("helper_survey")
+
+# =============================================================================================== #
+# 1. CONFIGURATION
+# =============================================================================================== #
+SEED = 20260101            # master seed; every random operation derives from it
+MIN_PAIR_N = 20            # minimum pairwise-complete N for a correlation
+MIN_GROUP_N = 10           # minimum group size for any group statistic
+N_IMPUTATIONS = 20         # default number of multiple imputations (>= 20 recommended for FMI up to ~0.3)
+N_BOOT = 2000              # default bootstrap resamples
+ALPHA_LEVEL = 0.05
+DELTA_GRID = (-15, -10, -5, 0, 5, 10, 15)   # tipping-point shifts of imputed JS (0-100 points)
+BURNOUT_BINS = [-0.1, 49.99, 74.99, 100.0]  # CBI-style cut-offs; adjust to your protocol
 BURNOUT_LABELS = ["Low (<50)", "Moderate (50-74)", "High (75+)"]
 
-sns.set_theme(style="whitegrid", context="notebook", font_scale=0.95)
-PALETTE = sns.color_palette("deep")
+GROUP_ORG, GROUP_SELF = "Organisation", "Self-employed"
 
-# --------------------------------------------------------------------------- #
-# Answer-label -> numeric maps (keys are whitespace-stripped, dash-normalised)
-# --------------------------------------------------------------------------- #
-DISTRESS = {"完全沒有": 0, "輕微": 1, "中等": 2, "嚴重": 3, "非常嚴重": 4}
-AGREE = {"非常不同意": 1, "不同意": 2, "普通": 3, "同意": 4, "非常同意": 5}
-LEAVE = {"從未": 0, "一次或兩次": 1, "一個月一次": 2, "一週一次": 3, "每天": 4}
-STAY = {"確定不會": 1, "應該不會": 2, "不確定": 3,
-        "應該會，但不確定更久以後": 4, "會，而且我打算長期待下去": 5}
-YESNO = {"有": 1, "無": 0}
-UWES = {"從未": 1, "幾乎從不": 2, "很少": 3, "有時": 4, "經常": 5, "非常經常": 6, "總是": 7}
-OVERWORK = {"從未或幾乎從未": 1, "不常": 2, "有時候": 3, "常常": 4, "總是": 5}
-PROQOL = {"從未有過": 1, "很少": 2, "有些時候": 3, "經常如此": 4, "總是如此": 5}
-
-SIZE_ORDER = ["1-4人", "5-10人", "11-15人", "16-30人", "31-50人", "51人以上"]
-SIZE_LABEL = ["1-4", "5-10", "11-15", "16-30", "31-50", "51+"]
-TENURE_ORDER = ["1年以內", "1年以上，未滿3年", "3年以上，未滿5年",
-                "5年以上，未滿8年", "8年以上，未滿15年", "15年以上"]
-TENURE_LABEL = ["<1 yr", "1-3 yrs", "3-5 yrs", "5-8 yrs", "8-15 yrs", "15+ yrs"]
-AGE_ORDER = ["18-24歲", "25-29歲", "30-34歲", "35-39歲", "40-49歲", "50歲以上"]
-AGE_LABEL = ["18-24", "25-29", "30-34", "35-39", "40-49", "50+"]
-HOURS_AGREED = {"20小時以下": "<=20", "21-40小時": "21-40", "41小時以上": "41+",
-                "沒有明確約定": "No agreement"}
-HOURS_ACTUAL_MID = {"20小時以下": 15, "21-40小時": 30, "41-50小時": 45,
-                    "51-60小時": 55, "61小時以上": 65}
-HOURS_ACTUAL_LABEL = {"20小時以下": "<=20", "21-40小時": "21-40", "41-50小時": "41-50",
-                      "51-60小時": "51-60", "61小時以上": "61+"}
-
-# ordered (substring -> label) rules; first match wins
-RULES_TYPE = [("獨立工作者", "Freelancer / independent"),
-              ("同時有機構工作", "Org + personal projects"),
-              ("隸屬於一個機構", "Org-affiliated")]
-RULES_ORG = [("財團法人基金會", "Foundation"), ("政府部門", "Government / commissioned"),
-             ("社團法人", "Association / society"), ("社會福利機構", "Social welfare agency"),
-             ("社會企業", "Social enterprise"), ("地方創生", "Community / regional team")]
-RULES_ROLE = [("創辦人", "Founder / decision-maker"), ("中階", "Mid-level manager"),
-              ("第一線", "Frontline helper"), ("行政", "Admin / project / finance"),
-              ("人資", "HR / training")]
-RULES_GENDER = [("非二元", "Non-binary / other"), ("女性", "Female"), ("男性", "Male"),
-                ("不願透露", "Prefer not to say")]
-COUNTY_EN = {"臺北市": "Taipei", "新北市": "New Taipei", "基隆市": "Keelung", "桃園市": "Taoyuan",
-             "新竹市": "Hsinchu City", "新竹縣": "Hsinchu County", "苗栗縣": "Miaoli",
-             "臺中市": "Taichung", "彰化縣": "Changhua", "南投縣": "Nantou", "雲林縣": "Yunlin",
-             "嘉義市": "Chiayi City", "嘉義縣": "Chiayi County", "臺南市": "Tainan",
-             "高雄市": "Kaohsiung", "屏東縣": "Pingtung", "宜蘭縣": "Yilan", "花蓮縣": "Hualien",
-             "臺東縣": "Taitung", "澎湖縣": "Penghu", "金門縣": "Kinmen", "連江縣": "Lienchiang"}
-
-# multi-select option keywords -> English label
-SUPPORT_KW = [("個別心理諮詢", "Individual counselling"), ("團體減壓", "Group stress relief"),
-              ("督導或教練", "Supervision / coaching"), ("領導力", "Leadership training"),
-              ("專業職能培訓", "Professional skills training"), ("專業技能培訓", "Professional skills training"),
-              ("職涯發展", "Career development"), ("內部溝通", "Internal communication"),
-              ("彈性工時", "Flexible / remote work"), ("遠距", "Flexible / remote work"),
-              ("職務代理津貼", "Acting-position allowance"), ("財務規劃", "Financial planning")]
-BARRIER_KW = [("預算不足", "Insufficient budget"), ("決策者不認為", "Decision-makers see no need"),
-              ("沒有人有餘力", "No one has capacity"), ("沒有專人", "No one has capacity"),
-              ("不知道從哪裡開始", "Don't know where to start"),
-              ("被視為抱怨", "Fear of seeming to complain"), ("規模太小", "Org too small"),
-              ("市場上沒有適合", "No programme for micro-orgs"), ("內部需求不明確", "Unclear internal needs"),
-              ("不了解這類方案", "Unclear benefits"), ("董事會", "Board not supportive"),
-              ("我不確定", "Not sure")]
-
-# --------------------------------------------------------------------------- #
-# Variable definitions: (key, English label, header fragment)
-# Org block and freelancer block share the same fragments; the first match is
-# the organisational column, the second (".1") the freelancer one, and they are
-# coalesced into one variable.
-# --------------------------------------------------------------------------- #
-D_ITEMS = [("d_workload", "Excess workload / uneven division", "[工作量過大"),
-           ("d_role", "Unclear role definition", "[角色定位不清"),
-           ("d_skill", "Job demands exceed training", "[工作要求的能力超出"),
-           ("d_coworker", "Difficulty w/ colleagues", "[與同事溝通困難]"),
-           ("d_supervisor", "Difficulty w/ supervisor", "[與主管溝通困難]"),
-           ("d_client", "Client boundaries / emotional load", "[與服務對象之間的界線"),
-           ("d_career", "Limited career path", "[職涯發展受限"),
-           ("d_pay", "Pay / conditions unsustainable", "[薪資與勞動條件"),
-           ("d_values", "Values misaligned w/ org", "[個人價值觀與機構方向不契合]")]
-R_ITEMS = [("r_clear", "Clear expectations", "[我清楚知道工作上對我的期待"),
-           ("r_autonomy", "Control over how I work", "[我能掌控自己執行工作的方式]"),
-           ("r_coworker", "Colleague support", "[工作遇到困難時，同事會幫助我]"),
-           ("r_supervisor", "Supervisor support", "[工作遇到困難時，主管會支持我]"),
-           ("r_recognition", "Recognition", "[我的貢獻在工作中有獲得足夠的肯定"),
-           ("r_wlb", "Org supports work-life balance", "[我的組織支持工作與個人生活"),
-           ("r_voice", "Free to voice concerns", "[我可以自由地向組織的管理層表達"),
-           ("r_skilldev", "Skill development opportunity", "[我在工作中有機會進一步發展"),
-           ("r_careertalk", "Career talks w/ leadership", "[我的主管或組織負責人，會與我討論職涯")]
-UWES_ITEMS = [("u_energy", "Full of energy", "[在工作時，我感到充滿能量。]"),
-              ("u_passion", "Passionate about work", "[我對我的工作充滿熱忱。]"),
-              ("u_absorbed", "Absorbed in work", "[我沉浸在我的工作中。]")]
-# first 6 = personal burnout; last 7 = work-related burnout; the final one is reverse-scored
-CBI_ITEMS = [("b1", "Often tired", "[你常覺得疲勞嗎"),
-             ("b2", "Physically drained", "[你常覺得身體上體力透支嗎"),
-             ("b3", "Emotionally drained", "[你常覺得情緒上心力交瘁嗎"),
-             ("b4", "'Can't take it anymore'", "我快要撐不下去了"),
-             ("b5", "Completely exhausted", "[你常覺得精疲力竭嗎"),
-             ("b6", "Weak / about to get sick", "[你常常覺得虛弱"),
-             ("w1", "Work emotionally draining", "[你的工作會令人情緒上心力交瘁嗎"),
-             ("w2", "Work: about to collapse", "[你的工作會讓你覺得快要累垮了嗎"),
-             ("w3", "Work is frustrating", "[你的工作會讓你覺得挫折嗎"),
-             ("w4", "Drained after work day", "[工作一整天之後"),
-             ("w5", "Dread another work day", "[上班之前只要想到"),
-             ("w6", "Every work hour is an ordeal", "[上班時你會覺得每一刻都很難熬嗎"),
-             ("w7", "Energy for friends/family (rev.)", "[不工作的時候")]
-PQ_ITEMS = [("sts1", "Affected by traumatised clients", "[我想我已經被這些我所幫助"),
-            ("bo1", "Feel stuck in helping work", "[從事助人的工作讓我感到陷入困境"),
-            ("cs1", "I enjoy helping work", "[我喜歡從事助人的工作"),
-            ("sts2", "Discouraged by traumatised clients", "[我所幫助的嚴重創傷經驗者讓我感到沮喪"),
-            ("cs2", "Work gives me satisfaction", "[我的工作使我感到滿意"),
-            ("bo2", "Exhausted because I'm a helper", "[我覺得筋疲力竭，因為"),
-            ("bo3", "Overwhelmed by endless workload", "[我覺得很受不了"),
-            ("sts3", "Intrusive / frightening thoughts", "[由於我助人的結果"),
-            ("cs3", "Glad I chose this career", "[我很高興我選擇了做這份工作")]
-
-LABELS: dict[str, str] = {k: l for k, l, _ in D_ITEMS + R_ITEMS + UWES_ITEMS + CBI_ITEMS + PQ_ITEMS}
-LABELS.update({
-    "demands_idx": "Job-demand index (0-4)", "resources_idx": "Job-resource index (1-5)",
-    "personal_bo": "Personal burnout (0-100)", "work_bo": "Work-related burnout (0-100)",
-    "engagement": "Work engagement UWES-3 (1-7)", "proqol_cs": "ProQOL compassion satisfaction",
-    "proqol_bo": "ProQOL burnout", "proqol_sts": "ProQOL secondary traumatic stress",
-    "consider_leaving": "Frequency considering leaving (0-4)", "expect_stay": "Expect to stay 1 yr (1-5)",
-    "job_search_n": "Job-search behaviours (0-3)", "hours_actual": "Actual weekly hours (midpoint)",
-    "helping_yrs": "Years in helping work (ordinal)", "org_tenure": "Tenure at org (ordinal)",
-    "org_size": "Org size (ordinal)", "age_ord": "Age (ordinal)",
-    "job_search": "Searched for jobs", "resume": "Updated resume", "applied": "Applied elsewhere",
-})
-
-
-# --------------------------------------------------------------------------- #
-# MODEL SPECIFICATION  (Equations 1-3)
-# All column numbers below are 0-BASED (pandas .iloc positions), exactly as in
-# the research team's brief.  Items are located by header text, and the script
-# verifies at start-up that the header text really sits at the stated position.
-#
-#   Eq.1  Burnout (BO)          = b0 + b1 WL + b2 OS + b3 JR + b4 PAY + b5 MA + b6 ID + g1 SIZE + g2 MISSION + e1
-#   Eq.2  Job satisfaction (JS) = a0 + a1 WL + a2 OS + a3 JR + a4 PAY + a5 MA + a6 ID + g3 SIZE + g4 MISSION + e2
-#   Eq.3  Retention (RET)       = d0 + d1 JS + d2 BO + g5 SIZE + g6 MISSION + e3
-# --------------------------------------------------------------------------- #
-EXTRA_FRAG = {"hours_agreed_ord": "「約定」的每週工時", "hours_actual_ord": "「過去七天」",
-              "consider_leaving": "多常認真考慮離開", "expect_stay": "你預期一年後",
-              "job_search": "[主動搜尋其他工作機會]", "resume": "[更新你的履歷]",
-              "applied": "[申請其他工作機會]", "SIZE": "你的機構目前全職人數",
-              "MISSION": "你的機構主要服務領域"}
-ITEM_FRAG = {k: f for k, _, f in D_ITEMS + R_ITEMS + UWES_ITEMS + CBI_ITEMS + PQ_ITEMS}
-ITEM_FRAG.update(EXTRA_FRAG)
-
-# theoretical (min, max) of each coded item -> used for 0-100 "percent of maximum possible" (POMP) scaling,
-# so that items answered on different scales (0-4, 1-5, 1-7, yes/no, hour bands) can be averaged fairly
-ITEM_RANGE = {}
-ITEM_RANGE.update({k: (0, 4) for k, _, _ in D_ITEMS})
-ITEM_RANGE.update({k: (1, 5) for k, _, _ in R_ITEMS + CBI_ITEMS + PQ_ITEMS})
-ITEM_RANGE.update({k: (1, 7) for k, _, _ in UWES_ITEMS})
-ITEM_RANGE.update({"hours_agreed_ord": (1, 3), "hours_actual_ord": (1, 5), "consider_leaving": (0, 4),
-                   "expect_stay": (1, 5), "job_search": (0, 1), "resume": (0, 1), "applied": (0, 1)})
-HOURS_AGREED_ORD = {"20小時以下": 1, "21-40小時": 2, "41小時以上": 3}          # "no agreement" -> missing
-HOURS_ACTUAL_ORD = {"20小時以下": 1, "21-40小時": 2, "41-50小時": 3, "51-60小時": 4, "61小時以上": 5}
-
-_BO = [(f"b{i}", 0) for i in range(1, 7)] + [(f"w{i}", 0) for i in range(1, 7)] + [("w7", 1)]
-# (item key, reverse-scored?)  ---- 1) the specification EXACTLY as supplied by the team
-SPEC_USER = {
-    "WL": [("d_workload", 0), ("d_role", 0), ("d_client", 0), ("hours_agreed_ord", 0), ("hours_actual_ord", 0)],
-    "OS": [("d_coworker", 0), ("d_supervisor", 1), ("r_coworker", 0), ("r_supervisor", 0),
-           ("r_recognition", 0), ("r_wlb", 0), ("r_voice", 0)],
-    "JR": [("d_career", 1), ("r_clear", 0), ("r_autonomy", 0), ("r_skilldev", 0), ("r_careertalk", 0)],
-    "PAY": [("d_pay", 1)], "MA": [("d_values", 1)],
-    "ID": [("u_energy", 0), ("u_passion", 0), ("u_absorbed", 0)],
-    "BO": _BO,
-    "JS": [("cs1", 0), ("cs2", 0), ("cs3", 0)],
-    "RET": [("consider_leaving", 1), ("expect_stay", 0), ("job_search", 0), ("resume", 0), ("applied", 0)],
-}
-USER_COLS = {"WL": [7, 8, 9, 10, 14], "OS": [12, 13, 20, 21, 22, 23, 24], "JR": [15, 18, 19, 25, 26],
-             "PAY": [16], "MA": [17], "ID": [32, 33, 34], "BO": list(range(35, 48)), "JS": [51, 53, 57],
-             "RET": [27, 28, 29, 30, 31]}
-# ---- 2) the REVISED specification used for every result in this script (reasons in CONSTRUCT_NOTES)
-SPEC = {k: list(v) for k, v in SPEC_USER.items()}
-SPEC["WL"] = [("d_workload", 0), ("d_role", 0), ("d_skill", 0), ("d_client", 0), ("hours_actual_ord", 0)]
-SPEC["OS"] = [("d_coworker", 1), ("d_supervisor", 1), ("r_coworker", 0), ("r_supervisor", 0),
-              ("r_recognition", 0), ("r_wlb", 0), ("r_voice", 0)]
-SPEC["RET"] = [("consider_leaving", 1), ("expect_stay", 0), ("job_search", 1), ("resume", 1), ("applied", 1)]
-MIN_FRAC = {"PAY": 1.0, "MA": 1.0, "ID": 1.0, "JS": 1.0}       # all other composites: >= 50% of items answered
-
-CONSTRUCT_NOTES = {
-    "WL": "Added col 11 (skills exceed training; r=.44-.59 with the other workload items, unassigned in the brief). "
-          "Dropped col 7 (agreed hours): a contract term rather than load, item-rest r~.1, and 'no agreement' (n=32) is missing.",
-    "OS": "Col 12 (difficulty with colleagues) must be reversed like col 13: both are 'difficulty' items on a distress scale, "
-          "and col 12 correlates NEGATIVELY (-.29 to -.41) with the other support items.",
-    "RET": "Cols 29-31 (searched / updated CV / applied) are coded 1 = yes = leaving, so they must be reversed like col 27. "
-           "As briefed, alpha = 0.03 (no internal consistency); reversed, alpha = 0.73.",
-    "ID": "Cols 32-34 are the UWES-3 work-engagement items (energy, passion, absorption), not 'personal values'. "
-          "Renamed Inner Drive (ID); the notation key's 'PV = Personal Values' should be renamed.",
-    "MA": "Col 17 literally asks about personal-values vs organisation-direction mismatch, so it is the best Mission/Value-alignment item. Single item.",
-    "PAY": "Single item (col 16, reversed so high = less pay strain). No reliability can be computed.",
-    "JR": "Unchanged. Note JR and OS correlate strongly (see construct heatmap) -> watch VIF.",
-    "JS": "Cols 51/53/57 are ProQOL compassion-satisfaction items (enjoy helping / work satisfies me / glad I chose this job). "
-          "The block was optional, so n drops to ~203.",
-    "BO": "Unchanged: 13 CBI items, col 47 reversed (correct).",
-}
+CONSTRUCTS = ["WL", "OS", "JR", "PAY", "MA", "ID", "BO", "JS", "RET"]
+PREDICTORS = ["WL", "OS", "JR", "PAY", "MA", "ID"]
 MISSION_KW = [("兒童與青少年", "mis_child", "Children & youth"), ("身心障礙", "mis_disab", "Disability"),
               ("高齡與長照", "mis_elder", "Elder & long-term care"), ("教育與學習", "mis_edu", "Education"),
               ("經濟弱勢家庭", "mis_lowinc", "Low-income families"), ("心理健康", "mis_mh", "Mental health"),
               ("社會創新", "mis_policy", "Social innovation / advocacy"), ("婦女與性別", "mis_women", "Women & gender")]
 MISSION_KEYS = [k for _, k, _ in MISSION_KW]
-CONSTRUCTS = ["WL", "OS", "JR", "PAY", "MA", "ID", "BO", "JS", "RET"]
-PREDICTORS = ["WL", "OS", "JR", "PAY", "MA", "ID"]
-LABELS.update({"WL": "Workload (0-100)", "OS": "Organizational support (0-100)", "JR": "Job resources (0-100)",
-               "PAY": "Pay (0-100, high = less strain)", "MA": "Mission alignment (0-100)",
-               "ID": "Inner drive / engagement (0-100)", "BO": "Burnout (0-100)",
-               "JS": "Job satisfaction (0-100)", "RET": "Retention (0-100)", "SIZE": "Org size (ordinal 0-5)",
-               "d_skill": "Job demands exceed training", "hours_actual_ord": "Actual weekly hours (band 1-5)",
-               "hours_agreed_ord": "Agreed weekly hours (band 1-3)", "total_bo": "Burnout, all 13 items (0-100)"})
-LABELS.update({k: lab for _, k, lab in MISSION_KW})
-LABELS.update({"cs1": "Enjoy helping work", "cs2": "Work gives me satisfaction", "cs3": "Glad I chose this career"})
+
+LABELS: dict[str, str] = {
+    "WL": "Workload", "OS": "Organisational support", "JR": "Job resources", "PAY": "Pay (high = less strain)",
+    "MA": "Mission alignment", "ID": "Inner drive (UWES-3 engagement)", "BO": "Burnout (CBI)",
+    "JS": "Job satisfaction (ProQOL CS)", "RET": "Retention", "SIZE": "Organisation size (0-5)",
+    "MISSION": "Mission (joint test of 8 dummies)", "work_bo": "Work-related burnout", "personal_bo": "Personal burnout",
+    "proqol_bo": "ProQOL burnout", "proqol_sts": "ProQOL secondary traumatic stress", "proqol_cs": "ProQOL compassion satisfaction",
+    **{k: l for _, k, l in MISSION_KW},
+}
+
+# --------------------------------------------------------------------------------------------- #
+# Answer-label -> numeric maps.  Keys are whitespace-stripped / dash-normalised (see norm()).
+# --------------------------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class Scale:
+    """A response scale: label->code mapping and the theoretical (lo, hi) used for 0-100 POMP rescaling."""
+    mapping: dict
+    lo: float
+    hi: float
 
 
-# --------------------------------------------------------------------------- #
-# Generic helpers
-# --------------------------------------------------------------------------- #
+SCALES: dict[str, Scale] = {
+    "distress": Scale({"完全沒有": 0, "輕微": 1, "中等": 2, "嚴重": 3, "非常嚴重": 4}, 0, 4),
+    "agree": Scale({"非常不同意": 1, "不同意": 2, "普通": 3, "同意": 4, "非常同意": 5}, 1, 5),
+    "leave_freq": Scale({"從未": 0, "一次或兩次": 1, "一個月一次": 2, "一週一次": 3, "每天": 4}, 0, 4),
+    "stay": Scale({"確定不會": 1, "應該不會": 2, "不確定": 3, "應該會，但不確定更久以後": 4,
+                   "會，而且我打算長期待下去": 5}, 1, 5),
+    "yesno": Scale({"有": 1, "無": 0}, 0, 1),
+    "uwes": Scale({"從未": 1, "幾乎從不": 2, "很少": 3, "有時": 4, "經常": 5, "非常經常": 6, "總是": 7}, 1, 7),
+    "cbi_freq": Scale({"從未或幾乎從未": 1, "不常": 2, "有時候": 3, "常常": 4, "總是": 5}, 1, 5),
+    "proqol": Scale({"從未有過": 1, "很少": 2, "有些時候": 3, "經常如此": 4, "總是如此": 5}, 1, 5),
+    # hour bands are ORDINAL codes; "no agreement" / "irregular" are deliberately missing (not a band)
+    "hours_agreed": Scale({"20小時以下": 1, "21-40小時": 2, "41小時以上": 3}, 1, 3),
+    "hours_actual": Scale({"20小時以下": 1, "21-40小時": 2, "41-50小時": 3, "51-60小時": 4, "61小時以上": 5}, 1, 5),
+}
+
+
+@dataclass(frozen=True)
+class Item:
+    """One survey item.  `col` is the 0-based column of the organisation block; `alt_col` is the identical
+    question in the self-employed block.  `anchor` must occur in the header text of both columns."""
+    col: int
+    key: str
+    label: str
+    scale: str
+    anchor: str
+    alt_col: int | None = None
+
+
+def _cbi(col: int, key: str, label: str, anchor: str) -> Item:
+    return Item(col, key, label, "cbi_freq", anchor, col + 41)
+
+
+def _pq(col: int, key: str, label: str, anchor: str) -> Item:
+    return Item(col, key, label, "proqol", anchor, col + 42)
+
+
+ITEMS: list[Item] = [
+    Item(7, "hours_agreed", "Agreed weekly hours (band)", "hours_agreed", "「約定」的每週工時"),
+    Item(8, "hours_actual", "Actual hours, past 7 days (band)", "hours_actual", "「過去七天」"),
+    Item(9, "d_workload", "Excess workload / uneven division", "distress", "[工作量過大"),
+    Item(10, "d_role", "Unclear role definition", "distress", "[角色定位不清"),
+    Item(11, "d_skill", "Demands exceed training", "distress", "[工作要求的能力超出"),
+    Item(12, "d_coworker", "Difficulty with colleagues", "distress", "[與同事溝通困難]"),
+    Item(13, "d_supervisor", "Difficulty with supervisor", "distress", "[與主管溝通困難]"),
+    Item(14, "d_client", "Client boundaries / emotional load", "distress", "[與服務對象之間的界線"),
+    Item(15, "d_career", "Limited career path", "distress", "[職涯發展受限"),
+    Item(16, "d_pay", "Pay / conditions unsustainable", "distress", "[薪資與勞動條件"),
+    Item(17, "d_values", "Values misaligned with org", "distress", "[個人價值觀與機構方向不契合]"),
+    Item(18, "r_clear", "Clear expectations", "agree", "[我清楚知道工作上對我的期待"),
+    Item(19, "r_autonomy", "Control over how I work", "agree", "[我能掌控自己執行工作的方式]"),
+    Item(20, "r_coworker", "Colleague support", "agree", "[工作遇到困難時，同事會幫助我]"),
+    Item(21, "r_supervisor", "Supervisor support", "agree", "[工作遇到困難時，主管會支持我]"),
+    Item(22, "r_recognition", "Recognition", "agree", "[我的貢獻在工作中有獲得足夠的肯定"),
+    Item(23, "r_wlb", "Org supports work-life balance", "agree", "[我的組織支持工作與個人生活"),
+    Item(24, "r_voice", "Free to voice concerns", "agree", "[我可以自由地向組織的管理層表達"),
+    Item(25, "r_skilldev", "Skill-development opportunity", "agree", "[我在工作中有機會進一步發展"),
+    Item(26, "r_careertalk", "Career talks with leadership", "agree", "[我的主管或組織負責人，會與我討論職涯"),
+    Item(27, "consider_leaving", "Frequency of seriously considering leaving", "leave_freq", "多常認真考慮離開"),
+    Item(28, "expect_stay", "Expect to stay one more year", "stay", "你預期一年後"),
+    Item(29, "job_search", "Searched for other jobs", "yesno", "[主動搜尋其他工作機會]"),
+    Item(30, "resume", "Updated CV", "yesno", "[更新你的履歷]"),
+    Item(31, "applied", "Applied elsewhere", "yesno", "[申請其他工作機會]"),
+    Item(32, "u_energy", "Full of energy", "uwes", "[在工作時，我感到充滿能量。]", 73),
+    Item(33, "u_passion", "Passionate about work", "uwes", "[我對我的工作充滿熱忱。]", 74),
+    Item(34, "u_absorbed", "Absorbed in work", "uwes", "[我沉浸在我的工作中。]", 75),
+    _cbi(35, "b1", "Often tired", "[你常覺得疲勞嗎"),
+    _cbi(36, "b2", "Physically drained", "[你常覺得身體上體力透支嗎"),
+    _cbi(37, "b3", "Emotionally drained", "[你常覺得情緒上心力交瘁嗎"),
+    _cbi(38, "b4", "'Cannot take it anymore'", "我快要撐不下去了"),
+    _cbi(39, "b5", "Completely exhausted", "[你常覺得精疲力竭嗎"),
+    _cbi(40, "b6", "Weak / about to get sick", "[你常常覺得虛弱"),
+    _cbi(41, "w1", "Work emotionally draining", "[你的工作會令人情緒上心力交瘁嗎"),
+    _cbi(42, "w2", "Work: about to collapse", "[你的工作會讓你覺得快要累垮了嗎"),
+    _cbi(43, "w3", "Work is frustrating", "[你的工作會讓你覺得挫折嗎"),
+    _cbi(44, "w4", "Drained after a work day", "[工作一整天之後"),
+    _cbi(45, "w5", "Dread another work day", "[上班之前只要想到"),
+    _cbi(46, "w6", "Every work hour is an ordeal", "[上班時你會覺得每一刻都很難熬嗎"),
+    _cbi(47, "w7", "Energy left for friends/family", "[不工作的時候"),
+    _pq(49, "sts1", "Affected by traumatised clients", "[我想我已經被這些我所幫助"),
+    _pq(50, "bo1", "Feel trapped by helping work", "[從事助人的工作讓我感到陷入困境"),
+    _pq(51, "cs1", "I like helping work", "[我喜歡從事助人的工作"),
+    _pq(52, "sts2", "Depressed by traumatised clients", "[我所幫助的嚴重創傷經驗者讓我感到沮喪"),
+    _pq(53, "cs2", "Work satisfies me", "[我的工作使我感到滿意"),
+    _pq(54, "bo2", "Exhausted because I am a helper", "[我覺得筋疲力竭，因為"),
+    _pq(55, "bo3", "Overwhelmed by endless workload", "[我覺得很受不了"),
+    _pq(56, "sts3", "Intrusive / frightening thoughts", "[由於我助人的結果"),
+    _pq(57, "cs3", "Glad I chose this work", "[我很高興我選擇了做這份工作"),
+]
+ITEM_BY_KEY = {i.key: i for i in ITEMS}
+LABELS.update({i.key: i.label for i in ITEMS})
+
+# Profile / free-choice columns: key -> (0-based column, header anchor)
+PROFILE_COLS = {
+    "type": (1, "工作型態"), "org_type": (2, "機構的性質"), "size": (3, "全職人數"), "mission": (4, "主要服務領域"),
+    "helping_yrs": (5, "助人工作總年資"), "tenure": (6, "機構的總年資"), "role": (58, "角色"),
+    "sup_have_staff": (59, "就你所知"), "sup_want_staff": (60, "最希望機構增加"), "bar_staff": (61, "還沒有建立"),
+    "sup_have_dm": (62, "你的機構目前有以下哪些支持制度"), "sup_want_dm": (63, "最希望為你的機構增加"),
+    "bar_dm": (64, "導入這類方案"), "prog_interest": (66, "免費的支持方案"), "dm_attitude": (67, "決策者"),
+    "helping_yrs_self": (69, "助人工作總年資"), "challenge_1": (70, "第一大挑戰"), "challenge_2": (71, "第二大挑戰"),
+    "challenge_3": (72, "第三大挑戰"), "gender": (101, "性別"), "age": (102, "年齡"), "county": (103, "縣市"),
+}
+
+SIZE_ORDER = ["1-4人", "5-10人", "11-15人", "16-30人", "31-50人", "51人以上"]
+SIZE_LABEL = ["1-4", "5-10", "11-15", "16-30", "31-50", "51+"]
+TENURE_ORDER = ["1年以內", "1年以上，未滿3年", "3年以上，未滿5年", "5年以上，未滿8年", "8年以上，未滿15年", "15年以上"]
+TENURE_LABEL = ["<1 yr", "1-3 yrs", "3-5 yrs", "5-8 yrs", "8-15 yrs", "15+ yrs"]
+AGE_ORDER = ["18-24歲", "25-29歲", "30-34歲", "35-39歲", "40-49歲", "50歲以上"]
+AGE_LABEL = ["18-24", "25-29", "30-34", "35-39", "40-49", "50+"]
+RULES_TYPE = [("獨立工作者", "Freelancer / independent"), ("同時有機構工作", "Org + personal projects"),
+              ("隸屬於一個機構", "Org-affiliated")]
+RULES_ORG = [("財團法人基金會", "Foundation"), ("政府部門", "Government / commissioned"), ("社團法人", "Association / society"),
+             ("社會福利機構", "Social welfare agency"), ("社會企業", "Social enterprise"), ("地方創生", "Community / regional team")]
+RULES_ROLE = [("創辦人", "Founder / decision-maker"), ("中階", "Mid-level manager"), ("第一線", "Frontline helper"),
+              ("行政", "Admin / project / finance"), ("人資", "HR / training")]
+RULES_GENDER = [("非二元", "Non-binary / other"), ("女性", "Female"), ("男性", "Male"), ("不願透露", "Prefer not to say")]
+COUNTY_EN = {"臺北市": "Taipei", "新北市": "New Taipei", "基隆市": "Keelung", "桃園市": "Taoyuan", "新竹市": "Hsinchu City",
+             "新竹縣": "Hsinchu County", "苗栗縣": "Miaoli", "臺中市": "Taichung", "彰化縣": "Changhua", "南投縣": "Nantou",
+             "雲林縣": "Yunlin", "嘉義市": "Chiayi City", "嘉義縣": "Chiayi County", "臺南市": "Tainan", "高雄市": "Kaohsiung",
+             "屏東縣": "Pingtung", "宜蘭縣": "Yilan", "花蓮縣": "Hualien", "臺東縣": "Taitung", "澎湖縣": "Penghu",
+             "金門縣": "Kinmen", "連江縣": "Lienchiang"}
+
+# --------------------------------------------------------------------------------------------- #
+# Construct specifications.   (item key, reverse-scored?)   Reverse => 100 - POMP.
+# --------------------------------------------------------------------------------------------- #
+_BO_ITEMS = [(f"b{i}", 0) for i in range(1, 7)] + [(f"w{i}", 0) for i in range(1, 7)] + [("w7", 1)]
+SPEC_BRIEF_LITERAL: dict[str, list[tuple[str, int]]] = {
+    "WL": [("hours_agreed", 0), ("hours_actual", 0), ("d_workload", 0), ("d_role", 0), ("d_client", 0)],     # cols 7,8,9,10,14
+    "OS": [("d_coworker", 0), ("d_supervisor", 1), ("r_coworker", 0), ("r_supervisor", 0), ("r_recognition", 0),
+           ("r_wlb", 0), ("r_voice", 0)],                                                                       # cols 12,13r,20-24
+    "JR": [("d_career", 1), ("r_clear", 0), ("r_autonomy", 0), ("r_skilldev", 0), ("r_careertalk", 0)],      # cols 15r,18,19,25,26
+    "PAY": [("d_pay", 1)],                                                                                      # col 16r
+    "MA": [("d_values", 1)],                                                                                    # col 17r
+    "ID": [("u_energy", 0), ("u_passion", 0), ("u_absorbed", 0)],                                              # cols 32-34
+    "BO": _BO_ITEMS,                                                                                            # cols 35-47, 47r
+    "JS": [("cs1", 0), ("cs2", 0), ("cs3", 0)],                                                                 # cols 51,53,57
+    "RET": [("consider_leaving", 1), ("expect_stay", 0), ("job_search", 0), ("resume", 0), ("applied", 0)],   # cols 27r,28-31
+}
+SPEC_PRIMARY = {k: list(v) for k, v in SPEC_BRIEF_LITERAL.items()}
+SPEC_PRIMARY["OS"][0] = ("d_coworker", 1)      # col 12 is a 'difficulty' item like col 13 -> must be reversed too
+SPEC_PRIMARY["RET"] = [("consider_leaving", 1), ("expect_stay", 0), ("job_search", 1), ("resume", 1), ("applied", 1)]
+SPEC_EXTENDED = {k: list(v) for k, v in SPEC_PRIMARY.items()}
+SPEC_EXTENDED["WL"] = [("hours_actual", 0), ("d_workload", 0), ("d_role", 0), ("d_skill", 0), ("d_client", 0)]
+SPECS = {"brief_literal": SPEC_BRIEF_LITERAL, "primary": SPEC_PRIMARY, "extended": SPEC_EXTENDED}
+SPEC_NOTES = {
+    "OS col 12": "Difficulty with colleagues is a distress item (higher = worse) exactly like col 13, which the brief already "
+                 "reverses; left unreversed it correlates negatively with every other support item (see coding audit).",
+    "RET cols 29-31": "Coded 1 = yes = looking to leave, so they must be reversed like col 27; as briefed the scale has "
+                      "alpha near zero because the items cancel each other.",
+    "WL col 11 / col 7": "(extended spec only) col 11 was unassigned in the brief and correlates with the other demand items; "
+                         "col 7 is a contract term, not a load, and 'no agreement' is missing.",
+    "ID (PV)": "Cols 32-34 are the UWES-3 engagement items, not 'personal values'.",
+    "JS": "Cols 51/53/57 are ProQOL compassion-satisfaction items in an OPTIONAL block preceded by a trauma warning.",
+}
+MIN_FRAC = {"PAY": 1.0, "MA": 1.0, "ID": 1.0, "JS": 1.0}   # all other composites: >= 50% of items answered
+
+# Values printed in the IQP report (Section 4.1.4) -- the benchmark for the validation step.
+# standardised betas; (n, R2) per equation.
+IQP_BENCHMARK = {
+    "Eq1_BO": {"n": 264, "r2": 0.504, "beta": {"WL": 0.393, "OS": 0.253, "JR": 0.059, "PAY": -0.023, "MA": -0.010,
+                                                "ID": -0.278, "SIZE": -0.016}},
+    "Eq2_JS": {"n": 199, "r2": 0.506, "beta": {"WL": 0.026, "OS": -0.189, "JR": 0.186, "PAY": 0.034, "MA": 0.078,
+                                                "ID": 0.596, "SIZE": -0.056}},
+    "Eq3_RET": {"n": 203, "r2": 0.143, "beta": {"JS": 0.061, "BO": -0.287, "SIZE": -0.074}},
+}
+IQP_SIG = {"Eq1_BO": {"WL": "***", "OS": "**", "ID": "***"}, "Eq2_JS": {"OS": "*", "JR": "*", "ID": "***"},
+           "Eq3_RET": {"BO": "***"}}
+
+
+# =============================================================================================== #
+# 2. GENERIC HELPERS
+# =============================================================================================== #
 def norm(v):
-    """Strip whitespace and normalise dashes so label matching is robust."""
+    """Strip all whitespace and normalise dash variants so label matching is robust to typing differences."""
     if pd.isna(v):
         return np.nan
     return re.sub(r"\s+", "", str(v)).replace("–", "-").replace("—", "-").replace("－", "-")
 
 
-def find_cols(df: pd.DataFrame, frag: str) -> list[str]:
-    return [c for c in df.columns if frag in c]
-
-
-def coalesce(df: pd.DataFrame, frag: str, mapper=None, exact: bool = False) -> pd.Series:
-    """Combine all columns that contain `frag` (org + freelancer blocks) into one Series."""
-    cols = [c for c in df.columns if (c.strip() == frag if exact else frag in c)]
-    if not cols:
-        print(f"  [warn] column not found for fragment: {frag!r}")
-        return pd.Series(np.nan, index=df.index)
-    out = pd.Series(np.nan, index=df.index, dtype="object")
-    for c in cols:
-        s = df[c].map(norm) if mapper is not None else df[c]
-        if mapper is not None:
-            s = s.map(lambda v: mapper.get(v, np.nan) if not pd.isna(v) else np.nan)
-        out = out.combine_first(s.astype("object"))
-    return pd.to_numeric(out, errors="coerce") if mapper is not None else out
-
-
-def label_rules(series: pd.Series, rules, default="Other") -> pd.Series:
+def label_rules(series: pd.Series, rules: Sequence[tuple[str, str]], default: str = "Other") -> pd.Series:
+    """First-substring-match labelling; NaN stays NaN."""
     def f(v):
         if pd.isna(v):
             return np.nan
-        for kw, lab in rules:
-            if kw in str(v):
-                return lab
-        return default
+        return next((lab for kw, lab in rules if kw in str(v)), default)
     return series.map(f)
 
 
-def ordinal(series: pd.Series, order: list[str], labels: list[str]):
-    """Return (ordinal code Series, ordered labelled Categorical)."""
+def ordinal(series: pd.Series, order: list[str], labels: list[str]) -> tuple[pd.Series, pd.Series]:
+    """Return (numeric ordinal code, ordered labelled Categorical)."""
     n = series.map(norm)
-    code = n.map({k: i for i, k in enumerate(order)}).astype(float)
-    cat = pd.Categorical(n.map(dict(zip(order, labels))), categories=labels, ordered=True)
+    code = n.map({norm(k): i for i, k in enumerate(order)}).astype(float)
+    cat = pd.Categorical(n.map({norm(k): l for k, l in zip(order, labels)}), categories=labels, ordered=True)
     return code, pd.Series(cat, index=series.index)
 
 
+def pomp(s: pd.Series, lo: float, hi: float, reverse: bool = False) -> pd.Series:
+    """Percent Of Maximum Possible: linear rescale to 0-100 (Cohen et al., 1999); reverse => 100 - x."""
+    x = (s - lo) / (hi - lo) * 100.0
+    return 100.0 - x if reverse else x
+
+
 def row_mean(frame: pd.DataFrame, min_frac: float = 0.5) -> pd.Series:
+    """Mean of available items, defined only if at least ceil(k * min_frac) items are present (prorating)."""
     ok = frame.notna().sum(axis=1) >= math.ceil(frame.shape[1] * min_frac)
     return frame.mean(axis=1).where(ok)
 
 
-def cronbach_alpha(items: pd.DataFrame) -> tuple[float, int]:
-    x = items.dropna()
-    k = x.shape[1]
-    if len(x) < 10 or k < 2:
-        return np.nan, len(x)
-    var_sum = x.var(axis=0, ddof=1).sum()
-    tot = x.sum(axis=1).var(ddof=1)
-    return (k / (k - 1)) * (1 - var_sum / tot), len(x)
-
-
-def bh_fdr(p: np.ndarray) -> np.ndarray:
-    """Benjamini-Hochberg adjusted p-values (NaN-safe)."""
-    p = np.asarray(p, dtype=float)
+def bh_fdr(p: Iterable[float]) -> np.ndarray:
+    """Benjamini-Hochberg (1995) adjusted p-values; NaN-safe; valid under independence / PRDS."""
+    p = np.asarray(list(p), dtype=float)
     q = np.full_like(p, np.nan)
     ok = ~np.isnan(p)
     pv = p[ok]
+    if pv.size == 0:
+        return q
     order = np.argsort(pv)
-    ranked = pv[order] * len(pv) / (np.arange(len(pv)) + 1)
+    ranked = pv[order] * pv.size / (np.arange(pv.size) + 1)
     ranked = np.minimum.accumulate(ranked[::-1])[::-1]
     adj = np.empty_like(pv)
-    adj[order] = np.minimum(ranked, 1)
+    adj[order] = np.minimum(ranked, 1.0)
     q[ok] = adj
     return q
 
 
 def stars(q: float) -> str:
+    if pd.isna(q):
+        return ""
     return "***" if q < 0.001 else "**" if q < 0.01 else "*" if q < 0.05 else ""
 
 
-def multiselect_counts(series: pd.Series, kw_map) -> pd.Series:
-    """% of answering respondents selecting each canonical option (keyword match)."""
-    ans = series.dropna()
-    ans = ans[ans.astype(str).str.strip() != ""]
-    labels = list(dict.fromkeys(l for _, l in kw_map))
-    counts = {lab: 0 for lab in labels}
-    for cell in ans:
-        hit = {lab for kw, lab in kw_map if kw in str(cell)}
-        for lab in hit:
-            counts[lab] += 1
-    return pd.Series(counts) / max(len(ans), 1) * 100, len(ans)
+def wilson_ci(k: int, n: int, z: float = 1.959964) -> tuple[float, float]:
+    """Wilson score interval for a proportion (better than Wald for small n / extreme p)."""
+    if n == 0:
+        return (np.nan, np.nan)
+    p = k / n
+    den = 1 + z ** 2 / n
+    centre = (p + z ** 2 / (2 * n)) / den
+    half = z * math.sqrt(p * (1 - p) / n + z ** 2 / (4 * n ** 2)) / den
+    return (centre - half, centre + half)
 
 
-def joined(df: pd.DataFrame, frag: str) -> pd.Series:
-    cols = find_cols(df, frag)
-    if not cols:
-        return pd.Series(np.nan, index=df.index, dtype="object")
-    return df[cols].apply(lambda r: " | ".join(str(x) for x in r.dropna()) or np.nan, axis=1)
+def newcombe_diff_ci(k1: int, n1: int, k2: int, n2: int) -> tuple[float, float]:
+    """Newcombe (1998) hybrid-score CI for p1 - p2 (method 10)."""
+    p1, p2 = k1 / n1, k2 / n2
+    l1, u1 = wilson_ci(k1, n1)
+    l2, u2 = wilson_ci(k2, n2)
+    d = p1 - p2
+    return (d - math.sqrt((p1 - l1) ** 2 + (u2 - p2) ** 2), d + math.sqrt((u1 - p1) ** 2 + (p2 - l2) ** 2))
 
 
-class Out:
-    """Output directory manager."""
+def md_table(df: pd.DataFrame, fmt: str = "{:.3g}") -> str:
+    """Minimal Markdown table writer (avoids the optional `tabulate` dependency)."""
+    cols = list(df.columns)
+    out = ["| " + " | ".join(map(str, cols)) + " |", "|" + "---|" * len(cols)]
+    for _, r in df.iterrows():
+        cells = [fmt.format(v) if isinstance(v, (float, np.floating)) and pd.notna(v)
+                 else ("" if pd.isna(v) else str(v)) for v in r.values]
+        out.append("| " + " | ".join(cells) + " |")
+    return "\n".join(out)
 
-    def __init__(self, root: str):
-        self.root = root
-        self.fig = os.path.join(root, "figures")
-        self.tab = os.path.join(root, "tables")
-        os.makedirs(self.fig, exist_ok=True)
-        os.makedirs(self.tab, exist_ok=True)
 
-    def save_fig(self, fig, name: str):
-        path = os.path.join(self.fig, name)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        fig.savefig(path, dpi=180, bbox_inches="tight", facecolor="white")
+class Output:
+    """Output-directory manager: every table is a CSV (UTF-8 with BOM for Excel); every figure its own PNG."""
+
+    def __init__(self, root: str | Path):
+        self.root = Path(root)
+        self.fig_dir, self.tab_dir = self.root / "figures", self.root / "tables"
+        self.fig_dir.mkdir(parents=True, exist_ok=True)
+        self.tab_dir.mkdir(parents=True, exist_ok=True)
+        self.tables: dict[str, pd.DataFrame] = {}
+
+    def table(self, df: pd.DataFrame, name: str, index: bool = False) -> pd.DataFrame:
+        df.to_csv(self.tab_dir / f"{name}.csv", index=index, encoding="utf-8-sig")
+        self.tables[name] = df
+        LOG.info("table  %s (%d rows)", name, len(df))
+        return df
+
+    def figure(self, fig, name: str) -> None:
+        fig.savefig(self.fig_dir / f"{name}.png", dpi=180, bbox_inches="tight", facecolor="white")
         plt.close(fig)
-        print(f"  figure -> {path}")
-
-    def save_tab(self, df: pd.DataFrame, name: str, index: bool = True):
-        path = os.path.join(self.tab, name)
-        df.to_csv(path, index=index, encoding="utf-8-sig")
-        print(f"  table  -> {path}")
+        LOG.info("figure %s", name)
 
 
-# --------------------------------------------------------------------------- #
-# 1. Load + clean
-# --------------------------------------------------------------------------- #
-def load_and_clean(path: str) -> tuple[pd.DataFrame, dict]:
-    raw = pd.read_csv(path)
-    print(f"Loaded {raw.shape[0]} responses x {raw.shape[1]} columns from {path}")
-    d = pd.DataFrame(index=raw.index)
-    meta: dict = {}
-
-    # --- profile -----------------------------------------------------------
-    d["respondent_type"] = label_rules(coalesce(raw, "你目前的助人／公益工作型態"), RULES_TYPE)
-    d["is_freelancer"] = (d["respondent_type"] == "Freelancer / independent").astype(int)
-    d["org_type"] = label_rules(coalesce(raw, "你任職機構的性質"), RULES_ORG)
-    d["org_size_code"], d["org_size_cat"] = ordinal(coalesce(raw, "你的機構目前全職人數"), SIZE_ORDER, SIZE_LABEL)
-    d["helping_yrs"], d["helping_yrs_cat"] = ordinal(coalesce(raw, "你的助人工作總年資"), TENURE_ORDER, TENURE_LABEL)
-    d["org_tenure"], d["org_tenure_cat"] = ordinal(coalesce(raw, "你在目前所屬機構的總年資"), TENURE_ORDER, TENURE_LABEL)
-    d["org_size"] = d["org_size_code"]
-    d["age_ord"], d["age_cat"] = ordinal(coalesce(raw, "年齡", exact=True), AGE_ORDER, AGE_LABEL)
-    d["role"] = label_rules(coalesce(raw, "你在機構中的角色"), RULES_ROLE)
-    d["gender"] = label_rules(coalesce(raw, "性別", exact=True), RULES_GENDER)
-    # county: map only known counties -> anything else (names/e-mails typed in error) is dropped
-    d["county"] = coalesce(raw, "主要工作縣市", exact=True).map(lambda v: COUNTY_EN.get(str(v).strip(), np.nan))
-    d["region"] = d["county"].map(lambda v: np.nan if pd.isna(v) else v if v in ("Taipei", "New Taipei") else "Other counties/cities")
-
-    agreed = coalesce(raw, "「約定」的每週工時").map(norm)
-    d["hours_agreed"] = agreed.map(HOURS_AGREED)
-    actual = coalesce(raw, "「過去七天」").map(norm)
-    d["hours_actual"] = actual.map(HOURS_ACTUAL_MID).astype(float)
-    d["hours_agreed_ord"] = agreed.map(HOURS_AGREED_ORD).astype(float)
-    d["hours_actual_ord"] = actual.map(HOURS_ACTUAL_ORD).astype(float)
-    d["hours_actual_cat"] = pd.Categorical(actual.map(HOURS_ACTUAL_LABEL),
-                                           categories=list(HOURS_ACTUAL_LABEL.values()), ordered=True)
-
-    # --- item-level scales -------------------------------------------------
-    for key, _, frag in D_ITEMS:
-        d[key] = coalesce(raw, frag, DISTRESS)
-    for key, _, frag in R_ITEMS:
-        d[key] = coalesce(raw, frag, AGREE)
-    for key, _, frag in UWES_ITEMS:
-        d[key] = coalesce(raw, frag, UWES)
-    for key, _, frag in CBI_ITEMS:
-        d[key] = coalesce(raw, frag, OVERWORK)
-    for key, _, frag in PQ_ITEMS:
-        d[key] = coalesce(raw, frag, PROQOL)
-
-    d["consider_leaving"] = coalesce(raw, "多常認真考慮離開", LEAVE)
-    d["expect_stay"] = coalesce(raw, "你預期一年後", STAY)
-    d["job_search"] = coalesce(raw, "[主動搜尋其他工作機會]", YESNO)
-    d["resume"] = coalesce(raw, "[更新你的履歷]", YESNO)
-    d["applied"] = coalesce(raw, "[申請其他工作機會]", YESNO)
-    sb = d[["job_search", "resume", "applied"]]
-    d["job_search_n"] = sb.sum(axis=1).where(sb.notna().all(axis=1))
-
-    # --- composite indices -------------------------------------------------
-    dk = [k for k, _, _ in D_ITEMS]
-    rk = [k for k, _, _ in R_ITEMS]
-    d["demands_idx"] = row_mean(d[dk])
-    d["resources_idx"] = row_mean(d[rk])
-    d["engagement"] = row_mean(d[[k for k, _, _ in UWES_ITEMS]], 1.0)
-
-    cbi = d[[k for k, _, _ in CBI_ITEMS]].copy()
-    cbi["w7"] = 6 - cbi["w7"]                       # reverse-score the 'energy left' item
-    cbi01 = (cbi - 1) / 4 * 100                      # 0-100 scale
-    d["personal_bo"] = row_mean(cbi01[[f"b{i}" for i in range(1, 7)]])
-    d["work_bo"] = row_mean(cbi01[[f"w{i}" for i in range(1, 8)]])
-    d["total_bo"] = row_mean(cbi01)
-    d["work_bo_level"] = pd.cut(d["work_bo"], BURNOUT_BINS, labels=BURNOUT_LABELS)
-    d["personal_bo_level"] = pd.cut(d["personal_bo"], BURNOUT_BINS, labels=BURNOUT_LABELS)
-    d["proqol_cs"] = row_mean(d[["cs1", "cs2", "cs3"]], 1.0)
-    d["proqol_bo"] = row_mean(d[["bo1", "bo2", "bo3"]], 1.0)
-    d["proqol_sts"] = row_mean(d[["sts1", "sts2", "sts3"]], 1.0)
-    d["high_leave"] = (d["consider_leaving"] >= 2).astype(float).where(d["consider_leaving"].notna())
-
-    # --- multi-select / text-based fields (kept raw for charts only) -------
-    d["_support_current"] = joined(raw, "你的機構目前有以下哪些支持制度")
-    d["_support_wanted"] = joined(raw, "你最希望")
-    d["_barriers"] = joined(raw, "還沒有建立這些制度").combine_first(joined(raw, "影響你的機構導入"))
-    d["_free_support"] = coalesce(raw, "什麼樣的支持，會對現在的你最有幫助")
-    d["_free_challenge1"] = coalesce(raw, "[第一大挑戰]")
-    d["program_interest"] = coalesce(raw, "免費的支持方案")
-    d["decision_maker_attitude"] = coalesce(raw, "決策者，對這件事")
-
-    # reliability of the scales (Cronbach alpha)
-    rel = []
-    for name, cols, scale in [
-        ("Job demands (9)", dk, d), ("Job resources (9)", rk, d),
-        ("UWES-3 engagement (3)", [k for k, _, _ in UWES_ITEMS], d),
-        ("CBI personal burnout (6)", [f"b{i}" for i in range(1, 7)], cbi),
-        ("CBI work burnout (7, w7 reversed)", [f"w{i}" for i in range(1, 8)], cbi),
-        ("ProQOL compassion satisfaction (3)", ["cs1", "cs2", "cs3"], d),
-        ("ProQOL burnout (3)", ["bo1", "bo2", "bo3"], d),
-        ("ProQOL secondary traumatic stress (3)", ["sts1", "sts2", "sts3"], d)]:
-        a, n = cronbach_alpha(scale[cols])
-        rel.append({"scale": name, "cronbach_alpha": round(a, 3), "n_complete": n})
-    meta["reliability"] = pd.DataFrame(rel)
-    meta["raw_n"] = len(raw)
-    add_model_variables(raw, d, meta)
-    return d, meta
+# =============================================================================================== #
+# 3. LOADING, LAYOUT VERIFICATION, CLEANING
+# =============================================================================================== #
+class LayoutError(RuntimeError):
+    """Raised when a column does not carry the header text the specification expects."""
 
 
-# --------------------------------------------------------------------------- #
-# 2. Statistics
-# --------------------------------------------------------------------------- #
-def spearman_matrix(df: pd.DataFrame, cols: list[str]):
-    n = len(cols)
-    rho = pd.DataFrame(np.nan, index=cols, columns=cols)
-    pv = rho.copy()
-    nn = rho.copy()
-    for i, a in enumerate(cols):
-        for j in range(i, n):
-            b = cols[j]
-            sub = df[[a, b]].dropna()
-            if i == j:
-                r, p = 1.0, 0.0
-            elif len(sub) >= MIN_PAIR_N and sub[a].nunique() > 1 and sub[b].nunique() > 1:
-                r, p = stats.spearmanr(sub[a], sub[b])
-            else:
-                r, p = np.nan, np.nan
-            rho.loc[a, b] = rho.loc[b, a] = r
-            pv.loc[a, b] = pv.loc[b, a] = p
-            nn.loc[a, b] = nn.loc[b, a] = len(sub)
-    iu = np.triu_indices(n, 1)
-    q = np.full((n, n), np.nan)
-    qv = bh_fdr(pv.values[iu])
-    q[iu] = qv
-    q = np.where(np.isnan(q), q.T, q)
-    np.fill_diagonal(q, 0.0)
-    return rho, pv, pd.DataFrame(q, index=cols, columns=cols), nn
-
-
-def long_corr(rho, pv, qv, nn) -> pd.DataFrame:
-    rows = []
-    cols = list(rho.columns)
-    for i, a in enumerate(cols):
-        for b in cols[i + 1:]:
-            rows.append({"var_1": LABELS.get(a, a), "var_2": LABELS.get(b, b),
-                         "spearman_rho": rho.loc[a, b], "p_value": pv.loc[a, b],
-                         "q_value_FDR": qv.loc[a, b], "n": int(nn.loc[a, b])})
-    out = pd.DataFrame(rows).dropna(subset=["spearman_rho"])
-    out["abs_rho"] = out["spearman_rho"].abs()
-    return out.sort_values("abs_rho", ascending=False).drop(columns="abs_rho")
-
-
-def group_tests(d: pd.DataFrame) -> pd.DataFrame:
-    segmenters = {"Respondent type": "respondent_type", "Org type": "org_type",
-                  "Org size": "org_size_cat", "Role": "role", "Gender": "gender",
-                  "Age": "age_cat", "Region": "region", "Years in helping work": "helping_yrs_cat",
-                  "Tenure at org": "org_tenure_cat", "Actual weekly hours": "hours_actual_cat",
-                  "Agreed weekly hours": "hours_agreed"}
-    outcomes = ["BO", "JS", "RET", "WL", "OS", "JR", "PAY", "MA", "ID", "work_bo", "personal_bo",
-                "proqol_sts", "consider_leaving"]
-    rows = []
-    for sname, scol in segmenters.items():
-        for o in outcomes:
-            sub = d[[scol, o]].dropna()
-            sub[scol] = sub[scol].astype(str)
-            vc = sub[scol].value_counts()
-            sub = sub[sub[scol].isin(vc[vc >= MIN_TEST_GROUP_N].index)]
-            groups = [g[o].values for _, g in sub.groupby(scol)]
-            if len(groups) < 2:
-                continue
-            if len(groups) == 2:
-                u, p = stats.mannwhitneyu(groups[0], groups[1], alternative="two-sided")
-                stat, test = u, "Mann-Whitney U"
-                eff = abs(1 - 2 * u / (len(groups[0]) * len(groups[1])))   # rank-biserial
-            else:
-                stat, p = stats.kruskal(*groups)
-                test = "Kruskal-Wallis H"
-                eff = stat / (len(sub) - 1)                                  # epsilon-squared
-            means = sub.groupby(scol)[o].mean().round(2).to_dict()
-            rows.append({"segment": sname, "outcome": LABELS.get(o, o), "test": test,
-                         "statistic": round(float(stat), 3), "p_value": p,
-                         "effect_size": round(float(eff), 3), "n": len(sub),
-                         "group_means": "; ".join(f"{k}={v}" for k, v in means.items())})
-    out = pd.DataFrame(rows)
-    out["q_value_FDR"] = bh_fdr(out["p_value"].values)
-    return out.sort_values("p_value")
-
-
-# --------------------------------------------------------------------------- #
-# 2b. Model variables, diagnostics and model-based statistics
-# --------------------------------------------------------------------------- #
-def pomp(s: pd.Series, lo: float, hi: float, reverse: bool = False) -> pd.Series:
-    """Percent Of Maximum Possible: rescale to 0-100 (reverse -> 100 - x) so mixed-scale items can be averaged."""
-    x = (s - lo) / (hi - lo) * 100
-    return 100 - x if reverse else x
-
-
-def scale_frame(d: pd.DataFrame, items) -> pd.DataFrame:
-    """Direction-aligned (higher = more of the construct), 0-100 item frame."""
-    return pd.DataFrame({k: pomp(d[k], *ITEM_RANGE[k], reverse=bool(r)) for k, r in items})
-
-
-def first_pos(raw: pd.DataFrame, frag: str) -> int:
-    for i, c in enumerate(raw.columns):
-        if frag in c:
-            return i
-    return -1
-
-
-def verify_user_columns(raw: pd.DataFrame) -> pd.DataFrame:
-    """Check that the 0-based column numbers in the brief land on the intended questions."""
-    pos = {k: first_pos(raw, f) for k, f in ITEM_FRAG.items()}
-    rows, ok = [], True
-    for cons, items in SPEC_USER.items():
-        found, listed = sorted(pos[k] for k, _ in items), sorted(USER_COLS[cons])
-        ok &= found == listed
-        rows.append({"construct": cons, "brief_columns": listed, "columns_found_by_header": found, "match": found == listed})
-    print("  column map (0-based) %s the brief" % ("MATCHES" if ok else "DOES NOT MATCH"))
+def verify_layout(raw: pd.DataFrame) -> pd.DataFrame:
+    """Check every positional column against its header anchor.  Returns an audit table; raises LayoutError
+    on any mismatch (a shifted export would otherwise silently score the wrong questions)."""
+    rows, bad = [], []
+    checks = [(i.col, i.key, i.anchor) for i in ITEMS] + [(i.alt_col, i.key + " (self-employed copy)", i.anchor)
+                                                          for i in ITEMS if i.alt_col is not None]
+    checks += [(c, k, a) for k, (c, a) in PROFILE_COLS.items()]
+    for col, key, anchor in checks:
+        header = str(raw.columns[col]) if col < raw.shape[1] else ""
+        ok = anchor in header
+        rows.append({"column_0based": col, "key": key, "anchor": anchor, "header_found": header[:70], "ok": ok})
+        if not ok:
+            bad.append(f"col {col} ({key}): expected '{anchor}' in header, found '{header[:60]}'")
+    if bad:
+        raise LayoutError("Questionnaire layout differs from the specification:\n  " + "\n  ".join(bad))
+    LOG.info("layout check passed for %d columns", len(rows))
     return pd.DataFrame(rows)
 
 
-def add_model_variables(raw: pd.DataFrame, d: pd.DataFrame, meta: dict) -> None:
-    meta["col_check"] = verify_user_columns(raw)
-    pos = {k: first_pos(raw, f) for k, f in ITEM_FRAG.items()}
-    meta["pos"] = pos
-    # ordinal hour bands (needed because 'hours' items are categorical in the questionnaire)
-    # (hours_*_ord are created in load_and_clean)
-    for cons in CONSTRUCTS:
-        d[cons] = scale_frame(d, SPEC[cons]).pipe(row_mean, MIN_FRAC.get(cons, 0.5))
-    d["SIZE"] = d["org_size_code"]
-    # Mission = multi-select service domains -> one 0/1 dummy per domain (>=10% prevalence); rarer ones are the reference
-    dom = coalesce(raw, "你的機構主要服務領域")
+# Answer labels that legitimately mean "no value" (not applicable / no fixed hours / no agreement).  They become
+# missing on purpose and are NOT counted as coding failures.
+NOT_APPLICABLE = {norm(x) for x in ("不適用", "沒有明確約定", "不固定，難以估算")}
+
+
+def _coded(raw: pd.DataFrame, col: int, scale: str) -> tuple[pd.Series, int]:
+    """Map one raw column through a Scale.  Returns (codes, number of non-empty cells with an UNRECOGNISED label);
+    declared not-applicable labels are silently missing."""
+    s = raw.iloc[:, col].map(norm)
+    mapping = {norm(k): v for k, v in SCALES[scale].mapping.items()}
+    coded = s.map(mapping).astype(float)
+    return coded, int((s.notna() & coded.isna() & ~s.isin(NOT_APPLICABLE)).sum())
+
+
+def load_and_clean(path: str | Path) -> tuple[pd.DataFrame, dict]:
+    """Read the CSV and return (analysis dataframe, metadata).  No free text, e-mail or timestamp is retained."""
+    raw = pd.read_csv(path)
+    LOG.info("loaded %d rows x %d columns", *raw.shape)
+    meta: dict = {"n_raw": len(raw), "layout": verify_layout(raw)}
+    d = pd.DataFrame(index=raw.index)
+
+    def pc(key: str) -> pd.Series:
+        return raw.iloc[:, PROFILE_COLS[key][0]]
+
+    # ---- respondent type and the two analysis groups -------------------------------------------------
+    d["respondent_type"] = label_rules(pc("type"), RULES_TYPE)
+    d["group"] = np.where(d["respondent_type"] == "Freelancer / independent", GROUP_SELF, GROUP_ORG)
+    d["hybrid"] = (d["respondent_type"] == "Org + personal projects").astype(int)
+    d["org_type"] = label_rules(pc("org_type"), RULES_ORG)
+    d["SIZE"], d["size_cat"] = ordinal(pc("size"), SIZE_ORDER, SIZE_LABEL)
+    d["helping_yrs"], d["helping_yrs_cat"] = ordinal(pc("helping_yrs").combine_first(pc("helping_yrs_self")),
+                                                      TENURE_ORDER, TENURE_LABEL)
+    d["org_tenure"], d["org_tenure_cat"] = ordinal(pc("tenure"), TENURE_ORDER, TENURE_LABEL)
+    d["age_ord"], d["age_cat"] = ordinal(pc("age"), AGE_ORDER, AGE_LABEL)
+    d["role"] = label_rules(pc("role"), RULES_ROLE)
+    d["gender"] = label_rules(pc("gender"), RULES_GENDER)
+    d["female"] = np.where(d["gender"].isna(), np.nan, (d["gender"] == "Female").astype(float))
+    county = pc("county").map(lambda v: COUNTY_EN.get(str(v).strip(), np.nan))   # anything else (typed names) is dropped
+    d["_county"] = county                                                       # internal only: used for the cluster-robust sensitivity, never exported
+    d["region"] = county.map(lambda v: np.nan if pd.isna(v) else "Taipei metro" if v in ("Taipei", "New Taipei") else "Other")
+    d["frontline"] = np.where(d["role"].isna(), np.nan, (d["role"] == "Frontline helper").astype(float))
+    d["manager"] = np.where(d["role"].isna(), np.nan, d["role"].isin(["Mid-level manager", "Founder / decision-maker"]).astype(float))
+
+    # ---- mission: multi-select -> one 0/1 dummy per domain (keyword match is delimiter-agnostic) ----------
+    dom = pc("mission")
     for kw, key, _ in MISSION_KW:
         d[key] = dom.map(lambda v, kw=kw: np.nan if pd.isna(v) else float(kw in str(v)))
-    d["mission_n"] = dom.map(lambda v: np.nan if pd.isna(v) else len([x for x in str(v).split(",") if x.strip()]))
-    # the brief's own specification, kept ONLY to quantify what the revision changed
-    user = pd.DataFrame({c: scale_frame(d, SPEC_USER[c]).pipe(row_mean, MIN_FRAC.get(c, 0.5)) for c in CONSTRUCTS})
-    meta["user_constructs"] = user
-    # reliability + item diagnostics, user vs revised
-    comp, diag = [], []
-    for cons in CONSTRUCTS:
-        for tag, spec in (("brief", SPEC_USER[cons]), ("revised", SPEC[cons])):
-            fr = scale_frame(d, spec)
-            a, n = cronbach_alpha(fr) if fr.shape[1] > 1 else (np.nan, int(fr.iloc[:, 0].notna().sum()))
-            comp.append({"construct": cons, "version": tag, "n_items": fr.shape[1],
-                         "items": ", ".join(f"{k}{'(rev)' if r else ''}" for k, r in spec),
-                         "cronbach_alpha": round(a, 3) if pd.notna(a) else np.nan, "n_complete": n})
-        fr = scale_frame(d, SPEC[cons])
-        for k, r in SPEC[cons]:
-            rest = fr.drop(columns=k)
-            sub = pd.concat([fr[k], rest.mean(axis=1) if rest.shape[1] else fr[k] * np.nan], axis=1).dropna()
-            irc = stats.spearmanr(sub.iloc[:, 0], sub.iloc[:, 1])[0] if len(sub) >= MIN_PAIR_N and sub.iloc[:, 0].nunique() > 1 else np.nan
-            ad = cronbach_alpha(rest)[0] if rest.shape[1] > 1 else np.nan
-            diag.append({"construct": cons, "item": k, "question": LABELS.get(k, k), "column_0based": pos[k],
-                         "reverse_scored": bool(r), "item_rest_rho": round(irc, 3) if pd.notna(irc) else np.nan,
-                         "alpha_if_item_deleted": round(ad, 3) if pd.notna(ad) else np.nan})
-    meta["spec_compare"] = pd.DataFrame(comp)
-    meta["item_diag"] = pd.DataFrame(diag)
-    cmp = []
-    for k, notes in CONSTRUCT_NOTES.items():
-        cmp.append({"construct": k, "brief_items(0-based cols)": ", ".join(f"{pos[i]}{'r' if r else ''}" for i, r in SPEC_USER[k]),
-                    "revised_items(0-based cols)": ", ".join(f"{pos[i]}{'r' if r else ''}" for i, r in SPEC[k]),
-                    "why": notes})
-    meta["changes"] = pd.DataFrame(cmp)
+    d["mission_n"] = d[MISSION_KEYS].sum(axis=1).where(dom.notna())
+
+    # ---- item-level coding (organisation block coalesced with the self-employed copy) -----------------------
+    unmapped: dict[str, int] = {}
+    for it in ITEMS:
+        s, bad = _coded(raw, it.col, it.scale)
+        if it.alt_col is not None:
+            s2, bad2 = _coded(raw, it.alt_col, it.scale)
+            s, bad = s.combine_first(s2), bad + bad2
+        d[it.key] = s
+        if bad:
+            unmapped[it.key] = bad
+    meta["unmapped_cells"] = unmapped
+    if unmapped:
+        LOG.warning("cells with an unrecognised answer label (set to missing): %s", unmapped)
+
+    # ---- raw multi-select text kept ONLY for the support-gap module (no free-text columns) -----------------
+    for k in ("sup_have_staff", "sup_want_staff", "bar_staff", "sup_have_dm", "sup_want_dm", "bar_dm",
+              "prog_interest", "dm_attitude", "challenge_1", "challenge_2", "challenge_3"):
+        d["_" + k] = pc(k)
+    d["support_branch"] = np.where(pc("sup_have_staff").notna(), "Staff", np.where(pc("sup_have_dm").notna(), "Decision-maker", None))
+
+    # ---- sub-scale composites that do not belong to the JD-R equations -----------------------------------
+    d["personal_bo"] = composite(d, [(f"b{i}", 0) for i in range(1, 7)])
+    d["work_bo"] = composite(d, [(f"w{i}", 0) for i in range(1, 7)] + [("w7", 1)])
+    d["personal_bo_level"] = pd.cut(d["personal_bo"], BURNOUT_BINS, labels=BURNOUT_LABELS)
+    d["work_bo_level"] = pd.cut(d["work_bo"], BURNOUT_BINS, labels=BURNOUT_LABELS)
+    d["proqol_cs"] = composite(d, [("cs1", 0), ("cs2", 0), ("cs3", 0)], 1.0)
+    d["proqol_bo"] = composite(d, [("bo1", 0), ("bo2", 0), ("bo3", 0)], 1.0)
+    d["proqol_sts"] = composite(d, [("sts1", 0), ("sts2", 0), ("sts3", 0)], 1.0)
+    return d, meta
 
 
-def fdr_sym(pv: pd.DataFrame) -> pd.DataFrame:
-    """BH-FDR over the upper triangle of a symmetric p-value matrix."""
-    n = pv.shape[0]
+# =============================================================================================== #
+# 4. SCORING
+# =============================================================================================== #
+def item_frame(d: pd.DataFrame, items: Sequence[tuple[str, int]]) -> pd.DataFrame:
+    """Direction-aligned (higher = more of the construct) 0-100 POMP item frame."""
+    return pd.DataFrame({k: pomp(d[k], SCALES[ITEM_BY_KEY[k].scale].lo, SCALES[ITEM_BY_KEY[k].scale].hi, bool(r))
+                         for k, r in items})
+
+
+def composite(d: pd.DataFrame, items: Sequence[tuple[str, int]], min_frac: float = 0.5) -> pd.Series:
+    return row_mean(item_frame(d, items), min_frac)
+
+
+def build_constructs(d: pd.DataFrame, spec: dict[str, list[tuple[str, int]]]) -> pd.DataFrame:
+    """All nine JD-R constructs (0-100, direction: high = more of the named construct) under one specification."""
+    return pd.DataFrame({c: composite(d, spec[c], MIN_FRAC.get(c, 0.5)) for c in CONSTRUCTS})
+
+
+def with_spec(d: pd.DataFrame, spec_name: str) -> pd.DataFrame:
+    """Copy of `d` whose nine construct columns are scored under the named specification."""
+    out = d.drop(columns=[c for c in CONSTRUCTS if c in d.columns]).copy()
+    return pd.concat([out, build_constructs(d, SPECS[spec_name])], axis=1)
+
+
+# =============================================================================================== #
+# 5. PSYCHOMETRICS
+# =============================================================================================== #
+def cronbach_alpha(items: pd.DataFrame) -> tuple[float, int]:
+    """Cronbach's alpha on complete cases.  For 0/1 items this equals KR-20.  Returns (alpha, n_complete)."""
+    x = items.dropna()
+    k = x.shape[1]
+    if len(x) < MIN_GROUP_N or k < 2:
+        return np.nan, len(x)
+    tot_var = x.sum(axis=1).var(ddof=1)
+    if tot_var <= 0:
+        return np.nan, len(x)
+    return (k / (k - 1)) * (1 - x.var(axis=0, ddof=1).sum() / tot_var), len(x)
+
+
+def one_factor_loadings(corr: np.ndarray, max_iter: int = 500, tol: float = 1e-7) -> np.ndarray:
+    """Principal-axis one-factor loadings (iterated communalities; Heywood cases clipped)."""
+    k = corr.shape[0]
+    try:
+        h = 1 - 1 / np.diag(np.linalg.inv(corr))        # squared multiple correlations as starting communalities
+    except np.linalg.LinAlgError:
+        h = np.full(k, 0.5)
+    h = np.clip(h, 0.05, 0.99)
+    load = np.sqrt(h)
+    for _ in range(max_iter):
+        red = corr.copy()
+        np.fill_diagonal(red, h)
+        w, v = np.linalg.eigh(red)
+        load = v[:, -1] * math.sqrt(max(w[-1], 1e-12))
+        if load.sum() < 0:
+            load = -load
+        h_new = np.clip(load ** 2, 0.005, 0.995)
+        if np.max(np.abs(h_new - h)) < tol:
+            h = h_new
+            break
+        h = h_new
+    return np.clip(load, -0.995, 0.995)
+
+
+def omega_total(items: pd.DataFrame) -> float:
+    """McDonald's omega-total from a one-factor model on Pearson correlations (complete cases).
+    NOTE: for the 13-item burnout composite (two sub-dimensions) a one-factor omega is a lower bound; ordinal /
+    polychoric CFA (e.g. lavaan WLSMV) is the recommended confirmation and is outside this script's scope."""
+    x = items.dropna()
+    if x.shape[1] < 3 or len(x) < MIN_GROUP_N or (x.std() == 0).any():
+        return np.nan
+    lam = one_factor_loadings(np.corrcoef(x.values.T))
+    num = lam.sum() ** 2
+    return float(num / (num + (1 - lam ** 2).sum()))
+
+
+def tucker_phi(a: np.ndarray, b: np.ndarray) -> float:
+    """Tucker's congruence coefficient between two loading vectors (>= .95 = 'equal', .85-.94 = fair similarity)."""
+    return float(np.sum(a * b) / math.sqrt(np.sum(a ** 2) * np.sum(b ** 2)))
+
+
+def alpha_boot_ci(items: pd.DataFrame, rng: np.random.Generator, B: int = 500) -> tuple[float, float]:
+    x = items.dropna().values
+    if x.shape[0] < MIN_GROUP_N or x.shape[1] < 2:
+        return (np.nan, np.nan)
+    vals = []
+    for _ in range(B):
+        s = x[rng.integers(0, len(x), len(x))]
+        tv = s.sum(axis=1).var(ddof=1)
+        if tv > 0:
+            vals.append(s.shape[1] / (s.shape[1] - 1) * (1 - s.var(axis=0, ddof=1).sum() / tv))
+    return tuple(np.percentile(vals, [2.5, 97.5])) if vals else (np.nan, np.nan)
+
+
+def reliability_table(d: pd.DataFrame, rng: np.random.Generator) -> pd.DataFrame:
+    """Alpha (with bootstrap CI), omega-total and mean inter-item r for every multi-item construct, every
+    specification, in the organisation group and (where n >= MIN_GROUP_N) the self-employed group."""
+    rows = []
+    for spec_name, spec in SPECS.items():
+        for cons in CONSTRUCTS:
+            if len(spec[cons]) < 2:
+                continue
+            for grp in (GROUP_ORG, GROUP_SELF):
+                fr = item_frame(d[d["group"] == grp], spec[cons])
+                if fr.notna().all(axis=1).sum() < MIN_GROUP_N:
+                    continue
+                a, n = cronbach_alpha(fr)
+                lo, hi = alpha_boot_ci(fr, rng)
+                cm = fr.dropna().corr().values
+                rows.append({"spec": spec_name, "group": grp, "construct": cons, "k_items": fr.shape[1],
+                             "alpha": a, "alpha_ci_low": lo, "alpha_ci_high": hi, "omega_total": omega_total(fr),
+                             "mean_inter_item_r": cm[np.triu_indices_from(cm, 1)].mean(), "n_complete": n})
+    return pd.DataFrame(rows)
+
+
+def coding_audit(d: pd.DataFrame) -> pd.DataFrame:
+    """Automatic direction audit.  For each item: Spearman correlation with the mean of the other items of its
+    construct (after the specification's reverse-coding).  A NEGATIVE value flags a probable coding/direction error;
+    this is how cols 12 and 29-31 were identified.  Organisation group only (the only group with all constructs)."""
+    org = d[d["group"] == GROUP_ORG]
+    rows = []
+    for spec_name, spec in SPECS.items():
+        for cons in CONSTRUCTS:
+            if len(spec[cons]) < 2:
+                continue
+            fr = item_frame(org, spec[cons])
+            for k, rev in spec[cons]:
+                rest = fr.drop(columns=k)
+                sub = pd.concat([fr[k], rest.mean(axis=1)], axis=1).dropna()
+                r = stats.spearmanr(sub.iloc[:, 0], sub.iloc[:, 1])[0] if len(sub) >= MIN_PAIR_N and sub.iloc[:, 0].nunique() > 1 else np.nan
+                a_del = cronbach_alpha(rest)[0] if rest.shape[1] > 1 else np.nan
+                rows.append({"spec": spec_name, "construct": cons, "item": k, "column_0based": ITEM_BY_KEY[k].col,
+                             "question": ITEM_BY_KEY[k].label, "reversed": bool(rev), "item_rest_rho": r,
+                             "alpha_if_deleted": a_del,
+                             "flag": "CHECK DIRECTION (negative item-rest r)" if pd.notna(r) and r < 0 else
+                                     "weak item (r < .20)" if pd.notna(r) and r < 0.20 else ""})
+    return pd.DataFrame(rows)
+
+
+# =============================================================================================== #
+# 6. REGRESSION ENGINE  (OLS + HC3 / cluster-robust, diagnostics, logistic, Rubin pooling)
+# =============================================================================================== #
+@dataclass
+class OLSFit:
+    """Result of fit_ols.  All inference is heteroskedasticity-robust (HC3) unless `cluster` was supplied (CR1)."""
+    y: str
+    names: list[str]            # slope names (no intercept)
+    beta: np.ndarray            # intercept first, raw units of y
+    cov: np.ndarray             # robust covariance of beta
+    df: float                   # residual df (n-k) or G-1 for cluster-robust
+    n: int
+    r2: float
+    adj_r2: float
+    sd_x: np.ndarray            # SD of each slope (1.0 for 0/1 dummies, which are never standardised)
+    sd_y: float
+    X: np.ndarray
+    resid: np.ndarray
+    hat: np.ndarray
+    binary: list[bool]
+
+    @property
+    def se(self) -> np.ndarray:
+        return np.sqrt(np.diag(self.cov))
+
+    @property
+    def std_scale(self) -> np.ndarray:
+        """Multiply raw slopes (and their SEs) by this to obtain standardised ones (y in SD units; x in SD units
+        except dummies)."""
+        return self.sd_x / self.sd_y
+
+    def table(self) -> pd.DataFrame:
+        tc = stats.t.ppf(0.975, self.df)
+        b, se = self.beta[1:], self.se[1:]
+        t = b / se
+        sc = self.std_scale
+        return pd.DataFrame({"outcome": self.y, "key": self.names, "predictor": [LABELS.get(c, c) for c in self.names],
+                             "b_raw": b, "se_raw": se, "std_beta": b * sc, "se_std": se * sc,
+                             "ci_low": (b - tc * se) * sc, "ci_high": (b + tc * se) * sc,
+                             "t": t, "p": 2 * stats.t.sf(np.abs(t), self.df), "n": self.n})
+
+    def wald(self, names: Sequence[str]) -> tuple[float, float, int]:
+        """Joint HC3-Wald F test that all listed slopes are zero (F approximation with q and df degrees of freedom)."""
+        idx = [1 + self.names.index(c) for c in names]
+        b = self.beta[idx]
+        W = float(b @ np.linalg.pinv(self.cov[np.ix_(idx, idx)]) @ b)
+        F = W / len(idx)
+        return F, float(stats.f.sf(F, len(idx), self.df)), len(idx)
+
+
+def fit_ols(df: pd.DataFrame, y: str, xs: Sequence[str], cluster: pd.Series | None = None) -> OLSFit:
+    """OLS on complete cases with HC3 robust covariance (MacKinnon & White 1985; Long & Ervin 2000: preferred for
+    n < 250).  With `cluster`, a CR1 cluster-robust covariance and G-1 df are used instead."""
+    xs = list(xs)
+    cols = [y] + xs
+    sub = df[cols].dropna()
+    if cluster is not None:
+        sub = sub.join(cluster.rename("_cl"), how="inner").dropna(subset=["_cl"])
+    n = len(sub)
+    X = np.column_stack([np.ones(n), sub[xs].values.astype(float)])
+    yv = sub[y].values.astype(float)
+    k = X.shape[1]
+    if n <= k + 2:
+        raise ValueError(f"too few observations ({n}) for {k} parameters in model for {y}")
+    XtXi = np.linalg.pinv(X.T @ X)
+    beta = XtXi @ X.T @ yv
+    e = yv - X @ beta
+    h = np.einsum("ij,jk,ik->i", X, XtXi, X)
+    if cluster is None:
+        meat = (X.T * (e ** 2 / np.clip(1 - h, 1e-8, None) ** 2)) @ X                  # HC3
+        cov, dof = XtXi @ meat @ XtXi, float(n - k)
+    else:
+        g = sub["_cl"].values
+        meat = np.zeros((k, k))
+        groups = np.unique(g)
+        for gi in groups:
+            s = X[g == gi].T @ e[g == gi]
+            meat += np.outer(s, s)
+        G = len(groups)
+        cov = XtXi @ meat @ XtXi * (G / (G - 1)) * ((n - 1) / (n - k))                  # CR1
+        dof = float(G - 1)
+    ss_res, ss_tot = float(e @ e), float(((yv - yv.mean()) ** 2).sum())
+    r2 = 1 - ss_res / ss_tot
+    binary = [set(np.unique(sub[c].values)) <= {0.0, 1.0} for c in xs]
+    sd_x = np.array([1.0 if b else sub[c].std(ddof=1) for c, b in zip(xs, binary)])
+    return OLSFit(y, xs, beta, cov, dof, n, r2, 1 - (1 - r2) * (n - 1) / (n - k), sd_x, float(sub[y].std(ddof=1)),
+                  X, e, h, binary)
+
+
+def diagnostics(fit: OLSFit) -> dict:
+    """Model diagnostics: VIF, condition number, Koenker-Breusch-Pagan, Ramsey RESET, Cook's D, studentised residuals."""
+    n, k = fit.X.shape
+    Xs = fit.X[:, 1:]
+    corr = np.corrcoef(Xs.T) if Xs.shape[1] > 1 else np.eye(1)
+    vif = np.diag(np.linalg.pinv(corr))
+    Z = (Xs - Xs.mean(0)) / np.where(Xs.std(0) == 0, 1, Xs.std(0))
+    e2 = fit.resid ** 2
+    aux = np.linalg.lstsq(fit.X, e2, rcond=None)[0]
+    r2_aux = 1 - ((e2 - fit.X @ aux) ** 2).sum() / ((e2 - e2.mean()) ** 2).sum()
+    bp_p = float(stats.chi2.sf(n * r2_aux, k - 1))
+    yhat = fit.X @ fit.beta
+    Xa = np.column_stack([fit.X, yhat ** 2, yhat ** 3])
+    rss0 = float(fit.resid @ fit.resid)
+    ba = np.linalg.lstsq(Xa, yhat + fit.resid, rcond=None)[0]
+    rss1 = float(((yhat + fit.resid - Xa @ ba) ** 2).sum())
+    reset_p = float(stats.f.sf(((rss0 - rss1) / 2) / (rss1 / (n - k - 2)), 2, n - k - 2)) if rss1 > 0 else np.nan
+    s2 = rss0 / (n - k)
+    cook = fit.resid ** 2 * fit.hat / (k * s2 * (1 - fit.hat) ** 2)
+    stud = fit.resid / np.sqrt(s2 * (1 - fit.hat))
+    return {"n": n, "k_params": k, "max_VIF": float(vif.max()), "condition_number": float(np.linalg.cond(Z)),
+            "BP_heterosk_p": bp_p, "RESET_p": reset_p, "n_cook_gt_4_over_n": int((cook > 4 / n).sum()),
+            "max_abs_stud_resid": float(np.abs(stud).max())}
+
+
+def _expit(z):
+    return 1 / (1 + np.exp(-z))
+
+
+def fit_logit(X: np.ndarray, y: np.ndarray, ridge: float = 1e-6, iters: int = 100) -> dict:
+    """Logistic regression by IRLS (intercept must be column 0 of X).  Tiny ridge guards against separation."""
+    b = np.zeros(X.shape[1])
+    for _ in range(iters):
+        p = _expit(X @ b)
+        W = np.clip(p * (1 - p), 1e-9, None)
+        H = X.T @ (X * W[:, None]) + ridge * np.eye(X.shape[1])
+        step = np.linalg.solve(H, X.T @ (y - p) - ridge * b)
+        b += step
+        if np.max(np.abs(step)) < 1e-9:
+            break
+    p = _expit(X @ b)
+    ll = float(np.sum(y * np.log(np.clip(p, 1e-12, 1)) + (1 - y) * np.log(np.clip(1 - p, 1e-12, 1))))
+    p0 = y.mean()
+    ll0 = float(len(y) * (p0 * math.log(p0) + (1 - p0) * math.log(1 - p0)))
+    se = np.sqrt(np.diag(np.linalg.inv(X.T @ (X * np.clip(p * (1 - p), 1e-9, None)[:, None]) + ridge * np.eye(X.shape[1]))))
+    pos, neg = p[y == 1], p[y == 0]
+    auc = float(stats.mannwhitneyu(pos, neg).statistic / (len(pos) * len(neg)))
+    lr = 2 * (ll - ll0)
+    return {"coef": b, "se": se, "p": 2 * stats.norm.sf(np.abs(b / se)), "loglik": ll, "lr_chi2": lr,
+            "lr_df": X.shape[1] - 1, "lr_p": float(stats.chi2.sf(lr, X.shape[1] - 1)),
+            "mcfadden_r2": 1 - ll / ll0, "auc": auc, "n": len(y)}
+
+
+def pool_rubin(estimates: list[np.ndarray], variances: list[np.ndarray], df_complete: float) -> pd.DataFrame:
+    """Rubin's (1987) rules with the Barnard-Rubin (1999) small-sample df.  `estimates`/`variances` are lists over the
+    m imputations of per-parameter vectors (variance = squared SE).  Returns est, se, df, t, p, FMI, RIV."""
+    Q = np.array(estimates)
+    U = np.array(variances)
+    m = Q.shape[0]
+    qbar, ubar = Q.mean(0), U.mean(0)
+    b = Q.var(0, ddof=1) if m > 1 else np.zeros_like(qbar)
+    t = ubar + (1 + 1 / m) * b
+    with np.errstate(divide="ignore", invalid="ignore"):
+        lam = np.where(t > 0, (1 + 1 / m) * b / t, 0.0)
+        r = np.where(ubar > 0, (1 + 1 / m) * b / ubar, 0.0)
+        df_old = np.where(lam > 0, (m - 1) / lam ** 2, np.inf)
+        df_obs = (df_complete + 1) / (df_complete + 3) * df_complete * (1 - lam)
+        df_adj = np.where(np.isfinite(df_old), df_old * df_obs / (df_old + df_obs), df_obs)
+        fmi = np.where(np.isfinite(df_old), (r + 2 / (df_old + 3)) / (r + 1), 0.0)
+    se = np.sqrt(t)
+    tv = qbar / se
+    return pd.DataFrame({"est": qbar, "se": se, "df": df_adj, "t": tv, "p": 2 * stats.t.sf(np.abs(tv), df_adj),
+                         "fmi": fmi, "riv": r})
+
+
+# =============================================================================================== #
+# 7. RESAMPLING UTILITIES
+# =============================================================================================== #
+def bca_interval(theta_hat: np.ndarray, boot: np.ndarray, jack: np.ndarray, alpha: float = 0.05) -> tuple[np.ndarray, np.ndarray]:
+    """Bias-corrected and accelerated bootstrap CI (Efron 1987), vectorised over parameters.
+    boot: (B, p) bootstrap replicates; jack: (n, p) leave-one-out estimates."""
+    z0 = stats.norm.ppf(np.clip((boot < theta_hat).mean(0) + 0.5 * (boot == theta_hat).mean(0), 1e-6, 1 - 1e-6))
+    d = jack.mean(0) - jack
+    den = 6 * (np.sum(d ** 2, axis=0) ** 1.5)
+    a = np.where(den > 0, np.sum(d ** 3, axis=0) / np.where(den > 0, den, 1), 0.0)
+    lo, hi = np.empty_like(theta_hat), np.empty_like(theta_hat)
+    for j in range(boot.shape[1]):
+        out = []
+        for zq in (stats.norm.ppf(alpha / 2), stats.norm.ppf(1 - alpha / 2)):
+            adj = stats.norm.cdf(z0[j] + (z0[j] + zq) / (1 - a[j] * (z0[j] + zq)))
+            out.append(np.percentile(boot[:, j], 100 * np.clip(adj, 0.001, 0.999)))
+        lo[j], hi[j] = out
+    return lo, hi
+
+
+def rank_biserial(x: np.ndarray, y: np.ndarray) -> float:
+    """Rank-biserial correlation r = 2U/(n1 n2) - 1 (= Cliff's delta); positive => x tends to exceed y."""
+    u = stats.mannwhitneyu(x, y, alternative="two-sided").statistic
+    return float(2 * u / (len(x) * len(y)) - 1)
+
+
+def rank_biserial_ci(x: np.ndarray, y: np.ndarray, rng: np.random.Generator, B: int = 1000) -> tuple[float, float]:
+    vals = [rank_biserial(rng.choice(x, len(x)), rng.choice(y, len(y))) for _ in range(B)]
+    return tuple(np.percentile(vals, [2.5, 97.5]))
+
+
+# =============================================================================================== #
+# 8. THE SIMPLIFIED JD-R EQUATIONS
+# =============================================================================================== #
+CONTROLS = ["SIZE"] + MISSION_KEYS
+EQUATIONS: dict[str, tuple[str, list[str]]] = {
+    "Eq1_BO": ("BO", PREDICTORS + CONTROLS),
+    "Eq2_JS": ("JS", PREDICTORS + CONTROLS),
+    "Eq3_RET": ("RET", ["JS", "BO"] + CONTROLS),
+    "Eq3b_RET": ("RET", ["JS", "BO"] + PREDICTORS + CONTROLS),     # sensitivity only (see module docstring)
+}
+STRUCTURAL = {"Eq1_BO": PREDICTORS, "Eq2_JS": PREDICTORS, "Eq3_RET": ["JS", "BO"]}   # the 14 primary-family slopes
+IMPUTE_AUX = ["age_ord", "helping_yrs", "org_tenure", "frontline", "manager", "female", "hybrid"]
+
+
+def fit_equations(df: pd.DataFrame, cluster: pd.Series | None = None) -> dict[str, OLSFit]:
+    return {name: fit_ols(df, y, xs, cluster) for name, (y, xs) in EQUATIONS.items()}
+
+
+def _mark_primary_family(coef: pd.DataFrame) -> pd.DataFrame:
+    """BH-FDR across the 14 pre-specified structural slopes; controls and Eq.3b are outside the family (q = NaN)."""
+    coef = coef.copy()
+    coef["primary_family"] = [(e in STRUCTURAL and k in STRUCTURAL[e]) for e, k in zip(coef["equation"], coef["key"])]
+    coef["q_fdr_primary"] = np.nan
+    fam = coef["primary_family"]
+    coef.loc[fam, "q_fdr_primary"] = bh_fdr(coef.loc[fam, "p"].values)
+    coef["sig"] = coef["q_fdr_primary"].map(stars)
+    return coef
+
+
+def tidy_cc(fits: dict[str, OLSFit]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Coefficient and model-summary tables for complete-case fits."""
+    coefs, summ = [], []
+    for name, f in fits.items():
+        t = f.table()
+        t.insert(0, "equation", name)
+        t["VIF"] = np.nan
+        dg = diagnostics(f)
+        corr = np.corrcoef(f.X[:, 1:].T)
+        t["VIF"] = np.diag(np.linalg.pinv(corr))
+        coefs.append(t)
+        Fo, po, _ = f.wald(f.names)
+        Fm, pm, _ = f.wald(MISSION_KEYS) if all(k in f.names for k in MISSION_KEYS) else (np.nan, np.nan, 0)
+        summ.append({"equation": name, "outcome": f.y, "n": f.n, "r2": f.r2, "adj_r2": f.adj_r2, "wald_F_all": Fo,
+                     "wald_p_all": po, "mission_block_F": Fm, "mission_block_p": pm, **{k: v for k, v in dg.items() if k not in ("n",)}})
+    return _mark_primary_family(pd.concat(coefs, ignore_index=True)), pd.DataFrame(summ)
+
+
+def tidy_mi(fit_lists: list[dict[str, OLSFit]]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Pool the m per-imputation fits with Rubin's rules (standardised and raw slopes)."""
+    coefs, summ = [], []
+    for name in EQUATIONS:
+        tabs = [fl[name].table() for fl in fit_lists]
+        f0 = fit_lists[0][name]
+        dfc = f0.n - len(f0.beta)
+        ps = pool_rubin([t["std_beta"].values for t in tabs], [t["se_std"].values ** 2 for t in tabs], dfc)
+        pr = pool_rubin([t["b_raw"].values for t in tabs], [t["se_raw"].values ** 2 for t in tabs], dfc)
+        tc = stats.t.ppf(0.975, ps["df"].values)
+        out = pd.DataFrame({"equation": name, "outcome": f0.y, "key": f0.names,
+                            "predictor": [LABELS.get(c, c) for c in f0.names], "b_raw": pr["est"], "se_raw": pr["se"],
+                            "std_beta": ps["est"], "se_std": ps["se"], "ci_low": ps["est"] - tc * ps["se"],
+                            "ci_high": ps["est"] + tc * ps["se"], "t": ps["t"], "p": ps["p"], "n": f0.n,
+                            "fmi": ps["fmi"], "VIF": np.nan})
+        coefs.append(out)
+        summ.append({"equation": name, "outcome": f0.y, "n": f0.n, "r2": np.mean([fl[name].r2 for fl in fit_lists]),
+                     "adj_r2": np.mean([fl[name].adj_r2 for fl in fit_lists]), "m_imputations": len(fit_lists)})
+    return _mark_primary_family(pd.concat(coefs, ignore_index=True)), pd.DataFrame(summ)
+
+
+# =============================================================================================== #
+# 9. MISSING DATA: diagnostics, multiple imputation, delta-adjusted sensitivity
+# =============================================================================================== #
+MISSING_COVARIATES = PREDICTORS + ["BO", "RET", "SIZE", "age_ord", "helping_yrs", "org_tenure", "frontline", "manager",
+                                   "female", "hybrid"]
+
+
+def js_missingness(org: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Who skipped the optional ProQOL block (JS missing)?  Returns (univariate comparison, multivariable logit).
+    A predictable pattern rules out MCAR; it can NEVER distinguish MAR from MNAR (the unobserved JS values are,
+    by definition, unobserved) -- hence the delta-adjusted sensitivity analysis below."""
+    miss = org["JS"].isna().astype(float)
+    rows = []
+    for c in MISSING_COVARIATES:
+        a, b = org.loc[miss == 0, c].dropna(), org.loc[miss == 1, c].dropna()
+        if len(a) < MIN_GROUP_N or len(b) < 5:
+            continue
+        sp = math.sqrt(((len(a) - 1) * a.var(ddof=1) + (len(b) - 1) * b.var(ddof=1)) / (len(a) + len(b) - 2))
+        rows.append({"covariate": c, "label": LABELS.get(c, c), "n_JS_observed": len(a), "n_JS_missing": len(b),
+                     "mean_observed": a.mean(), "mean_missing": b.mean(),
+                     "std_mean_diff_(obs-miss)": (a.mean() - b.mean()) / sp if sp > 0 else np.nan,
+                     "mannwhitney_p": stats.mannwhitneyu(a, b).pvalue})
+    uni = pd.DataFrame(rows)
+    uni["q_fdr"] = bh_fdr(uni["mannwhitney_p"].values)
+    cov = [c for c in MISSING_COVARIATES if org[c].nunique() > 1]
+    sub = org[cov].assign(_m=miss).dropna()
+    Z = (sub[cov] - sub[cov].mean()) / sub[cov].std(ddof=0)
+    X = np.column_stack([np.ones(len(Z)), Z.values])
+    fit = fit_logit(X, sub["_m"].values)
+    lg = pd.DataFrame({"covariate": ["(intercept)"] + cov, "log_odds_per_SD": fit["coef"], "se": fit["se"], "p": fit["p"]})
+    lg["odds_ratio"] = np.exp(lg["log_odds_per_SD"])
+    lg["or_ci_low"] = np.exp(lg["log_odds_per_SD"] - 1.96 * lg["se"])
+    lg["or_ci_high"] = np.exp(lg["log_odds_per_SD"] + 1.96 * lg["se"])
+    for k in ("auc", "lr_chi2", "lr_df", "lr_p", "mcfadden_r2", "n"):
+        lg[f"model_{k}"] = fit[k]
+    lg["events_missing"] = int(sub["_m"].sum())
+    return uni, lg
+
+
+def make_imputations(org: pd.DataFrame, m: int, seed: int) -> tuple[list[pd.DataFrame], pd.Series]:
+    """m stochastic-regression (Bayesian-ridge, posterior-sampled) chained-equation imputations of the model constructs
+    + controls, with auxiliary variables.  Returns (completed frames, boolean mask of originally-missing JS).
+    Imputation model uses the organisation sample only (self-employed lack these constructs by design).
+    LIMITATION: imputes composites (not items); linear-Gaussian chained equations, no predictive mean matching."""
+    if IterativeImputer is None:
+        raise RuntimeError("scikit-learn is required for multiple imputation (pip install scikit-learn)")
+    cols = CONSTRUCTS + ["SIZE"] + MISSION_KEYS + IMPUTE_AUX
+    X = org[cols].astype(float)
+    keep = [c for c in cols if X[c].nunique(dropna=True) > 1]
+    lo = np.array([0.0] * len(keep))
+    hi = np.array([100.0 if c in CONSTRUCTS else 5.0 if c in ("SIZE", "age_ord", "helping_yrs", "org_tenure") else 1.0 for c in keep])
+    frames = []
+    for i in range(m):
+        imp = IterativeImputer(estimator=BayesianRidge(), sample_posterior=True, max_iter=20, tol=1e-3,
+                               random_state=seed + i, min_value=lo, max_value=hi, skip_complete=True)
+        arr = imp.fit_transform(X[keep])
+        f = org.copy()
+        f[keep] = arr
+        frames.append(f)
+    return frames, org["JS"].isna()
+
+
+def delta_shift(frames: list[pd.DataFrame], mask: pd.Series, delta: float) -> list[pd.DataFrame]:
+    """Delta-adjustment (pattern-mixture sensitivity): add `delta` points to every IMPUTED JS value, clipped to 0-100."""
+    out = []
+    for f in frames:
+        g = f.copy()
+        g.loc[mask, "JS"] = (g.loc[mask, "JS"] + delta).clip(0, 100)
+        out.append(g)
+    return out
+
+
+def tipping_point(frames: list[pd.DataFrame], mask: pd.Series) -> pd.DataFrame:
+    """Re-estimate Eq.2 and Eq.3 after shifting imputed JS by each delta in DELTA_GRID; pooled by Rubin's rules."""
+    rows = []
+    for delta in DELTA_GRID:
+        shifted = delta_shift(frames, mask, delta)
+        coef, _ = tidy_mi([fit_equations(f) for f in shifted])
+        sel = coef[((coef["equation"] == "Eq2_JS") & coef["key"].isin(PREDICTORS)) | ((coef["equation"] == "Eq3_RET") & coef["key"].isin(["JS", "BO"]))]
+        for _, r in sel.iterrows():
+            rows.append({"delta_imputed_JS": delta, "equation": r["equation"], "key": r["key"], "std_beta": r["std_beta"],
+                         "ci_low": r["ci_low"], "ci_high": r["ci_high"], "p": r["p"]})
+    return pd.DataFrame(rows)
+
+
+# =============================================================================================== #
+# 10. ASSOCIATIONAL PARALLEL MEDIATION  X -> {BO, JS} -> RET  (UNSTANDARDISED; 0-100 points)
+# =============================================================================================== #
+def _mediation_vector(arr: np.ndarray, k: int) -> np.ndarray:
+    """arr columns: [X_1..X_k, controls..., BO, JS, RET].  Returns
+    [ind_BO(k), ind_JS(k), ind_total(k), direct(k), total(k), contrast_BO_minus_JS(k), b_BO, b_JS]."""
+    n, p = arr.shape
+    nc = p - k - 3
+    X, C = arr[:, :k], arr[:, k:k + nc]
+    bo, js, ret = arr[:, -3], arr[:, -2], arr[:, -1]
+    one = np.ones((n, 1))
+    base = np.hstack([one, X, C])
+    G = base.T @ base
+    coef_bo = np.linalg.solve(G, base.T @ bo)
+    coef_js = np.linalg.solve(G, base.T @ js)
+    coef_tot = np.linalg.solve(G, base.T @ ret)
+    full = np.hstack([one, bo[:, None], js[:, None], X, C])
+    cf = np.linalg.solve(full.T @ full, full.T @ ret)
+    a1, a2 = coef_bo[1:1 + k], coef_js[1:1 + k]
+    b1, b2, direct = cf[1], cf[2], cf[3:3 + k]
+    return np.concatenate([a1 * b1, a2 * b2, a1 * b1 + a2 * b2, direct, coef_tot[1:1 + k], a1 * b1 - a2 * b2, [b1, b2]])
+
+
+def mediation(frames: list[pd.DataFrame], B: int, seed: int, bca: bool) -> tuple[pd.DataFrame, int]:
+    """Parallel mediation with percentile (MI) or BCa (complete-case) bootstrap CIs.
+    frames: one frame (complete-case) or m imputed frames; draws from all frames are stacked (impute-then-bootstrap)."""
+    xs = PREDICTORS
+    k = len(xs)
+    cols = xs + CONTROLS + ["BO", "JS", "RET"]
+    rng = np.random.default_rng(seed)
+    arrays = [f[cols].dropna().values.astype(float) for f in frames]
+    point = np.mean([_mediation_vector(a, k) for a in arrays], axis=0)
+    per = max(50, B // len(arrays))
+    draws = []
+    for a in arrays:
+        n = len(a)
+        for _ in range(per):
+            draws.append(_mediation_vector(a[rng.integers(0, n, n)], k))
+    draws = np.array(draws)
+    if bca and len(arrays) == 1:
+        a = arrays[0]
+        jack = np.array([_mediation_vector(np.delete(a, i, axis=0), k) for i in range(len(a))])
+        lo, hi = bca_interval(point, draws, jack)
+        method = "BCa"
+    else:
+        lo, hi = np.percentile(draws, [2.5, 97.5], axis=0)
+        method = "percentile (stacked over imputations)"
+    names = [f"{kind}|{x}" for kind in ("ind_BO", "ind_JS", "ind_total", "direct", "total", "contrast_BO_minus_JS") for x in xs] + ["b_BO", "b_JS"]
+    out = pd.DataFrame({"effect": names, "estimate": point, "ci_low": lo, "ci_high": hi})
+    out["ci_excludes_0"] = (out["ci_low"] > 0) | (out["ci_high"] < 0)
+    out["ci_method"] = method
+    out["n"] = int(np.mean([len(a) for a in arrays]))
+    out["kind"] = out["effect"].str.split("|").str[0]
+    out["predictor"] = out["effect"].str.split("|").str[1]
+    return out, int(np.mean([len(a) for a in arrays]))
+
+
+# =============================================================================================== #
+# 11. ORGANISATION vs SELF-EMPLOYED
+# =============================================================================================== #
+COMPARE_VARS = ["BO", "work_bo", "personal_bo", "ID", "JS", "proqol_bo", "proqol_sts"]
+REDUCED_EQS = {"R1_BO~ID": ("BO", ["ID"]), "R2_JS~ID": ("JS", ["ID"]), "R3_BO~ID+JS": ("BO", ["ID", "JS"])}
+REDUCED_CONTROLS = ["age_ord", "helping_yrs"]       # observed in BOTH groups (org SIZE/MISSION do not exist for the self-employed)
+
+
+def group_comparison(d: pd.DataFrame, rng: np.random.Generator, exclude_hybrid: bool = False) -> pd.DataFrame:
+    """Organisation vs self-employed on the outcomes measured in both blocks.  Mann-Whitney U, rank-biserial r with
+    bootstrap CI, BH-FDR across the family.  Exploratory family (7 contrasts)."""
+    o = d[d["group"] == GROUP_ORG]
+    if exclude_hybrid:
+        o = o[o["hybrid"] == 0]
+    s = d[d["group"] == GROUP_SELF]
+    rows = []
+    for v in COMPARE_VARS:
+        a, b = o[v].dropna().values, s[v].dropna().values
+        if len(a) < MIN_GROUP_N or len(b) < MIN_GROUP_N:
+            continue
+        rb = rank_biserial(b, a)
+        lo, hi = rank_biserial_ci(b, a, rng)
+        rows.append({"variable": v, "label": LABELS[v], "n_org": len(a), "mean_org": a.mean(), "sd_org": a.std(ddof=1),
+                     "median_org": np.median(a), "n_self": len(b), "mean_self": b.mean(), "sd_self": b.std(ddof=1),
+                     "median_self": np.median(b), "mean_diff_self_minus_org": b.mean() - a.mean(),
+                     "mannwhitney_p": stats.mannwhitneyu(b, a).pvalue, "rank_biserial_self_vs_org": rb,
+                     "rb_ci_low": lo, "rb_ci_high": hi})
+    out = pd.DataFrame(rows)
+    out["q_fdr"] = bh_fdr(out["mannwhitney_p"].values)
+    out["sample"] = "organisation excl. hybrid" if exclude_hybrid else "organisation incl. hybrid"
+    return out
+
+
+def reduced_models(d: pd.DataFrame) -> pd.DataFrame:
+    """The part of the JD-R model that exists in BOTH groups (ID, BO, JS), fitted separately per group, plus a pooled
+    model testing whether the slope differs by group (interaction, raw 0-100 units, HC3)."""
+    rows = []
+    for gname, sub in ((GROUP_ORG, d[d["group"] == GROUP_ORG]), (GROUP_SELF, d[d["group"] == GROUP_SELF])):
+        for eq, (y, xs) in REDUCED_EQS.items():
+            f = fit_ols(sub, y, xs + REDUCED_CONTROLS)
+            t = f.table()
+            t.insert(0, "equation", eq)
+            t.insert(0, "group", gname)
+            t["r2"] = f.r2
+            rows.append(t)
+    out = pd.concat(rows, ignore_index=True)
+    out["scope"] = "separate fit per group"
+    inter = []
+    pooled = d.copy()
+    pooled["self"] = (pooled["group"] == GROUP_SELF).astype(float)
+    for eq, (y, xs) in REDUCED_EQS.items():
+        for x in xs:
+            pooled[f"{x}_x_self"] = pooled[x] * pooled["self"]
+        names = xs + ["self"] + [f"{x}_x_self" for x in xs] + REDUCED_CONTROLS
+        f = fit_ols(pooled, y, names)
+        t = f.table()
+        t = t[t["key"].str.endswith("_x_self")].copy()
+        t.insert(0, "equation", eq)
+        t.insert(0, "group", "pooled (interaction)")
+        t["scope"] = "difference in raw slope: self-employed minus organisation"
+        inter.append(t)
+    both = pd.concat([out] + inter, ignore_index=True)
+    both["q_fdr_within_table"] = bh_fdr(both["p"].values)
+    return both
+
+
+# =============================================================================================== #
+# 12. VALIDATION AGAINST THE IQP REPORT
+# =============================================================================================== #
+def validate_against_iqp(tables: dict[str, tuple[pd.DataFrame, pd.DataFrame]]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Compare standardised betas / n / R2 printed in the IQP report with this pipeline.
+    `tables` maps a label ('brief_literal CC', 'primary CC', 'primary MI') to (coef table, summary table)."""
+    rows, srows = [], []
+    for label, (coef, summ) in tables.items():
+        for eq, bench in IQP_BENCHMARK.items():
+            s = summ[summ["equation"] == eq].iloc[0]
+            srows.append({"pipeline": label, "equation": eq, "n_iqp": bench["n"], "n_here": s["n"], "r2_iqp": bench["r2"],
+                          "r2_here": s["r2"], "r2_diff": s["r2"] - bench["r2"]})
+            for key, b_iqp in bench["beta"].items():
+                r = coef[(coef["equation"] == eq) & (coef["key"] == key)]
+                if r.empty:
+                    continue
+                r = r.iloc[0]
+                star = IQP_SIG.get(eq, {}).get(key, "")
+                rows.append({"pipeline": label, "equation": eq, "term": key, "beta_iqp": b_iqp, "iqp_stars": star,
+                             "beta_here": r["std_beta"], "diff": r["std_beta"] - b_iqp,
+                             "same_sign": np.sign(b_iqp) == np.sign(r["std_beta"]),
+                             "here_p": r["p"], "significant_here_p<.05": r["p"] < 0.05,
+                             "significance_agrees": (r["p"] < 0.05) == bool(star)})
+    det, sm = pd.DataFrame(rows), pd.DataFrame(srows)
+    agg = det.groupby("pipeline").agg(n_terms=("term", "size"), mean_abs_diff=("diff", lambda x: np.abs(x).mean()),
+                                      max_abs_diff=("diff", lambda x: np.abs(x).max()), sign_agreement=("same_sign", "mean"),
+                                      significance_agreement=("significance_agrees", "mean")).reset_index()
+    agg["corr_beta"] = [np.corrcoef(det.loc[det["pipeline"] == p, "beta_iqp"], det.loc[det["pipeline"] == p, "beta_here"])[0, 1]
+                        for p in agg["pipeline"]]
+    return det, pd.concat([agg.assign(section="aggregate"), sm.assign(section="model-level")], ignore_index=True)
+
+
+# =============================================================================================== #
+# 13. THE SUPPORT GAP: what is PROVIDED, what is WANTED, what DECISION-MAKERS report
+# =============================================================================================== #
+# Two questionnaire branches exist (verified from the data, see `branch_audit`):
+#   * Staff branch (cols 59-61): frontline, admin, mid-level managers  -> "what exists as far as I know" / "what I want"
+#   * Decision-maker branch (cols 62-64): founders / board / executives and HR -> "what my organisation has" / "what I want to add"
+# The two branches are different PEOPLE in (mostly) different organisations: no organisation identifier exists, so
+# staff-vs-decision-maker contrasts are between independent samples, NOT matched pairs, and the decision-maker branch
+# is small (n = 28).  Treat those contrasts as indicative.
+@dataclass(frozen=True)
+class SupportItem:
+    key: str
+    label: str
+    supply_kw: str | None      # regex matched against the 'currently available' answer (None = option not asked)
+    demand_kw: str | None      # regex matched against the 'most wanted (pick <= 3)' answer (None = option not asked)
+    note: str = ""
+
+
+SUPPORT_ITEMS = [
+    SupportItem("counselling", "Individual counselling", "個別心理諮詢", "個別心理諮詢"),
+    SupportItem("group_relief", "Group stress relief", "團體減壓", "團體減壓"),
+    SupportItem("supervision", "Supervision / coaching", "督導或教練", "督導或教練"),
+    SupportItem("leadership", "Leadership & management training", "領導力", "領導力"),
+    SupportItem("skills", "Professional skills training", "專業職能培訓", "專業職能培訓"),
+    SupportItem("career", "Career development", "職涯發展", "職涯發展",
+                "APPROXIMATE match: supply option = a promotion/career SYSTEM, demand option = long-term career DISCUSSIONS"),
+    SupportItem("communication", "Internal communication", "內部溝通", "內部溝通"),
+    SupportItem("flexible", "Flexible / remote work", "彈性工時|遠距", None, "not offered as a 'wanted' option (write-ins only)"),
+    SupportItem("allowance", "Acting-position allowance", "職務代理津貼", "職務代理津貼", "not asked in the decision-maker supply list"),
+    SupportItem("finance", "Personal / family financial planning", None, "財務規劃", "not asked in any 'currently available' list"),
+]
+NONE_SUPPLY, NONE_DEMAND = "以上皆無", "目前不需要額外支"
+DM_SUPPLY_NOT_ASKED = {"finance", "allowance"}
+
+BARRIERS = [  # (staff regex, decision-maker regex, English label, directly comparable?)
+    ("預算不足", "預算不足", "Insufficient budget", True),
+    ("沒有人有餘力", "沒有專人", "No one has capacity / owner", True),
+    ("決策者不認為", None, "Decision-makers see no need (staff view only)", False),
+    ("不知道從哪裡開始", None, "Don't know where to start (staff view only)", False),
+    ("被視為抱怨", "擔心夥伴意願低", "Fear of complaint (staff) / awkward, low uptake (DM)", False),
+    ("規模太小", "市場上沒有適合", "Org too small (staff) / no programme for micro-orgs (DM)", False),
+    (None, "內部需求不明確", "Unclear internal needs (DM view only)", False),
+    (None, "不了解這類方案", "Unclear programme benefits (DM view only)", False),
+    (None, "董事會", "Board not supportive (DM view only)", False),
+    ("我不確定", None, "Not sure (staff view only)", False),
+    (None, "沒有特別顧慮", "No particular concern (DM view only)", False),
+]
+INTEREST_RULES = [("非常希望", "Very much, we need it"), ("餘力", "Yes, but unsure of capacity"), ("可有可無", "Fine / optional"),
+                  ("不太希望", "Not interested (other priorities)"), ("不確定", "Not sure")]
+ATTITUDE_RULES = [("很積極", "Enthusiastic"), ("擔心成本", "Interested but worried about cost / workload"),
+                  ("不需要", "May think it unnecessary"), ("不是時候", "Not the right time"), ("自己就是決策者", "I am the decision-maker"),
+                  ("不確定", "Not sure")]
+CHALLENGE_RULES = [("收入不穩定", "Unstable income"), ("專業水準", "Cannot judge own professional level"),
+                   ("督導或專業回饋", "No supervision / professional feedback"), ("沒有同儕", "No peers to discuss with"),
+                   ("界線模糊", "Blurred work-life boundary"), ("合作機構", "Cannot find partner organisations"),
+                   ("長期方向", "Unsure about long-term direction"), ("把關工作量", "Nobody guards my workload"), ("其他", "Other")]
+
+
+def _has(series: pd.Series, pattern: str | None, none_label: str | None = None) -> pd.Series:
+    """Boolean Series: does the multi-select answer contain `pattern`?  NaN where unanswered."""
+    if pattern is None:
+        return pd.Series(np.nan, index=series.index)
+    out = series.map(lambda v: np.nan if pd.isna(v) or str(v).strip() == "" else float(re.search(pattern, str(v)) is not None))
+    return out
+
+
+def _prop(x: pd.Series) -> tuple[float, int, int, float, float]:
+    x = x.dropna()
+    k, n = int(x.sum()), len(x)
+    lo, hi = wilson_ci(k, n) if n else (np.nan, np.nan)
+    return (k / n * 100 if n else np.nan, k, n, lo * 100, hi * 100)
+
+
+def support_gap(d: pd.DataFrame) -> dict[str, pd.DataFrame]:
+    """Build the provision / need / decision-maker tables.  All percentages are of respondents in the branch who
+    answered that question.  'Wanted' is capped at three picks, so a respondent NOT selecting an item does not
+    prove they do not want it -> 'wanted' is a lower bound on need, and provided-but-not-wanted is not a surplus."""
+    staff = d[d["support_branch"] == "Staff"]
+    dm = d[d["support_branch"] == "Decision-maker"]
+    rows, ind = [], {}
+    for it in SUPPORT_ITEMS:
+        hs, ws = _has(staff["_sup_have_staff"], it.supply_kw), _has(staff["_sup_want_staff"], it.demand_kw)
+        hd = _has(dm["_sup_have_dm"], None if it.key in DM_SUPPLY_NOT_ASKED else it.supply_kw)
+        wd = _has(dm["_sup_want_dm"], it.demand_kw)
+        ind[it.key] = (hs, ws)
+        r = {"key": it.key, "item": it.label, "comparability_note": it.note}
+        for tag, ser in (("staff_provided", hs), ("dm_provided", hd), ("staff_wanted", ws), ("dm_wanted", wd)):
+            p, k, n, lo, hi = _prop(ser)
+            r.update({f"{tag}_pct": p, f"{tag}_k": k, f"{tag}_n": n, f"{tag}_ci_low": lo, f"{tag}_ci_high": hi})
+        both = pd.concat([hs, ws], axis=1, keys=["have", "want"]).dropna()
+        if len(both):
+            r["staff_unmet_pct"] = ((both["want"] == 1) & (both["have"] == 0)).mean() * 100          # wants it, org lacks it
+            r["staff_met_pct"] = ((both["want"] == 1) & (both["have"] == 1)).mean() * 100            # wants it, org has it
+            r["staff_provided_not_selected_pct"] = ((both["want"] == 0) & (both["have"] == 1)).mean() * 100
+            wanters = (both["want"] == 1).sum()
+            r["pct_of_wanters_whose_org_lacks_it"] = ((both["want"] == 1) & (both["have"] == 0)).sum() / wanters * 100 if wanters else np.nan
+        r["staff_wanted_minus_provided_pp"] = r.get("staff_wanted_pct", np.nan) - r.get("staff_provided_pct", np.nan)
+        # contrasts, staff vs decision-makers (independent samples; Newcombe CI, Fisher exact)
+        for tag in ("provided", "wanted"):
+            ks, ns, kd, nd = r[f"staff_{tag}_k"], r[f"staff_{tag}_n"], r[f"dm_{tag}_k"], r[f"dm_{tag}_n"]
+            if ns and nd:
+                lo, hi = newcombe_diff_ci(ks, ns, kd, nd)
+                r[f"{tag}_diff_staff_minus_dm_pp"] = (ks / ns - kd / nd) * 100
+                r[f"{tag}_diff_ci_low"], r[f"{tag}_diff_ci_high"] = lo * 100, hi * 100
+                r[f"{tag}_fisher_p"] = stats.fisher_exact([[ks, ns - ks], [kd, nd - kd]])[1]
+        rows.append(r)
+    gap = pd.DataFrame(rows)
+    for tag in ("provided", "wanted"):
+        gap[f"{tag}_fisher_q_fdr"] = bh_fdr(gap[f"{tag}_fisher_p"].values) if f"{tag}_fisher_p" in gap else np.nan
+    gap["rank_by_staff_unmet"] = gap["staff_unmet_pct"].rank(ascending=False, method="min")
+    gap = gap.sort_values("staff_unmet_pct", ascending=False, na_position="last").reset_index(drop=True)
+
+    # --- by staff role: provision / want / unmet -------------------------------------------------------------
+    rr = []
+    for role in ("Frontline helper", "Admin / project / finance", "Mid-level manager"):
+        sub = staff[staff["role"] == role]
+        if len(sub) < MIN_GROUP_N:
+            continue
+        for it in SUPPORT_ITEMS:
+            if it.supply_kw is None or it.demand_kw is None:
+                continue
+            hs, ws = _has(sub["_sup_have_staff"], it.supply_kw), _has(sub["_sup_want_staff"], it.demand_kw)
+            rr.append({"role": role, "n": len(sub), "item": it.label, "provided_pct": hs.mean() * 100, "wanted_pct": ws.mean() * 100,
+                       "unmet_pct": ((ws == 1) & (hs == 0)).mean() * 100})
+    by_role = pd.DataFrame(rr)
+
+    # --- how many supports exist vs the JD-R outcomes (exploratory Spearman) -----------------------------------
+    cnt = pd.DataFrame({it.key: _has(staff["_sup_have_staff"], it.supply_kw) for it in SUPPORT_ITEMS if it.supply_kw})
+    n_sup = cnt.sum(axis=1).where(cnt.notna().all(axis=1))
+    sc = []
+    for v in ["OS", "JR", "WL", "BO", "RET"]:
+        sub = pd.concat([n_sup.rename("n_sup"), staff[v]], axis=1).dropna()
+        if len(sub) >= MIN_PAIR_N:
+            rho, p = stats.spearmanr(sub["n_sup"], sub[v])
+            sc.append({"outcome": LABELS[v], "spearman_rho": rho, "p": p, "n": len(sub)})
+    cnt_tab = pd.DataFrame(sc)
+    if len(cnt_tab):
+        cnt_tab["q_fdr"] = bh_fdr(cnt_tab["p"].values)
+        cnt_tab["predictor"] = "Number of supports staff say exist (0-9)"
+
+    # --- barriers ----------------------------------------------------------------------------------------------
+    brow = []
+    for s_kw, d_kw, lab, comp in BARRIERS:
+        r = {"barrier": lab, "directly_comparable": comp}
+        for tag, ser, kw in (("staff", staff["_bar_staff"], s_kw), ("dm", dm["_bar_dm"], d_kw)):
+            p, k, n, lo, hi = _prop(_has(ser, kw))
+            r.update({f"{tag}_pct": p, f"{tag}_k": k, f"{tag}_n": n})
+        if comp:
+            r["fisher_p"] = stats.fisher_exact([[r["staff_k"], r["staff_n"] - r["staff_k"]], [r["dm_k"], r["dm_n"] - r["dm_k"]]])[1]
+        brow.append(r)
+    barriers = pd.DataFrame(brow)
+    barriers["q_fdr"] = bh_fdr(barriers["fisher_p"].values) if "fisher_p" in barriers else np.nan
+
+    # --- programme interest and expected decision-maker attitude, by branch ------------------------------------
+    def tab(col: str, rules) -> pd.DataFrame:
+        t = d.assign(_lab=label_rules(d[col], rules, "Other")).dropna(subset=["_lab", "support_branch"])
+        ct = pd.crosstab(t["_lab"], t["support_branch"])
+        pct = ct.div(ct.sum(axis=0), axis=1) * 100
+        out = ct.join(pct, lsuffix="_n", rsuffix="_pct")
+        out.index.name = "answer"
+        return out.reset_index()
+
+    return {"support_gap": gap, "support_gap_by_role": by_role, "support_count_vs_outcomes": cnt_tab,
+            "barriers": barriers, "programme_interest": tab("_prog_interest", INTEREST_RULES),
+            "decision_maker_attitude": tab("_dm_attitude", ATTITUDE_RULES)}
+
+
+def branch_audit(d: pd.DataFrame) -> pd.DataFrame:
+    """Who answered which support branch (justifies treating cols 59-61 as 'staff' and 62-64 as 'decision-maker')."""
+    t = pd.crosstab(d["role"].fillna("(self-employed: no role)"), d["support_branch"].fillna("none"))
+    t.index.name = "role"
+    return t.reset_index()
+
+
+def role_profile(d: pd.DataFrame) -> pd.DataFrame:
+    """Do managers have more (or fewer) resources than frontline staff?  Construct means by role, organisation group,
+    with a Kruskal-Wallis test per construct (exploratory; BH-FDR over the family)."""
+    org = d[d["group"] == GROUP_ORG]
+    roles = [r for r in ("Frontline helper", "Admin / project / finance", "Mid-level manager", "Founder / decision-maker")
+             if (org["role"] == r).sum() >= MIN_GROUP_N]
+    rows = []
+    for c in ["WL", "OS", "JR", "PAY", "MA", "ID", "BO", "JS", "RET"]:
+        groups = [org.loc[org["role"] == r, c].dropna() for r in roles]
+        ok = [g for g in groups if len(g) >= MIN_GROUP_N]
+        if len(ok) < 2:
+            continue
+        h, p = stats.kruskal(*ok)
+        row = {"construct": LABELS[c], "kruskal_H": h, "p": p, "epsilon_sq": h / (sum(len(g) for g in ok) - 1)}
+        for r, g in zip(roles, groups):
+            row[f"{r} mean (n)"] = f"{g.mean():.1f} ({len(g)})" if len(g) else ""
+        rows.append(row)
+    out = pd.DataFrame(rows)
+    out["q_fdr"] = bh_fdr(out["p"].values)
+    return out
+
+
+def selfemployed_challenges(d: pd.DataFrame) -> pd.DataFrame:
+    """Top-3 challenges named by self-employed respondents: % naming each at any rank and % naming it first."""
+    s = d[d["group"] == GROUP_SELF]
+    rows = []
+    cols = ["_challenge_1", "_challenge_2", "_challenge_3"]
+    labs = {c: label_rules(s[c], CHALLENGE_RULES, "Other") for c in cols}
+    for _, lab in CHALLENGE_RULES:
+        anyr = pd.concat([labs[c] == lab for c in cols], axis=1).any(axis=1)
+        k, n = int(anyr.sum()), len(s)
+        lo, hi = wilson_ci(k, n)
+        rows.append({"challenge": lab, "named_any_rank_n": k, "named_any_rank_pct": k / n * 100,
+                     "ci_low": lo * 100, "ci_high": hi * 100, "ranked_first_n": int((labs["_challenge_1"] == lab).sum()), "n_respondents": n})
+    return pd.DataFrame(rows).sort_values("named_any_rank_n", ascending=False)
+
+
+# =============================================================================================== #
+# 14. ROBUSTNESS GRID  (specification x sample x estimator)
+# =============================================================================================== #
+SAMPLES: dict[str, Callable[[pd.DataFrame], pd.DataFrame]] = {
+    "org_incl_hybrid": lambda x: x[x["group"] == GROUP_ORG],
+    "org_excl_hybrid": lambda x: x[(x["group"] == GROUP_ORG) & (x["hybrid"] == 0)],
+}
+PRIMARY_KEY = ("primary", "org_incl_hybrid", "complete-case")
+
+
+def robustness_grid(d: pd.DataFrame, m: int, seed: int) -> tuple[dict, dict]:
+    """Fit Eq.1-3b for every (specification, sample) by complete-case; for the primary specification also by multiple
+    imputation (both samples) and with county-clustered SEs (sensitivity; few effective clusters -> indicative only).
+    Returns ({(spec, sample, method): (coef, summary)}, {sample: (imputed frames, JS-missing mask)})."""
+    fits: dict = {}
+    imputed: dict = {}
+    for spec in SPECS:
+        ds = with_spec(d, spec)
+        for sname, sel in SAMPLES.items():
+            org = sel(ds)
+            fits[(spec, sname, "complete-case")] = tidy_cc(fit_equations(org))
+            if spec == "primary":
+                frames, mask = make_imputations(org, m, seed)
+                imputed[sname] = (frames, mask)
+                fits[(spec, sname, "multiple imputation")] = tidy_mi([fit_equations(f) for f in frames])
+                fits[(spec, sname, "county-clustered SE")] = tidy_cc(fit_equations(org, cluster=org["_county"]))
+    return fits, imputed
+
+
+def robustness_tables(fits: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
+    long = []
+    for (spec, sample, method), (coef, _) in fits.items():
+        long.append(coef.assign(spec=spec, sample=sample, method=method))
+    long = pd.concat(long, ignore_index=True)
+    ref = long[(long["spec"] == PRIMARY_KEY[0]) & (long["sample"] == PRIMARY_KEY[1]) & (long["method"] == PRIMARY_KEY[2])]
+    rows = []
+    for _, r in ref[ref["primary_family"]].iterrows():
+        v = long[(long["equation"] == r["equation"]) & (long["key"] == r["key"]) & (long["spec"] != "brief_literal")]
+        lit = long[(long["equation"] == r["equation"]) & (long["key"] == r["key"]) & (long["spec"] == "brief_literal")
+                   & (long["method"] == "complete-case") & (long["sample"] == "org_incl_hybrid")]
+        rows.append({"equation": r["equation"], "term": r["key"], "primary_std_beta": r["std_beta"], "primary_p": r["p"],
+                     "n_variants": len(v), "share_same_sign": float((np.sign(v["std_beta"]) == np.sign(r["std_beta"])).mean()),
+                     "share_p<.05": float((v["p"] < 0.05).mean()), "primary_p<.05": bool(r["p"] < 0.05),
+                     "min_std_beta": v["std_beta"].min(), "max_std_beta": v["std_beta"].max(),
+                     "brief_literal_std_beta": lit["std_beta"].iloc[0] if len(lit) else np.nan,
+                     "brief_literal_p": lit["p"].iloc[0] if len(lit) else np.nan})
+    return long, pd.DataFrame(rows)
+
+
+# =============================================================================================== #
+# 15. FIGURES  (English labels only; every chart is its own PNG so it can be dropped into a document)
+# =============================================================================================== #
+C_ORG, C_SELF, C_GREY = "#2b6cb0", "#dd6b20", "#8a8a8a"
+plt.rcParams.update({"axes.spines.top": False, "axes.spines.right": False, "axes.grid": True, "grid.alpha": 0.25,
+                     "font.size": 9, "axes.titleweight": "bold", "axes.titlesize": 10.5})
+
+
+def fig_reliability(rel: pd.DataFrame, out: Output) -> None:
+    r = rel[rel["group"] == GROUP_ORG]
+    cons = [c for c in CONSTRUCTS if c in r["construct"].values]
+    fig, ax = plt.subplots(figsize=(7.2, 4.2))
+    w = 0.26
+    for i, (spec, col) in enumerate((("brief_literal", C_GREY), ("primary", C_ORG), ("extended", "#38a169"))):
+        v = r[r["spec"] == spec].set_index("construct")["alpha"].reindex(cons)
+        ax.bar(np.arange(len(cons)) + (i - 1) * w, v.values, w, label=spec, color=col)
+    ax.axhline(0.7, ls="--", c="k", lw=0.7)
+    ax.set_xticks(np.arange(len(cons)))
+    ax.set_xticklabels(cons)
+    ax.set_ylabel("Cronbach's alpha (organisation group)")
+    ax.set_title("Scale reliability by specification (dashed = .70)")
+    ax.legend(frameon=False)
+    out.figure(fig, "01_reliability_by_specification")
+
+
+def fig_corr(ds: pd.DataFrame, out: Output) -> pd.DataFrame:
+    org = ds[ds["group"] == GROUP_ORG]
+    keys = CONSTRUCTS + ["SIZE"]
+    n = len(keys)
+    rho, pv = np.full((n, n), np.nan), np.full((n, n), np.nan)
+    for i in range(n):
+        for j in range(i, n):
+            sub = org[[keys[i], keys[j]]].dropna()
+            if i == j:
+                rho[i, j], pv[i, j] = 1.0, 0.0
+            elif len(sub) >= MIN_PAIR_N:
+                rho[i, j], pv[i, j] = stats.spearmanr(sub.iloc[:, 0], sub.iloc[:, 1])
+                rho[j, i], pv[j, i] = rho[i, j], pv[i, j]
     iu = np.triu_indices(n, 1)
     q = np.full((n, n), np.nan)
-    q[iu] = bh_fdr(pv.values[iu])
+    q[iu] = bh_fdr(pv[iu])
     q = np.where(np.isnan(q), q.T, q)
-    np.fill_diagonal(q, 0.0)
-    return pd.DataFrame(q, index=pv.index, columns=pv.columns)
-
-
-def partial_spearman_matrix(df: pd.DataFrame, cols: list[str], controls: list[str]):
-    """Spearman partial correlations: rank-transform, residualise on controls, correlate residuals."""
-    rho = pd.DataFrame(np.nan, index=cols, columns=cols)
-    pv, nn = rho.copy(), rho.copy()
-    for i, a in enumerate(cols):
-        for b in cols[i:]:
-            if a == b:
-                rho.loc[a, b], pv.loc[a, b], nn.loc[a, b] = 1.0, 0.0, df[a].notna().sum()
-                continue
-            sub = df[[a, b] + controls].dropna()
-            if len(sub) < MIN_PAIR_N + len(controls) or sub[a].nunique() < 2 or sub[b].nunique() < 2:
-                continue
-            R = sub.rank()
-            C = np.column_stack([np.ones(len(R)), R[controls].values])
-            ra = R[a].values - C @ np.linalg.lstsq(C, R[a].values, rcond=None)[0]
-            rb = R[b].values - C @ np.linalg.lstsq(C, R[b].values, rcond=None)[0]
-            r = np.corrcoef(ra, rb)[0, 1]
-            dof = len(sub) - 2 - len(controls)
-            t = r * np.sqrt(dof / max(1e-12, 1 - r ** 2))
-            rho.loc[a, b] = rho.loc[b, a] = r
-            pv.loc[a, b] = pv.loc[b, a] = 2 * stats.t.sf(abs(t), dof)
-            nn.loc[a, b] = nn.loc[b, a] = len(sub)
-    return rho, pv, fdr_sym(pv), nn
-
-
-def ols_fit(df: pd.DataFrame, y: str, cont: list[str], dummies: list[str] | None = None):
-    """OLS with HC3 heteroskedasticity-robust SEs.  y and `cont` predictors are z-scored (standardised betas);
-    0/1 dummies are left as 0/1 (their beta = shift in SD of y).  Also returns VIFs and a joint (Wald) test
-    for the dummy block, so a multi-category control such as Mission gets ONE test (the equation's single gamma)."""
-    dummies = dummies or []
-    xs = list(cont) + list(dummies)
-    sub = df[[y] + xs].dropna()
-    Z = sub.copy().astype(float)
-    for c in [y] + list(cont):
-        Z[c] = (sub[c] - sub[c].mean()) / sub[c].std(ddof=0)
-    X = np.column_stack([np.ones(len(Z)), Z[xs].values])
-    Y = Z[y].values
-    n, k = X.shape
-    XtXi = np.linalg.pinv(X.T @ X)
-    beta = XtXi @ X.T @ Y
-    res = Y - X @ beta
-    dof = n - k
-    h = np.einsum("ij,jk,ik->i", X, XtXi, X)
-    meat = (X.T * (res ** 2 / (1 - h) ** 2)) @ X
-    cov = XtXi @ meat @ XtXi                                   # HC3
-    se = np.sqrt(np.diag(cov))
-    p = 2 * stats.t.sf(np.abs(beta / se), dof)
-    tcrit = stats.t.ppf(0.975, dof)
-    r2 = 1 - (res @ res) / (Y @ Y)
-    adj = 1 - (1 - r2) * (n - 1) / dof
-    fstat = (r2 / (k - 1)) / ((1 - r2) / dof)
-    vif = []
-    for j, name in enumerate(xs):
-        Xo = np.column_stack([np.ones(n)] + [Z[c].values for c in xs if c != name])
-        bj = np.linalg.lstsq(Xo, Z[name].values, rcond=None)[0]
-        ss = ((Z[name].values - Z[name].mean()) ** 2).sum()
-        rj = 1 - ((Z[name].values - Xo @ bj) ** 2).sum() / ss if ss > 0 else 0
-        vif.append(1 / (1 - rj) if rj < 1 else np.inf)
-    coef = pd.DataFrame({"predictor": [LABELS.get(c, c) for c in xs], "key": xs, "std_beta": beta[1:], "robust_se": se[1:],
-                         "ci_low": beta[1:] - tcrit * se[1:], "ci_high": beta[1:] + tcrit * se[1:],
-                         "p_value": p[1:], "VIF": vif})
-    coef["q_value_FDR"] = bh_fdr(coef["p_value"].values)
-    summ = {"n": n, "r2": r2, "adj_r2": adj, "F": fstat, "F_p": stats.f.sf(fstat, k - 1, dof)}
-    if dummies:
-        idx = [1 + xs.index(c) for c in dummies]
-        b = beta[idx]
-        W = b @ np.linalg.pinv(cov[np.ix_(idx, idx)]) @ b
-        summ["mission_F"] = W / len(idx)
-        summ["mission_p"] = stats.f.sf(W / len(idx), len(idx), dof)
-    return coef, summ
-
-
-def mediation_bootstrap(df: pd.DataFrame, xs: list[str], controls: list[str], B: int = 2000, seed: int = 42):
-    """Parallel mediation X -> {BO, JS} -> RET (controls in every equation).  All continuous variables z-scored on the
-    complete-case sample; percentile bootstrap CIs for the indirect effects a*b."""
-    cols = list(dict.fromkeys(xs + controls + ["BO", "JS", "RET"]))
-    sub = df[cols].dropna().astype(float)
-    Z = (sub - sub.mean()) / sub.std(ddof=0)
-    Z[[c for c in controls if c in MISSION_KEYS]] = sub[[c for c in controls if c in MISSION_KEYS]]   # keep dummies 0/1
-    n = len(Z)
-    rng = np.random.default_rng(seed)
-
-    def fit(X, Y):
-        return np.linalg.lstsq(X, Y, rcond=None)[0]
-
-    def paths(Zb):
-        base = np.column_stack([np.ones(len(Zb)), Zb[xs + controls].values])
-        a_bo = fit(base, Zb["BO"].values)[1:1 + len(xs)]
-        a_js = fit(base, Zb["JS"].values)[1:1 + len(xs)]
-        full = np.column_stack([np.ones(len(Zb)), Zb[["BO", "JS"]].values, Zb[xs + controls].values])
-        bb = fit(full, Zb["RET"].values)
-        b_bo, b_js, direct = bb[1], bb[2], bb[3:3 + len(xs)]
-        tot = fit(base, Zb["RET"].values)[1:1 + len(xs)]
-        return a_bo * b_bo, a_js * b_js, direct, tot
-
-    ibo, ijs, direct, total = paths(Z)
-    draws = []
-    for _ in range(B):
-        zb = Z.iloc[rng.integers(0, n, n)]
-        a, b, _, _ = paths(zb)
-        draws.append(np.concatenate([a, b]))
-    draws = np.array(draws)
-    k = len(xs)
-    lo, hi = np.percentile(draws, [2.5, 97.5], axis=0)
-    tot_ind = draws[:, :k] + draws[:, k:]
-    tlo, thi = np.percentile(tot_ind, [2.5, 97.5], axis=0)
-    out = pd.DataFrame({"predictor": [LABELS[c] for c in xs], "key": xs,
-                        "indirect_via_burnout": ibo, "via_BO_ci_low": lo[:k], "via_BO_ci_high": hi[:k],
-                        "indirect_via_job_sat": ijs, "via_JS_ci_low": lo[k:], "via_JS_ci_high": hi[k:],
-                        "total_indirect": ibo + ijs, "total_ind_ci_low": tlo, "total_ind_ci_high": thi,
-                        "direct_effect": direct, "total_effect": total})
-    out["indirect_significant"] = (out["total_ind_ci_low"] > 0) | (out["total_ind_ci_high"] < 0)
-    return out, n
-
-
-def md_table(df: pd.DataFrame, floatfmt: str = "{:.3g}") -> str:
-    """Tiny markdown-table writer (avoids the optional `tabulate` dependency)."""
-    cols = list(df.columns)
-    lines = ["| " + " | ".join(map(str, cols)) + " |", "|" + "---|" * len(cols)]
-    for _, r in df.iterrows():
-        lines.append("| " + " | ".join(floatfmt.format(v) if isinstance(v, (float, np.floating)) and pd.notna(v) else
-                                       ("" if pd.isna(v) else str(v)) for v in r.values) + " |")
-    return "\n".join(lines)
-
-
-# --------------------------------------------------------------------------- #
-# 3. Plots  -- EVERY chart is its own file (no multi-panel figures) so each can be dropped straight into a document
-# --------------------------------------------------------------------------- #
-SINGLE = (6.8, 4.4)        # default single-chart size (inches)
-WIDE = (8.6, 5.2)
-
-
-def barh_counts(ax, series: pd.Series, title: str, order=None, color=None, titlesize=12, fontsize=8, top: int | None = None):
-    s = series.dropna()
-    vc = s.value_counts()
-    if order is not None:
-        vc = vc.reindex([o for o in order if o in vc.index]).dropna()
-    elif top:
-        vc = vc.head(top)
-    vc = vc[::-1]
-    ax.barh(vc.index.astype(str), vc.values, color=color or PALETTE[0])
-    for i, v in enumerate(vc.values):
-        ax.text(v + vc.max() * 0.01, i, f"{int(v)} ({v / len(s) * 100:.0f}%)", va="center", fontsize=fontsize)
-    ax.set_xlim(0, vc.max() * 1.28)
-    ax.set_title(f"{title} (n={len(s)})", fontsize=titlesize, loc="left", fontweight="bold")
-    ax.grid(axis="y", visible=False)
-
-
-def one_bar(d, col, title, fname, out: Out, order=None, color=None, top=None, size=SINGLE):
-    fig, ax = plt.subplots(figsize=size)
-    barh_counts(ax, d[col].astype(object), title, order=order, color=color, top=top)
-    out.save_fig(fig, fname)
-
-
-def figs_profile(d, out: Out):
-    s = "01_profile/"
-    one_bar(d, "respondent_type", "Respondent type", s + "respondent_type.png", out, color=PALETTE[0])
-    one_bar(d, "org_type", "Organisation type", s + "org_type.png", out, color=PALETTE[1])
-    one_bar(d, "org_size_cat", "Organisation size (full-time staff)", s + "org_size.png", out, order=SIZE_LABEL, color=PALETTE[2])
-    one_bar(d, "role", "Role in organisation", s + "role.png", out, color=PALETTE[3])
-    one_bar(d, "gender", "Gender", s + "gender.png", out, color=PALETTE[4], size=(5.5, 3.6))
-    one_bar(d, "age_cat", "Age", s + "age.png", out, order=AGE_LABEL, color=PALETTE[5], size=(5.5, 4))
-    one_bar(d, "county", "Main county / city (top 10)", s + "county_top10.png", out, top=10, color=PALETTE[6])
-    one_bar(d, "helping_yrs_cat", "Years in helping work", s + "helping_years.png", out, order=TENURE_LABEL, color=PALETTE[7])
-    one_bar(d, "hours_actual_cat", "Actual hours worked, past 7 days", s + "hours_actual.png", out,
-            order=list(HOURS_ACTUAL_LABEL.values()), color=PALETTE[8])
-
-
-def likert_stack(ax, data: pd.DataFrame, levels, level_labels, cmap, title):
-    pct = pd.DataFrame({lv: (data == lv).sum() / data.notna().sum() * 100 for lv in levels})
-    pct = pct.loc[data.mean().sort_values().index]
-    names = [LABELS.get(k, k) for k in pct.index]
-    left = np.zeros(len(pct))
-    for lv, lab, col in zip(levels, level_labels, sns.color_palette(cmap, len(levels))):
-        ax.barh(names, pct[lv], left=left, color=col, label=lab, edgecolor="white", linewidth=0.5)
-        for i, (l, w) in enumerate(zip(left, pct[lv])):
-            if w >= 7:
-                ax.text(l + w / 2, i, f"{w:.0f}", ha="center", va="center", fontsize=8,
-                        color="white" if lv in (levels[0], levels[-1]) else "black")
-        left += pct[lv].values
-    ax.set_xlim(0, 100)
-    ax.set_xlabel("% of respondents")
-    ax.set_title(title, loc="left", fontweight="bold", fontsize=11)
-    ax.legend(ncol=len(levels), loc="upper center", bbox_to_anchor=(0.5, -0.12), frameon=False, fontsize=8)
-    ax.grid(axis="y", visible=False)
-
-
-def figs_likert(d, out: Out):
-    org = d[d["is_freelancer"] == 0]
-    fig, ax = plt.subplots(figsize=(10, 5.5))
-    likert_stack(ax, org[[k for k, _, _ in D_ITEMS]], [0, 1, 2, 3, 4], ["None", "Mild", "Moderate", "Severe", "Very severe"],
-                 "YlOrRd", f"Distress caused by job demands, past 6 months (org respondents, n={len(org.dropna(subset=['d_workload']))})")
-    out.save_fig(fig, "02_job_demands_resources/job_demands_distress.png")
-    fig, ax = plt.subplots(figsize=(10, 5.5))
-    likert_stack(ax, org[[k for k, _, _ in R_ITEMS]], [1, 2, 3, 4, 5],
-                 ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"], "RdYlBu",
-                 "Agreement with job-resource statements (org respondents)")
-    out.save_fig(fig, "02_job_demands_resources/job_resources_agreement.png")
-
-
-def figs_burnout(d, out: Out):
-    s = "03_burnout/"
-    fig, ax = plt.subplots(figsize=SINGLE)
-    for col, name, c in [("personal_bo", "Personal burnout", PALETTE[0]), ("work_bo", "Work-related burnout", PALETTE[3])]:
-        sns.kdeplot(d[col].dropna(), ax=ax, fill=True, alpha=0.35, color=c, label=f"{name} (mean {d[col].mean():.1f})")
-    for x in (50, 75):
-        ax.axvline(x, ls="--", c="grey", lw=0.8)
-    ax.set_xlim(0, 100)
-    ax.set_xlabel("C-CBI-style score (0-100)")
-    ax.set_title("Burnout score distributions", loc="left", fontweight="bold")
-    ax.legend(frameon=False)
-    out.save_fig(fig, s + "burnout_distributions.png")
-
-    fig, ax = plt.subplots(figsize=SINGLE)
-    lv = pd.DataFrame({"Personal": d["personal_bo_level"].value_counts(normalize=True),
-                       "Work-related": d["work_bo_level"].value_counts(normalize=True)}).reindex(BURNOUT_LABELS) * 100
-    lv.T.plot(kind="barh", stacked=True, ax=ax, color=["#8fd19e", "#f6c85f", "#e4572e"], edgecolor="white")
-    for i, row in enumerate(lv.T.values):
-        left = 0
-        for v in row:
-            if v >= 6:
-                ax.text(left + v / 2, i, f"{v:.0f}%", ha="center", va="center", fontsize=9)
-            left += v
-    ax.set_xlim(0, 100)
-    ax.set_xlabel("% of respondents")
-    ax.set_title("Burnout level (cut-offs 50 / 75)", loc="left", fontweight="bold")
-    ax.legend(frameon=False, ncol=3, loc="upper center", bbox_to_anchor=(0.5, -0.15))
-    ax.grid(axis="y", visible=False)
-    out.save_fig(fig, s + "burnout_levels.png")
-
-    fig, ax = plt.subplots(figsize=SINGLE)
-    melt = d.melt(id_vars="respondent_type", value_vars=["personal_bo", "work_bo"]).dropna()
-    melt["variable"] = melt["variable"].map({"personal_bo": "Personal", "work_bo": "Work-related"})
-    sns.boxplot(data=melt, x="variable", y="value", hue="respondent_type", ax=ax, palette="Set2", fliersize=2)
-    ax.set_xlabel("")
-    ax.set_ylabel("Burnout score (0-100)")
-    ax.set_title("Burnout by respondent type", loc="left", fontweight="bold")
-    ax.legend(frameon=False, fontsize=8, title="")
-    out.save_fig(fig, s + "burnout_by_respondent_type.png")
-
-    fig, ax = plt.subplots(figsize=SINGLE)
-    order = [o for o in ["Frontline helper", "Mid-level manager", "Admin / project / finance", "Founder / decision-maker"]
-             if o in d["role"].values]
-    sns.boxplot(data=d[d["role"].isin(order)], x="work_bo", y="role", order=order, ax=ax, palette="Set3", fliersize=2)
-    ax.set_xlabel("Work-related burnout (0-100)")
-    ax.set_ylabel("")
-    ax.set_title("Work-related burnout by role", loc="left", fontweight="bold")
-    out.save_fig(fig, s + "work_burnout_by_role.png")
-
-
-def figs_wellbeing(d, out: Out):
-    s = "04_wellbeing/"
-    fig, ax = plt.subplots(figsize=SINGLE)
-    long = d.melt(value_vars=["proqol_cs", "proqol_bo", "proqol_sts"]).dropna()
-    long["variable"] = long["variable"].map({"proqol_cs": "Compassion\nsatisfaction", "proqol_bo": "Burnout",
-                                              "proqol_sts": "Secondary\ntraumatic stress"})
-    sns.violinplot(data=long, x="variable", y="value", ax=ax, palette=["#6bbf8a", "#e4572e", "#7a6fb0"], inner="quartile", cut=0)
-    ax.set_ylabel("Mean item score (1-5)")
-    ax.set_xlabel("")
-    ax.set_title("ProQOL-9 subscales", loc="left", fontweight="bold")
-    out.save_fig(fig, s + "proqol_subscales.png")
-
-    fig, ax = plt.subplots(figsize=SINGLE)
-    sns.histplot(d["engagement"].dropna(), bins=np.arange(0.75, 7.5, 0.5), ax=ax, color=PALETTE[2])
-    ax.set_xlabel("UWES-3 engagement (1 = never ... 7 = always)")
-    ax.set_title(f"Work engagement / inner drive (mean {d['engagement'].mean():.2f})", loc="left", fontweight="bold")
-    out.save_fig(fig, s + "engagement_distribution.png")
-
-    fig, ax = plt.subplots(figsize=(8.4, 5))
-    vals = d[[f"b{i}" for i in range(1, 7)] + [f"w{i}" for i in range(1, 8)]].copy()
-    vals["w7"] = 6 - vals["w7"]
-    m = vals.mean().sort_values()
-    ax.barh([LABELS[k] for k in m.index], m.values, color=[PALETTE[0] if k.startswith("b") else PALETTE[3] for k in m.index])
-    ax.set_xlim(1, 5)
-    ax.set_xlabel("Mean (1-5, higher = more burnout)")
-    ax.set_title("Burnout items (blue = personal, red = work-related)", loc="left", fontweight="bold")
-    ax.tick_params(axis="y", labelsize=8)
-    ax.grid(axis="y", visible=False)
-    out.save_fig(fig, s + "burnout_item_means.png")
-
-
-def figs_turnover(d, out: Out):
-    s = "05_turnover/"
-    org = d[d["is_freelancer"] == 0]
-    fig, ax = plt.subplots(figsize=SINGLE)
-    lab = {0: "Never", 1: "Once/twice", 2: "Monthly", 3: "Weekly", 4: "Daily"}
-    vc = org["consider_leaving"].map(lab).value_counts().reindex(list(lab.values()))
-    ax.bar(vc.index, vc.values, color=sns.color_palette("YlOrRd", 5))
-    ax.set_title("Considered leaving, past 6 months", loc="left", fontweight="bold")
-    ax.tick_params(axis="x", rotation=25)
-    out.save_fig(fig, s + "considered_leaving.png")
-
-    fig, ax = plt.subplots(figsize=SINGLE)
-    lab2 = {1: "Definitely\nnot", 2: "Probably\nnot", 3: "Unsure", 4: "Probably\nyes", 5: "Yes, long-term"}
-    vc = org["expect_stay"].map(lab2).value_counts().reindex(list(lab2.values()))
-    ax.bar(vc.index, vc.values, color=sns.color_palette("RdYlGn", 5))
-    ax.set_title("Expect to be here in 1 year?", loc="left", fontweight="bold")
-    ax.tick_params(axis="x", labelsize=8)
-    out.save_fig(fig, s + "expect_to_stay.png")
-
-    fig, ax = plt.subplots(figsize=SINGLE)
-    pct = org[["job_search", "resume", "applied"]].mean() * 100
-    ax.bar(["Searched for\njobs", "Updated\nresume", "Applied\nelsewhere"], pct.values, color=PALETTE[:3])
-    for i, v in enumerate(pct.values):
-        ax.text(i, v + 1, f"{v:.0f}%", ha="center")
-    ax.set_ylim(0, 100)
-    ax.set_ylabel("% of org respondents")
-    ax.set_title("Job-search behaviour, past 6 months", loc="left", fontweight="bold")
-    out.save_fig(fig, s + "job_search_behaviour.png")
-
-
-def figs_hours(d, out: Out):
-    s = "06_working_hours/"
-    sub = d.dropna(subset=["hours_agreed", "hours_actual_cat"])
-    ct = pd.crosstab(sub["hours_agreed"], sub["hours_actual_cat"]).reindex(
-        index=[v for v in ["<=20", "21-40", "41+", "No agreement"] if v in sub["hours_agreed"].values],
-        columns=list(HOURS_ACTUAL_LABEL.values()), fill_value=0)
-    fig, ax = plt.subplots(figsize=SINGLE)
-    sns.heatmap(ct, annot=True, fmt="d", cmap="Blues", ax=ax, cbar_kws={"label": "respondents"})
-    ax.set_xlabel("Actual hours worked (past 7 days)")
-    ax.set_ylabel("Agreed weekly hours")
-    ax.set_title("Agreed vs actual working hours", loc="left", fontweight="bold")
-    out.save_fig(fig, s + "agreed_vs_actual_hours.png")
-
-    fig, ax = plt.subplots(figsize=SINGLE)
-    sub2 = d.dropna(subset=["hours_actual_cat", "work_bo"])
-    sns.boxplot(data=sub2, x="hours_actual_cat", y="work_bo", ax=ax, palette="YlOrRd", fliersize=2)
-    ax.set_xlabel("Actual hours worked (past 7 days)")
-    ax.set_ylabel("Work-related burnout (0-100)")
-    ax.set_title("Burnout by actual hours", loc="left", fontweight="bold")
-    out.save_fig(fig, s + "burnout_by_actual_hours.png")
-
-
-def figs_eap(d, out: Out):
-    s = "07_support_programmes/"
-    cur, n_cur = multiselect_counts(d["_support_current"], SUPPORT_KW)
-    want, n_want = multiselect_counts(d["_support_wanted"], SUPPORT_KW)
-    cmp_ = pd.DataFrame({"Currently available": cur, "Most wanted (pick up to 3)": want}).dropna(how="all")
-    cmp_ = cmp_.sort_values("Most wanted (pick up to 3)")
-    fig, ax = plt.subplots(figsize=(9, 5.8))
-    y = np.arange(len(cmp_))
-    ax.barh(y + 0.2, cmp_["Currently available"], 0.4, label=f"Currently available (n={n_cur})", color=PALETTE[0])
-    ax.barh(y - 0.2, cmp_["Most wanted (pick up to 3)"], 0.4, label=f"Most wanted (n={n_want})", color=PALETTE[3])
-    ax.set_yticks(y)
-    ax.set_yticklabels(cmp_.index)
-    ax.set_xlabel("% of respondents")
-    ax.set_title("Employee-support (EAP) measures: availability vs need", loc="left", fontweight="bold")
-    ax.legend(frameon=False)
-    ax.grid(axis="y", visible=False)
-    out.save_fig(fig, s + "eap_supply_vs_demand.png")
-    out.save_tab(cmp_.round(1), "eap_supply_vs_demand_pct.csv")
-
-    bar, n_b = multiselect_counts(d["_barriers"], BARRIER_KW)
-    bar = bar[bar > 0].sort_values()
-    fig, ax = plt.subplots(figsize=(8.6, 5))
-    ax.barh(bar.index, bar.values, color=PALETTE[4])
-    for i, v in enumerate(bar.values):
-        ax.text(v + 0.5, i, f"{v:.0f}%", va="center", fontsize=9)
-    ax.set_xlabel("% of respondents")
-    ax.set_title(f"Why the organisation has no/limited support systems (n={n_b})", loc="left", fontweight="bold", fontsize=11)
-    ax.grid(axis="y", visible=False)
-    out.save_fig(fig, s + "eap_barriers.png")
-    out.save_tab(bar.round(1).to_frame("pct"), "eap_barriers_pct.csv")
-
-    prog = d["program_interest"].map(lambda v: np.nan if pd.isna(v) else
-        "Very much, we need it" if "非常希望" in v else "Yes, unsure of capacity" if "餘力" in v else
-        "Fine / optional" if "可有可無" in v else "Not interested (other priorities)" if "不太希望" in v else "Not sure")
-    fig, ax = plt.subplots(figsize=SINGLE)
-    barh_counts(ax, prog, "Would your org join a free support programme?", color=PALETTE[2], titlesize=11)
-    out.save_fig(fig, s + "programme_interest.png")
-    dm = d["decision_maker_attitude"].map(lambda v: np.nan if pd.isna(v) else
-        "Interested but cost/workload worry" if "擔心成本" in v else "Might think unnecessary" if "不需要" in v else
-        "Not the right time" if "不是時候" in v else "Very enthusiastic" if "很積極" in v else
-        "I am the decision-maker" if "決策者" in v and "自己" in v else "Not sure")
-    fig, ax = plt.subplots(figsize=SINGLE)
-    barh_counts(ax, dm, "Expected attitude of decision-makers", color=PALETTE[5], titlesize=11)
-    out.save_fig(fig, s + "decision_maker_attitude.png")
-
-
-def annotate_corr(rho, qv, keys_r, keys_c, diag_blank=True):
-    a = pd.DataFrame("", index=keys_r, columns=keys_c, dtype=object)
-    for r in keys_r:
-        for c in keys_c:
-            v = rho.loc[r, c]
-            if pd.isna(v):
-                continue
-            a.loc[r, c] = f"{v:.2f}" + ("" if (r == c) else stars(qv.loc[r, c]))
-    return a
-
-
-def fig_corr_composite(d, out: Out):
-    """Heat-map of every construct in the three equations + the other composite measures."""
-    keys = CONSTRUCTS + ["SIZE", "personal_bo", "work_bo", "proqol_bo", "proqol_sts", "consider_leaving", "expect_stay",
-                         "job_search_n", "hours_actual", "helping_yrs", "org_tenure", "age_ord"]
-    rho, pv, qv, nn = spearman_matrix(d, keys)
-    out.save_tab(rho.rename(index=LABELS, columns=LABELS).round(3), "corr_composite_spearman_rho.csv")
-    out.save_tab(qv.rename(index=LABELS, columns=LABELS).round(4), "corr_composite_fdr_q.csv")
-    annot = annotate_corr(rho, qv, keys, keys)
-    mask = np.triu(np.ones_like(rho, dtype=bool), k=1)
-    fig, ax = plt.subplots(figsize=(14, 11.5))
-    sns.heatmap(rho.astype(float), mask=mask, annot=annot.values, fmt="", cmap="RdBu_r", vmin=-1, vmax=1, center=0,
-                linewidths=0.5, square=True, ax=ax, annot_kws={"size": 7.5}, cbar_kws={"label": "Spearman rho", "shrink": 0.7},
-                xticklabels=[LABELS[k] for k in keys], yticklabels=[LABELS[k] for k in keys])
-    ax.set_title("Correlation heatmap: model constructs and composite measures\n(Spearman; * q<.05, ** q<.01, *** q<.001, BH-FDR)",
-                 loc="left", fontweight="bold", fontsize=11)
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
-    out.save_fig(fig, "08_correlations/corr_heatmap_composites.png")
-    return rho, pv, qv, nn
-
-
-def fig_corr_items(d, out: Out):
-    keys = ([k for k, _, _ in D_ITEMS] + [k for k, _, _ in R_ITEMS] + [k for k, _, _ in UWES_ITEMS]
-            + [k for k, _, _ in CBI_ITEMS] + [k for k, _, _ in PQ_ITEMS] + ["consider_leaving", "expect_stay"])
-    rho, pv, qv, nn = spearman_matrix(d, keys)
-    labels = [LABELS[k] for k in keys]
-    g = sns.clustermap(rho.fillna(0).astype(float).set_axis(labels, axis=0).set_axis(labels, axis=1), cmap="RdBu_r", vmin=-1,
-                       vmax=1, center=0, figsize=(17, 16), linewidths=0.2, cbar_kws={"label": "Spearman rho"},
-                       dendrogram_ratio=0.08, method="average")
-    g.fig.suptitle("Item-level correlation clustermap (hierarchically clustered)", y=1.0, fontweight="bold", fontsize=14)
-    plt.setp(g.ax_heatmap.get_xticklabels(), rotation=90, fontsize=7.5)
-    plt.setp(g.ax_heatmap.get_yticklabels(), fontsize=7.5)
-    out.save_fig(g.fig, "08_correlations/corr_clustermap_items.png")
-    out.save_tab(long_corr(rho, pv, qv, nn).round(4), "corr_item_level_all_pairs.csv", index=False)
-    return rho, pv, qv, nn
-
-
-def heat_block(rho, qv, rows, cols, fname, out: Out, title, figsize, vmax=0.7, mask_self=False):
-    block = rho.loc[rows, cols].astype(float)
-    annot = annotate_corr(rho, qv, rows, cols)
-    mask = pd.DataFrame(False, index=rows, columns=cols)
-    for r in rows:
-        for c in cols:
-            if r == c:
-                mask.loc[r, c] = True
-    fig, ax = plt.subplots(figsize=figsize)
-    sns.heatmap(block, annot=annot.values, fmt="", cmap="RdBu_r", vmin=-vmax, vmax=vmax, center=0, linewidths=0.5, ax=ax,
-                mask=mask.values, cbar_kws={"label": "Spearman rho"},
-                xticklabels=[LABELS[c] for c in cols], yticklabels=[LABELS[r] for r in rows])
-    ax.set_title(title, loc="left", fontweight="bold", fontsize=11)
-    plt.setp(ax.get_xticklabels(), rotation=35, ha="right")
-    out.save_fig(fig, fname)
-    return block
-
-
-def fig_demand_vs_resource(d, out: Out):
-    """Item-level demands (top) and resources (bottom) against the outcomes."""
-    dk = [k for k, _, _ in D_ITEMS]
-    rk = [k for k, _, _ in R_ITEMS]
-    outcomes = ["BO", "personal_bo", "work_bo", "JS", "ID", "consider_leaving", "expect_stay", "RET"]
-    rho, pv, qv, nn = spearman_matrix(d, dk + rk + outcomes)
-    block = heat_block(rho, qv, dk + rk, outcomes, "08_correlations/items_vs_outcomes_heatmap.png", out,
-                       "Which job demands / resources relate to well-being & retention?\n(top block: demands, bottom: resources; * q<.05 FDR)",
-                       (11, 9))
-    out.save_tab(block.rename(index=LABELS, columns=LABELS).round(3), "corr_items_vs_outcomes_rho.csv")
-
-
-def fig_segment_heatmap(d, out: Out):
-    metrics = {"Burnout": ("BO", 0, 100), "Job satisfaction": ("JS", 0, 100), "Retention": ("RET", 0, 100),
-               "Workload": ("WL", 0, 100), "Org support": ("OS", 0, 100), "Job resources": ("JR", 0, 100),
-               "Pay (high=less strain)": ("PAY", 0, 100), "Mission alignment": ("MA", 0, 100),
-               "Inner drive": ("ID", 0, 100), "Work burnout": ("work_bo", 0, 100), "Sec. traumatic stress": ("proqol_sts", 1, 5)}
-    segs = [("Role", "role"), ("Org size", "org_size_cat"), ("Org type", "org_type"), ("Gender", "gender"),
-            ("Age", "age_cat"), ("Region", "region"), ("Helping yrs", "helping_yrs_cat"),
-            ("Org tenure", "org_tenure_cat"), ("Actual hrs", "hours_actual_cat"), ("Type", "respondent_type")]
-    rows, idx = [], []
-    for sname, col in segs:
-        for g, sub in d.groupby(col, observed=True):
-            if len(sub) < MIN_GROUP_N:
-                continue
-            rows.append({m: (sub[c].mean() - lo) / (hi - lo) * 100 for m, (c, lo, hi) in metrics.items()})
-            idx.append(f"{sname}: {g} (n={len(sub)})")
-    seg = pd.DataFrame(rows, index=idx)
-    out.save_tab(seg.round(1), "segment_means_scaled_0_100.csv")
-    z = (seg - seg.mean()) / seg.std(ddof=0)
-    fig, ax = plt.subplots(figsize=(13, max(8, 0.3 * len(seg))))
-    sns.heatmap(z, annot=seg.round(0), fmt=".0f", cmap="RdYlBu_r", center=0, linewidths=0.4, ax=ax,
-                cbar_kws={"label": "column z-score (colour)  |  numbers = mean rescaled 0-100"}, annot_kws={"size": 8})
-    ax.set_title("Segment heatmap: mean indicators by subgroup (groups with n>=%d)" % MIN_GROUP_N, loc="left", fontweight="bold")
-    ax.xaxis.tick_top()
-    plt.setp(ax.get_xticklabels(), rotation=35, ha="left")
-    out.save_fig(fig, "08_correlations/segment_heatmap.png")
-
-
-def fig_correlates(d, target: str, fname: str, out: Out, title: str, exclude: list[str]):
-    cands = ([k for k, _, _ in D_ITEMS] + [k for k, _, _ in R_ITEMS] + CONSTRUCTS +
-             ["hours_actual", "helping_yrs", "org_tenure", "SIZE", "age_ord", "proqol_cs"])
-    cands = [c for c in cands if c not in exclude and c != target]
-    rows = []
-    for c in cands:
-        sub = d[[target, c]].dropna()
-        if len(sub) >= MIN_PAIR_N and sub[c].nunique() > 1:
-            r, p = stats.spearmanr(sub[target], sub[c])
-            rows.append({"key": c, "variable": LABELS[c], "rho": r, "p": p, "n": len(sub)})
-    t = pd.DataFrame(rows)
-    t["q"] = bh_fdr(t["p"].values)
-    t = t.sort_values("rho")
-    fig, ax = plt.subplots(figsize=(9.5, 0.28 * len(t) + 1.5))
-    ax.barh(t["variable"], t["rho"], color=np.where(t["rho"] > 0, "#e4572e", "#2e86ab"))
-    for i, (r, q) in enumerate(zip(t["rho"], t["q"])):
-        ax.text(r + (0.01 if r >= 0 else -0.01), i, stars(q), va="center", ha="left" if r >= 0 else "right", fontsize=9)
-    ax.axvline(0, color="black", lw=0.8)
-    ax.set_xlabel("Spearman rho (* q<.05, ** q<.01, *** q<.001)")
-    ax.set_title(title, loc="left", fontweight="bold")
-    ax.grid(axis="y", visible=False)
-    out.save_fig(fig, fname)
-    return t.sort_values("rho", key=np.abs, ascending=False)
-
-
-def scatter_pair(d, x, y, fname, out: Out, color):
-    sub = d[[x, y]].dropna()
-    fig, ax = plt.subplots(figsize=(6, 4.8))
-    rng = np.random.default_rng(1)
-    ax.scatter(sub[x] + rng.normal(0, 0.8, len(sub)), sub[y] + rng.normal(0, 0.8, len(sub)), s=22, alpha=0.45, color=color)
-    m, b = np.polyfit(sub[x], sub[y], 1)
-    xs = np.linspace(sub[x].min(), sub[x].max(), 50)
-    ax.plot(xs, m * xs + b, color="black", lw=1.8)
-    r, p = stats.spearmanr(sub[x], sub[y])
-    ax.set_xlabel(LABELS[x])
-    ax.set_ylabel(LABELS[y])
-    ax.set_title(f"rho = {r:.2f}, p = {p:.1g}, n = {len(sub)}", loc="left", fontsize=10, fontweight="bold")
-    out.save_fig(fig, fname)
-
-
-def figs_scatter(d, out: Out):
-    s = "08_correlations/scatter_"
-    for x, y, c in [("WL", "BO", PALETTE[3]), ("OS", "BO", PALETTE[0]), ("JR", "BO", PALETTE[9]), ("ID", "BO", PALETTE[2]),
-                    ("BO", "JS", PALETTE[4]), ("BO", "RET", PALETTE[1]), ("JS", "RET", PALETTE[2]), ("OS", "RET", PALETTE[5])]:
-        scatter_pair(d, x, y, f"{s}{x}_vs_{y}.png", out, c)
-    fig, ax = plt.subplots(figsize=SINGLE)
-    lab = {0: "Never", 1: "1-2x", 2: "Monthly", 3: "Weekly", 4: "Daily"}
-    sub = d.dropna(subset=["consider_leaving", "BO"]).copy()
-    sub["lv"] = pd.Categorical(sub["consider_leaving"].map(lab), categories=list(lab.values()), ordered=True)
-    sns.boxplot(data=sub, x="lv", y="BO", ax=ax, palette="YlOrRd", fliersize=2)
-    ax.set_xlabel("Frequency of considering leaving (past 6 months)")
-    ax.set_ylabel(LABELS["BO"])
-    r, p = stats.spearmanr(sub["consider_leaving"], sub["BO"])
-    ax.set_title(f"rho = {r:.2f}, p = {p:.1g}, n = {len(sub)}", loc="left", fontsize=10, fontweight="bold")
-    out.save_fig(fig, s + "BO_by_consider_leaving.png")
-
-
-# ---- model-specific charts -------------------------------------------------
-def fig_construct_means(d, out: Out):
-    org = d[d["is_freelancer"] == 0]
-    m = org[CONSTRUCTS].agg(["mean", "std", "count"]).T.sort_values("mean")
-    fig, ax = plt.subplots(figsize=WIDE)
-    ax.barh([LABELS[k] for k in m.index], m["mean"], xerr=m["std"], color=PALETTE[0], alpha=0.85, capsize=3)
-    for i, (mu, n) in enumerate(zip(m["mean"], m["count"])):
-        ax.text(2, i, f"{mu:.0f}  (n={int(n)})", va="center", color="white", fontsize=9, fontweight="bold")
-    ax.set_xlim(0, 105)
-    ax.set_xlabel("Mean score, 0-100 (error bar = SD)")
-    ax.set_title("Model constructs: mean level among organisation respondents", loc="left", fontweight="bold")
-    ax.grid(axis="y", visible=False)
-    out.save_fig(fig, "09_model/construct_means.png")
-
-
-def fig_alpha_compare(meta, out: Out):
-    t = meta["spec_compare"]
-    t = t[t["n_items"] > 1]
-    piv = t.pivot(index="construct", columns="version", values="cronbach_alpha").reindex(
-        [c for c in CONSTRUCTS if c in t["construct"].values])
-    fig, ax = plt.subplots(figsize=SINGLE)
-    y = np.arange(len(piv))
-    ax.barh(y + 0.2, piv["brief"], 0.4, label="As briefed", color="#b0b0b0")
-    ax.barh(y - 0.2, piv["revised"], 0.4, label="Revised", color=PALETTE[2])
-    for i, (a, b) in enumerate(zip(piv["brief"], piv["revised"])):
-        ax.text(max(a, 0) + 0.01, i + 0.2, f"{a:.2f}", va="center", fontsize=8)
-        ax.text(max(b, 0) + 0.01, i - 0.2, f"{b:.2f}", va="center", fontsize=8)
-    ax.axvline(0.7, ls="--", c="grey", lw=0.8)
-    ax.set_yticks(y)
-    ax.set_yticklabels(piv.index)
-    ax.set_xlim(0, 1.08)
-    ax.set_xlabel("Cronbach's alpha (dashed line = .70)")
-    ax.set_title("Scale reliability: briefed vs revised item groupings", loc="left", fontweight="bold", fontsize=11)
-    ax.grid(axis="y", visible=False)
+    fig, ax = plt.subplots(figsize=(7.4, 6.4))
+    im = ax.imshow(rho, cmap="RdBu_r", vmin=-1, vmax=1)
+    for i in range(n):
+        for j in range(n):
+            if i != j and not np.isnan(rho[i, j]):
+                ax.text(j, i, f"{rho[i, j]:.2f}{stars(q[i, j])}", ha="center", va="center", fontsize=7.5,
+                        color="white" if abs(rho[i, j]) > 0.6 else "black")
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(keys, rotation=45, ha="right")
+    ax.set_yticklabels(keys)
+    ax.grid(False)
+    fig.colorbar(im, shrink=0.75, label="Spearman rho")
+    ax.set_title("Construct correlations, organisation group\n(exploratory; * q<.05, ** q<.01, *** q<.001, BH-FDR)")
+    out.figure(fig, "02_construct_correlations")
+    return pd.DataFrame(rho, index=keys, columns=keys).join(pd.DataFrame(q, index=keys, columns=[f"q_{k}" for k in keys]))
+
+
+def fig_group_means(ds: pd.DataFrame, out: Output) -> None:
+    vars_ = [v for v in COMPARE_VARS]
+    fig, ax = plt.subplots(figsize=(7.4, 4.6))
+    for i, (g, c, off) in enumerate(((GROUP_ORG, C_ORG, -0.15), (GROUP_SELF, C_SELF, 0.15))):
+        sub = ds[ds["group"] == g]
+        mu = np.array([sub[v].mean() for v in vars_])
+        ns = np.array([sub[v].notna().sum() for v in vars_])
+        se = np.array([sub[v].std(ddof=1) / math.sqrt(max(n, 1)) for v, n in zip(vars_, ns)])
+        ci = stats.t.ppf(0.975, np.maximum(ns - 1, 1)) * se
+        ax.errorbar(mu, np.arange(len(vars_)) + off, xerr=ci, fmt="o", color=c, capsize=3, label=f"{g} (n={int(ns.max())})")
+    ax.set_yticks(range(len(vars_)))
+    ax.set_yticklabels([LABELS[v] for v in vars_])
+    ax.invert_yaxis()
+    ax.set_xlabel("Mean score, 0-100 (95% CI)")
+    ax.set_title("Organisation vs self-employed: outcomes measured in both blocks")
     ax.legend(frameon=False, loc="lower right")
-    out.save_fig(fig, "09_model/reliability_brief_vs_revised.png")
+    out.figure(fig, "03_group_comparison_means")
 
 
-def fig_model_correlations(d, out: Out):
-    org = d[d["is_freelancer"] == 0]
-    cons = CONSTRUCTS + ["SIZE"]
-    # 1) all construct pairs
-    rho, pv, qv, nn = spearman_matrix(org, cons)
-    annot = annotate_corr(rho, qv, cons, cons)
-    fig, ax = plt.subplots(figsize=(9.5, 8))
-    sns.heatmap(rho.astype(float), mask=np.triu(np.ones_like(rho, dtype=bool), k=1), annot=annot.values, fmt="", cmap="RdBu_r",
-                vmin=-1, vmax=1, center=0, linewidths=0.5, square=True, ax=ax, annot_kws={"size": 8},
-                cbar_kws={"label": "Spearman rho", "shrink": 0.75},
-                xticklabels=[LABELS[k] for k in cons], yticklabels=[LABELS[k] for k in cons])
-    ax.set_title("Equation constructs: Spearman correlations (org respondents)\n* q<.05, ** q<.01, *** q<.001 (BH-FDR)",
-                 loc="left", fontweight="bold", fontsize=11)
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
-    out.save_fig(fig, "09_model/construct_correlations.png")
-    out.save_tab(long_corr(rho, pv, qv, nn).round(4), "model_construct_correlations.csv", index=False)
-
-    # 2) partial correlations controlling Size + Mission (the equations' control set)
-    ctrl = ["SIZE"] + MISSION_KEYS
-    prho, ppv, pqv, pnn = partial_spearman_matrix(org, CONSTRUCTS, ctrl)
-    annot = annotate_corr(prho, pqv, CONSTRUCTS, CONSTRUCTS)
-    fig, ax = plt.subplots(figsize=(9, 7.5))
-    sns.heatmap(prho.astype(float), mask=np.triu(np.ones_like(prho, dtype=bool), k=1), annot=annot.values, fmt="", cmap="RdBu_r",
-                vmin=-1, vmax=1, center=0, linewidths=0.5, square=True, ax=ax, annot_kws={"size": 8},
-                cbar_kws={"label": "partial Spearman rho", "shrink": 0.75},
-                xticklabels=[LABELS[k] for k in CONSTRUCTS], yticklabels=[LABELS[k] for k in CONSTRUCTS])
-    ax.set_title("Partial correlations controlling for org size + mission area\n* q<.05, ** q<.01, *** q<.001 (BH-FDR)",
-                 loc="left", fontweight="bold", fontsize=11)
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
-    out.save_fig(fig, "09_model/construct_partial_correlations.png")
-    out.save_tab(long_corr(prho, ppv, pqv, pnn).round(4), "model_construct_partial_correlations.csv", index=False)
-
-    # 3) the equation paths: each predictor (+ mediators) vs each dependent variable
-    rows = PREDICTORS + ["SIZE", "BO", "JS"]
-    heat_block(rho, qv, rows, ["BO", "JS", "RET"], "09_model/equation_paths_correlations.png", out,
-               "Equation paths: predictors vs Burnout / Job satisfaction / Retention\n(Spearman; * q<.05 BH-FDR over all construct pairs)",
-               (6.8, 6.2), vmax=0.8)
-
-    # 4) facet level: predictors vs burnout sub-types, satisfaction items and retention behaviours
-    facets = ["personal_bo", "work_bo", "cs1", "cs2", "cs3", "consider_leaving", "expect_stay", "job_search_n", "hours_actual"]
-    keys = PREDICTORS + ["SIZE"] + facets
-    r2, p2, q2, n2 = spearman_matrix(org, keys)
-    heat_block(r2, q2, PREDICTORS + ["SIZE"], facets, "09_model/predictors_vs_facets_correlations.png", out,
-               "Predictors vs facets of the outcomes\n(Spearman; * q<.05 BH-FDR)", (10.5, 6.4), vmax=0.7)
-    out.save_tab(r2.loc[PREDICTORS + ["SIZE"], facets].rename(index=LABELS, columns=LABELS).round(3),
-                 "model_predictors_vs_facets_rho.csv")
-    return rho, pv, qv, nn, prho, ppv, pqv, pnn
+def fig_forest_equations(fits: dict, out: Output) -> None:
+    variants = [(("brief_literal", "org_incl_hybrid", "complete-case"), "As briefed (literal)", C_GREY, -0.27),
+                (("primary", "org_incl_hybrid", "complete-case"), "Primary, complete-case", C_ORG, -0.09),
+                (("primary", "org_incl_hybrid", "multiple imputation"), "Primary, multiple imputation", "#38a169", 0.09),
+                (("extended", "org_incl_hybrid", "complete-case"), "Extended items, complete-case", "#805ad5", 0.27)]
+    for eq, title in (("Eq1_BO", "Eq.1  Burnout"), ("Eq2_JS", "Eq.2  Job satisfaction"), ("Eq3_RET", "Eq.3  Retention")):
+        keys = STRUCTURAL[eq]
+        fig, ax = plt.subplots(figsize=(7.2, 1.2 + 0.85 * len(keys)))
+        for key, lab, col, off in variants:
+            coef = fits[key][0]
+            t = coef[(coef["equation"] == eq) & coef["key"].isin(keys)].set_index("key").reindex(keys)
+            y = np.arange(len(keys)) + off
+            ax.errorbar(t["std_beta"], y, xerr=[t["std_beta"] - t["ci_low"], t["ci_high"] - t["std_beta"]], fmt="o", ms=4,
+                        color=col, capsize=2, label=lab)
+        ax.axvline(0, c="k", lw=0.8)
+        ax.set_yticks(range(len(keys)))
+        ax.set_yticklabels([LABELS[k] for k in keys])
+        ax.invert_yaxis()
+        ax.set_xlabel("Standardised beta (95% CI; HC3-robust)")
+        ax.set_title(f"{title} - organisation group")
+        ax.legend(frameon=False, fontsize=7.5, loc="best")
+        out.figure(fig, f"04_{eq}_coefficients")
 
 
-def fig_regression(coef: pd.DataFrame, summ: dict, out: Out, name: str, title: str):
-    c = coef.sort_values("std_beta")
-    fig, ax = plt.subplots(figsize=(9, 0.3 * len(c) + 2))
-    colors = np.where(c["p_value"] < ALPHA, np.where(c["std_beta"] > 0, "#e4572e", "#2e86ab"), "#b0b0b0")
-    ax.barh(c["predictor"], c["std_beta"], color=colors)
-    ax.errorbar(c["std_beta"], np.arange(len(c)), xerr=[c["std_beta"] - c["ci_low"], c["ci_high"] - c["std_beta"]],
-                fmt="none", ecolor="black", lw=0.8, capsize=2)
-    ax.axvline(0, color="black", lw=0.8)
-    ax.set_xlabel("Standardised beta, 95% CI (HC3-robust) -- coloured = p<.05, grey = n.s.")
-    extra = f", Mission block p={summ['mission_p']:.2g}" if "mission_p" in summ else ""
-    ax.set_title(f"{title}\nn={summ['n']}, R²={summ['r2']:.2f}, adj. R²={summ['adj_r2']:.2f}{extra}",
-                 loc="left", fontweight="bold", fontsize=11)
-    ax.grid(axis="y", visible=False)
-    out.save_fig(fig, name)
+def fig_missingness(uni: pd.DataFrame, out: Output) -> None:
+    t = uni.sort_values("std_mean_diff_(obs-miss)")
+    fig, ax = plt.subplots(figsize=(7, 5))
+    colors = np.where(t["q_fdr"] < 0.05, C_SELF, C_GREY)
+    ax.scatter(t["std_mean_diff_(obs-miss)"], t["label"], c=colors, s=40)
+    ax.axvline(0, c="k", lw=0.8)
+    for x in (-0.2, 0.2):
+        ax.axvline(x, ls=":", c="grey", lw=0.8)
+    ax.set_xlabel("Standardised mean difference: JS answered minus JS skipped")
+    ax.set_title("Who skipped the optional ProQOL block? (orange = q<.05)")
+    out.figure(fig, "05_js_missingness_balance")
 
 
-def fig_mediation(med: pd.DataFrame, n: int, out: Out):
-    t = med.sort_values("total_indirect")
-    fig, ax = plt.subplots(figsize=(8.8, 5))
+def fig_tipping(tp: pd.DataFrame, out: Output) -> None:
+    fig, axes = plt.subplots(1, 2, figsize=(9, 3.6), sharey=True)
+    for ax, key, title in zip(axes, ("JS", "BO"), ("JS -> Retention", "BO -> Retention")):
+        t = tp[(tp["equation"] == "Eq3_RET") & (tp["key"] == key)]
+        ax.plot(t["delta_imputed_JS"], t["std_beta"], "o-", color=C_ORG)
+        ax.fill_between(t["delta_imputed_JS"], t["ci_low"], t["ci_high"], alpha=0.2, color=C_ORG)
+        ax.axhline(0, c="k", lw=0.8)
+        ax.set_title(title)
+        ax.set_xlabel("Shift applied to imputed JS (0-100 points)")
+    axes[0].set_ylabel("Pooled standardised beta (95% CI)")
+    fig.suptitle("Tipping-point analysis: skipped-JS respondents differ from observed by delta", fontsize=10, fontweight="bold")
+    out.figure(fig, "06_delta_tipping_point")
+
+
+def fig_mediation(med_cc: pd.DataFrame, med_mi: pd.DataFrame, out: Output) -> None:
+    fig, axes = plt.subplots(1, 3, figsize=(11, 3.8), sharey=True)
+    for ax, kind, title in zip(axes, ("ind_BO", "ind_JS", "ind_total"), ("Indirect via burnout", "Indirect via job satisfaction", "Total indirect")):
+        for med, col, off, lab in ((med_cc, C_ORG, -0.12, "complete-case (BCa)"), (med_mi, "#38a169", 0.12, "imputed (percentile)")):
+            t = med[med["kind"] == kind].set_index("predictor").reindex(PREDICTORS)
+            ax.errorbar(t["estimate"], np.arange(len(PREDICTORS)) + off, xerr=[t["estimate"] - t["ci_low"], t["ci_high"] - t["estimate"]],
+                        fmt="o", ms=4, color=col, capsize=2, label=lab)
+        ax.axvline(0, c="k", lw=0.8)
+        ax.set_title(title)
+        ax.set_xlabel("Effect on RET per 1 point of X")
+    axes[0].set_yticks(range(len(PREDICTORS)))
+    axes[0].set_yticklabels(PREDICTORS)
+    axes[0].invert_yaxis()
+    axes[0].legend(frameon=False, fontsize=7.5)
+    fig.suptitle("Associational parallel mediation X -> {BO, JS} -> RET (unstandardised, 95% CI)", fontsize=10, fontweight="bold")
+    out.figure(fig, "07_mediation_indirect_effects")
+
+
+def fig_validation(det: pd.DataFrame, out: Output) -> None:
+    fig, ax = plt.subplots(figsize=(5.8, 5.6))
+    for pipe, col, mk in (("extended CC", "#805ad5", "o"), ("primary CC", C_ORG, "s")):
+        t = det[det["pipeline"] == pipe]
+        ax.scatter(t["beta_iqp"], t["beta_here"], c=col, marker=mk, s=38, label=pipe, alpha=0.85)
+    bad = det[(det["pipeline"] == "extended CC") & (~det["same_sign"])]
+    for _, r in bad.iterrows():
+        ax.annotate(f"{r['equation'].split('_')[0]} {r['term']}: sign differs", (r["beta_iqp"], r["beta_here"]),
+                    xytext=(8, -14), textcoords="offset points", fontsize=8, arrowprops={"arrowstyle": "-", "color": "k"})
+    lim = [-0.7, 0.7]
+    ax.plot(lim, lim, "k--", lw=0.8)
+    ax.set_xlim(lim)
+    ax.set_ylim(lim)
+    ax.set_xlabel("Standardised beta printed in the IQP report")
+    ax.set_ylabel("Standardised beta recomputed here")
+    ax.set_title("Validation against the IQP report")
+    ax.legend(frameon=False)
+    out.figure(fig, "08_validation_vs_iqp_report")
+
+
+def fig_gap_dumbbell(gap: pd.DataFrame, out: Output) -> None:
+    t = gap.dropna(subset=["staff_provided_pct", "staff_wanted_pct"]).sort_values("staff_unmet_pct")
+    fig, ax = plt.subplots(figsize=(8, 4.6))
     y = np.arange(len(t))
-    cols = np.where(t["indirect_significant"], "#e4572e", "#b0b0b0")
-    ax.scatter(t["total_indirect"], y, color=cols, zorder=3, s=45)
-    ax.hlines(y, t["total_ind_ci_low"], t["total_ind_ci_high"], color=cols, lw=2)
-    ax.axvline(0, color="black", lw=0.8)
+    ax.hlines(y, t["staff_provided_pct"], t["staff_wanted_pct"], color="#cbd5e0", lw=3, zorder=1)
+    ax.scatter(t["staff_provided_pct"], y, s=55, color=C_ORG, label="Provided (staff say it exists)", zorder=2)
+    ax.scatter(t["staff_wanted_pct"], y, s=55, color=C_SELF, label="Wanted (top-3 pick)", zorder=2)
+    for yi, (_, r) in zip(y, t.iterrows()):
+        ax.text(max(r["staff_provided_pct"], r["staff_wanted_pct"]) + 2.5, yi, f"unmet {r['staff_unmet_pct']:.0f}%", va="center", fontsize=8)
     ax.set_yticks(y)
-    ax.set_yticklabels(t["predictor"])
-    ax.set_xlabel("Standardised indirect effect on Retention via Burnout + Job satisfaction (95% bootstrap CI)")
-    ax.set_title(f"Mediation: do Burnout and Job satisfaction carry each predictor's effect on Retention? (n={n})\n"
-                 "red = CI excludes 0", loc="left", fontweight="bold", fontsize=10.5)
-    ax.grid(axis="y", visible=False)
-    out.save_fig(fig, "09_model/mediation_indirect_effects.png")
+    ax.set_yticklabels(t["item"])
+    ax.set_xlim(0, 80)
+    ax.set_xlabel(f"% of staff respondents (n={int(t['staff_provided_n'].max())})")
+    ax.set_title("Provision vs need, staff view\n'unmet' = wants it AND their organisation lacks it")
+    ax.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=2, fontsize=8)
+    out.figure(fig, "09_gap_staff_provided_vs_wanted")
 
 
-def random_forest_leave(d: pd.DataFrame, features: list[str], target: str = "high_leave"):
-    try:
-        from sklearn.ensemble import RandomForestClassifier
-        from sklearn.impute import SimpleImputer
-        from sklearn.inspection import permutation_importance
-        from sklearn.metrics import roc_auc_score
-        from sklearn.model_selection import StratifiedKFold
-        from sklearn.pipeline import make_pipeline
-    except ImportError:
-        print("  [skip] scikit-learn not installed -> random forest skipped")
-        return None, None
-    sub = d.dropna(subset=[target]).copy()
-    X, y = sub[features], sub[target].astype(int)
-    skf = StratifiedKFold(5, shuffle=True, random_state=42)
-    aucs, imps = [], []
-    for tr, te in skf.split(X, y):
-        pipe = make_pipeline(SimpleImputer(strategy="median"),
-                             RandomForestClassifier(n_estimators=400, min_samples_leaf=3, class_weight="balanced",
-                                                    random_state=42, n_jobs=-1))
-        pipe.fit(X.iloc[tr], y.iloc[tr])
-        aucs.append(roc_auc_score(y.iloc[te], pipe.predict_proba(X.iloc[te])[:, 1]))
-        pi = permutation_importance(pipe, X.iloc[te], y.iloc[te], n_repeats=20, scoring="roc_auc", random_state=42)
-        imps.append(pi.importances_mean)
-    imp = pd.DataFrame({"feature": [LABELS.get(f, f) for f in features], "key": features,
-                        "perm_importance_auc_drop": np.mean(imps, axis=0)}).sort_values("perm_importance_auc_drop", ascending=False)
-    return imp, {"n": len(sub), "positive_rate": float(y.mean()), "auc_mean": float(np.mean(aucs)), "auc_sd": float(np.std(aucs))}
+def fig_gap_four_way(gap: pd.DataFrame, out: Output) -> None:
+    t = gap.sort_values("staff_unmet_pct")
+    fig, ax = plt.subplots(figsize=(9, 5.6))
+    y = np.arange(len(t))
+    h = 0.2
+    series = [("staff_provided_pct", "Staff: provided", C_ORG, 1.5), ("dm_provided_pct", "Decision-makers: provided", "#90cdf4", 0.5),
+              ("staff_wanted_pct", "Staff: wanted", C_SELF, -0.5), ("dm_wanted_pct", "Decision-makers: wanted", "#fbd38d", -1.5)]
+    for col, lab, c, k in series:
+        ax.barh(y + k * h, t[col].fillna(0), h, color=c, label=lab)
+        for yi, v in zip(y, t[col]):
+            if pd.isna(v):
+                ax.text(0.8, yi + k * h, "not asked", va="center", fontsize=6, color="#666")
+    ax.set_yticks(y)
+    ax.set_yticklabels(t["item"])
+    ax.set_xlabel("% of respondents in branch (staff n=241, decision-makers n=28)")
+    ax.set_title("Provided vs wanted: staff and decision-makers")
+    ax.legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=4)
+    out.figure(fig, "10_gap_four_way")
 
 
-def fig_rf(imp: pd.DataFrame, info: dict, out: Out):
-    t = imp.head(15).sort_values("perm_importance_auc_drop")
-    fig, ax = plt.subplots(figsize=(9, 6))
-    ax.barh(t["feature"], t["perm_importance_auc_drop"], color=PALETTE[4])
-    ax.set_xlabel("Permutation importance (drop in held-out AUC)")
-    ax.set_title(f"Random forest: considers leaving at least monthly\n5-fold CV AUC = {info['auc_mean']:.2f} ± {info['auc_sd']:.2f}"
-                 f"  (n={info['n']}, {info['positive_rate'] * 100:.0f}% positive)", loc="left", fontweight="bold", fontsize=11)
-    ax.grid(axis="y", visible=False)
-    out.save_fig(fig, "10_random_forest/random_forest_intent_to_leave.png")
+def fig_barriers(b: pd.DataFrame, out: Output) -> None:
+    t = b.copy()
+    t["m"] = t[["staff_pct", "dm_pct"]].max(axis=1)
+    t = t.sort_values("m")
+    fig, ax = plt.subplots(figsize=(9, 5))
+    y = np.arange(len(t))
+    ax.barh(y + 0.2, t["staff_pct"].fillna(0), 0.38, color=C_ORG, label="Staff (why no system exists)")
+    ax.barh(y - 0.2, t["dm_pct"].fillna(0), 0.38, color=C_SELF, label="Decision-makers (what constrains adoption)")
+    ax.set_yticks(y)
+    ax.set_yticklabels(t["barrier"], fontsize=7.5)
+    ax.set_xlabel("% of respondents in branch (option not offered to the other branch shows 0)")
+    ax.set_title("Barriers: staff vs decision-makers (only budget and capacity are like-for-like)")
+    ax.legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+    out.figure(fig, "11_barriers_staff_vs_decision_makers")
 
 
-# --------------------------------------------------------------------------- #
-# 4. Report
-# --------------------------------------------------------------------------- #
-def sig_pairs(rho, qv, nn, keys):
-    rows = []
-    for i, a in enumerate(keys):
-        for b in keys[i + 1:]:
-            if pd.notna(qv.loc[a, b]) and qv.loc[a, b] < ALPHA:
-                rows.append((LABELS[a], LABELS[b], rho.loc[a, b], qv.loc[a, b], int(nn.loc[a, b])))
-    return sorted(rows, key=lambda r: -abs(r[2]))
+def fig_challenges(ch: pd.DataFrame, out: Output) -> None:
+    t = ch.sort_values("named_any_rank_pct")
+    fig, ax = plt.subplots(figsize=(7.4, 4.2))
+    ax.barh(t["challenge"], t["named_any_rank_pct"], color=C_SELF, xerr=[t["named_any_rank_pct"] - t["ci_low"], t["ci_high"] - t["named_any_rank_pct"]], capsize=2)
+    ax.set_xlabel(f"% of self-employed respondents naming it in their top 3 (n={int(t['n_respondents'].iloc[0])}; 95% Wilson CI)")
+    ax.set_title("Self-employed: top challenges")
+    out.figure(fig, "12_self_employed_challenges")
 
 
-def write_report(d, meta, out: Out, corr, burn_tab, gt, eqs, med, rf_imp, rf_info):
-    comp, partial = corr["composite"], corr["partial"]
+# =============================================================================================== #
+# 16. ASSUMPTIONS REGISTER  (written to the report so every assumption can be critiqued)
+# =============================================================================================== #
+ASSUMPTIONS = [
+    ("A1", "Questionnaire layout is stable", "all", "Every positional column is verified against header text; a mismatch aborts the run (LayoutError)."),
+    ("A2", "Direction of every item is correct after reverse-coding", "scoring",
+     "coding_audit.csv flags negative item-rest correlations. This found cols 12 and 29-31 mis-directed in the brief; 'primary' repairs ONLY these."),
+    ("A3", "'Not applicable', 'no agreement on hours' and 'irregular hours' are missing, not low/mid values", "scoring",
+     "Declared in NOT_APPLICABLE; not recoded to a number. Affects cols 7, 8 and the N/A answers on demand/resource items."),
+    ("A4", "Ordinal items are equal-interval after POMP rescaling to 0-100 and averaged", "all composites",
+     "Not testable from these data. Exploratory associations use Spearman; ordinal CFA (WLSMV) is the recommended confirmation (outside this script)."),
+    ("A5", "Items in a composite are essentially unidimensional / tau-equivalent", "reliability",
+     "Alpha AND omega-total reported. The 13-item burnout composite mixes personal and work-related burnout; sub-scales are in the group table."),
+    ("A6", "Item non-response inside a composite is MAR given the other items", "row_mean",
+     "Composite defined if >= 50% of items answered (100% for PAY, MA, ID, JS). Missingness inside composites is tiny (<= 3 respondents per item)."),
+    ("A7", "Single-item PAY and MA carry no measurement error", "Eq.1-3",
+     "UNTESTABLE with one item; slopes for PAY and MA are probably attenuated toward zero. Treat their null results as inconclusive."),
+    ("A8", "Linear, additive conditional means; no interactions", "OLS",
+     "Ramsey RESET reported per model. Demand x resource buffering is NOT tested because the brief's equations contain no interaction terms."),
+    ("A9", "Observations are independent", "OLS, bootstrap",
+     "VIOLATION POSSIBLE: no organisation identifier exists, so clustering by employer cannot be modelled. County-clustered SEs are a weak "
+     "sensitivity (few effective clusters; Taipei/New Taipei dominate). HC3 does NOT correct clustering."),
+    ("A10", "Heteroskedasticity is allowed; mean model is correctly specified", "HC3",
+     "Koenker-BP reported; HC3 used (preferred for n < 250). Cook's D counts reported; no observation was deleted."),
+    ("A11", "Collinearity is not severe", "OLS", "VIF and condition number reported per model (rule of thumb: VIF > 5 would be flagged)."),
+    ("A12", "Mission = 8 overlapping multi-select dummies (each vs 'not selected'); SIZE is linear on its 0-5 order", "controls",
+     "Joint Wald test of the dummy block per equation; the dummies are NOT mutually exclusive categories. Free-text 'other' mission answers are ignored."),
+    ("A13", "Skipping the optional ProQOL block is MAR given observed covariates (incl. role)", "multiple imputation",
+     "UNTESTABLE (MAR vs MNAR). missingness model shows skipping is strongly predictable (role); tipping-point analysis shows how large an "
+     "MNAR shift in JS would be needed to change conclusions. Complete-case answers a different estimand (respondents who answered)."),
+    ("A14", "The imputation model is adequate", "MI",
+     "Bayesian-ridge chained equations on composites, m imputations, posterior sampling, bounds enforced, auxiliary variables included. "
+     "No predictive-mean matching; imputes composites not items."),
+    ("A15", "Mediation: temporal order X -> M -> Y, and no unmeasured X-M, M-Y, X-Y confounding", "mediation",
+     "CROSS-SECTIONAL: order is assumed, never observed. Results are structural ASSOCIATIONS. No confounding-sensitivity (e.g. E-value) is computed."),
+    ("A16", "Rows are exchangeable under the bootstrap", "BCa / percentile CI", "Same independence caveat as A9."),
+    ("A17", "BH-FDR is valid under independence / positive dependence", "multiplicity",
+     "Primary family = 14 structural slopes. Everything else is exploratory with its own FDR family and must be reported as such."),
+    ("A18", "Self-reported perceptions of what exists ('as far as you know') approximate what exists", "support gap",
+     "Staff may be unaware of existing supports. Decision-maker answers are the better record of supply but n = 28."),
+    ("A19", "'Wanted' = chosen among <= 3 picks; not choosing an item does not mean not wanting it", "support gap",
+     "'Wanted' is a LOWER BOUND on need; 'provided but not selected' is not evidence of surplus."),
+    ("A20", "Supply and demand option lists correspond item-for-item", "support gap",
+     "Not exactly: career (system vs discussion) is approximate; flexible work has no demand option; financial planning has no supply option; "
+     "allowance is not asked of decision-makers. Gaps are computed only where both sides were asked."),
+    ("A21", "Staff and decision-maker samples can be compared as independent groups", "support gap",
+     "They are different people in different (unidentified) organisations; no matched-pair analysis is possible."),
+    ("A22", "Hybrid respondents (org + personal projects, n = 32) answered the organisational items about their organisational work", "grouping",
+     "Pooled with organisation respondents; every model is re-run excluding them (sample = org_excl_hybrid)."),
+    ("A23", "Self-employed respondents answered only ID, BO, JS (+ProQOL); WL, OS, JR, PAY, MA, RET, SIZE, MISSION do not exist for them", "group split",
+     "The three JD-R structural equations are therefore NOT identified for the self-employed; only the reduced model (ID, BO, JS) can be compared."),
+    ("A24", "The sample is non-probability, self-selected (~5% response per the IQP report) and all measures are self-reported", "inference",
+     "No population inference, no weights. Common-method variance probably inflates correlations. Descriptive levels are NOT prevalence estimates."),
+]
+
+
+# =============================================================================================== #
+# 17. REPORT
+# =============================================================================================== #
+def _fmt(df: pd.DataFrame, cols: dict[str, str], nd: int = 3) -> pd.DataFrame:
+    out = df[list(cols)].rename(columns=cols).copy()
+    for c in out.columns:
+        if pd.api.types.is_float_dtype(out[c]):
+            out[c] = out[c].map(lambda v: "" if pd.isna(v) else (f"{v:.{nd}f}" if abs(v) >= 0.001 or v == 0 else f"{v:.1e}"))
+    return out
+
+
+def _beta_table(cc: pd.DataFrame, mi: pd.DataFrame, eq: str) -> str:
+    a = cc[(cc["equation"] == eq)].copy()
+    b = mi[(mi["equation"] == eq)].set_index("key")
+    a["MI beta"] = a["key"].map(b["std_beta"])
+    a["MI p"] = a["key"].map(b["p"])
+    a["CI"] = a.apply(lambda r: f"[{r['ci_low']:.2f}, {r['ci_high']:.2f}]", axis=1)
+    a["family"] = np.where(a["primary_family"], "primary", "control")
+    a["q (primary FDR)"] = a["q_fdr_primary"]
+    return md_table(_fmt(a, {"predictor": "Predictor", "std_beta": "Std beta (CC)", "CI": "95% CI", "p": "p", "q (primary FDR)": "q",
+                             "MI beta": "Std beta (MI)", "MI p": "p (MI)", "VIF": "VIF", "family": "Family"}, 3))
+
+
+def write_report(ctx: dict, out: Output, args: argparse.Namespace) -> None:
+    T = out.tables
+    cc, summ = T["primary_cc_coefficients"], T["primary_cc_model_summary"]
+    mi = T["primary_mi_coefficients"]
     L: list[str] = []
-    org = d[d["is_freelancer"] == 0]
-    L.append("# 2026 Taiwan Helpers' Needs Survey -- automated analysis summary\n")
-    L.append(f"- Responses analysed: **{meta['raw_n']}** ({len(org)} organisation-affiliated incl. hybrid, "
-             f"{int(d['is_freelancer'].sum())} freelancers/independents). **Equations 1-3 use organisation respondents only** "
-             "(freelancers were not asked the workload / support / resource / retention items).")
-    L.append("- Sample is self-selected (not probability-based): percentages describe respondents, not all Taiwanese helpers.\n")
+    A = L.append
+    A(f"# Taiwan Helpers' Needs Survey 2026 - JD-R analysis report (pipeline v{__version__})\n")
+    A("*Auto-generated. Numbers come from `tables/*.csv`; interpretation is deliberately limited to what the estimators can support. "
+      "All associations are cross-sectional and from a self-selected, non-probability sample.*\n")
+    n = ctx["n"]
+    A("## 1. Samples\n")
+    A(f"- Responses: **{n['raw']}**; organisation-based **{n['org']}** (of whom **{n['hybrid']}** hybrid: organisation + personal projects); self-employed **{n['self']}**.")
+    A(f"- JS (optional ProQOL block) observed for **{n['js_org']}** organisation and **{n['js_self']}** self-employed respondents.")
+    A(f"- Support-gap branches: staff **{n['staff']}**, decision-makers (founders/board/HR) **{n['dm']}**.\n")
+    A("## 2. Measurement and coding audit\n")
+    rel = T["reliability"]
+    r = rel[(rel["group"] == GROUP_ORG) & rel["construct"].isin(["OS", "RET", "WL"])].pivot(index="construct", columns="spec", values="alpha")
+    A("Cronbach's alpha, organisation group (full table with omega and CIs: `reliability.csv`):\n")
+    A(md_table(r.reset_index().round(2)))
+    A("\nItems flagged by the automatic direction audit (`coding_audit.csv`):\n")
+    fl = T["coding_audit"]
+    fl = fl[(fl["flag"].str.startswith("CHECK")) & (fl["spec"] != "extended")]
+    A(md_table(fl[["spec", "construct", "item", "column_0based", "item_rest_rho"]].round(2)) if len(fl) else "_none_")
+    A("\n`primary` repairs only these direction errors (cols 12, 29, 30, 31). Item membership stays as in the brief. `extended` also moves col 11 into WL "
+      "and drops col 7; it is a sensitivity analysis.\n")
+    A("## 3. Simplified JD-R equations - organisation group (primary specification)\n")
+    A("Standardised betas, HC3-robust 95% CI. 'CC' = complete case; 'MI' = multiple imputation pooled by Rubin's rules. "
+      "q = BH-FDR over the **14 primary slopes** (6 + 6 + 2); controls are outside the family.\n")
+    for eq, ttl in (("Eq1_BO", "Eq.1 Burnout"), ("Eq2_JS", "Eq.2 Job satisfaction"), ("Eq3_RET", "Eq.3 Retention")):
+        s = summ[summ["equation"] == eq].iloc[0]
+        A(f"### {ttl}  (n = {int(s['n'])}, R2 = {s['r2']:.3f}, adj. R2 = {s['adj_r2']:.3f}, max VIF = {s['max_VIF']:.2f}, "
+          f"BP p = {s['BP_heterosk_p']:.3f}, RESET p = {s['RESET_p']:.3f}, mission-block p = {s['mission_block_p']:.3f})\n")
+        A(_beta_table(cc, mi, eq) + "\n")
+    s3b = summ[summ["equation"] == "Eq3b_RET"].iloc[0]
+    A(f"**Eq.3b** (Eq.3 + all six predictors; n = {int(s3b['n'])}, R2 = {s3b['r2']:.3f}) is a *sensitivity* check on direct effects only. "
+      "Adding correlated predictors beside BO and JS can change signs (suppression); individual Eq.3b coefficients must not be read causally. "
+      f"On the same {ctx['dr2']['n']} rows, Eq.3 R2 = {ctx['dr2']['r2_eq3']:.3f} and Eq.3b R2 = {ctx['dr2']['r2_eq3b']:.3f} (increment = {ctx['dr2']['delta']:.3f}).\n")
+    A("## 4. Missing job-satisfaction block\n")
+    lg = T["missingness_logit"]
+    A(f"- Logistic model of 'JS skipped': AUC = **{lg['model_auc'].iloc[0]:.2f}**, McFadden R2 = {lg['model_mcfadden_r2'].iloc[0]:.2f}, "
+      f"LR p = {lg['model_lr_p'].iloc[0]:.1e}, events = {int(lg['events_missing'].iloc[0])}.")
+    top = lg[lg["covariate"] != "(intercept)"].assign(a=lambda x: x["log_odds_per_SD"].abs()).sort_values("a", ascending=False).head(3)
+    A("- Strongest predictors (odds ratio per SD): " + "; ".join(f"{LABELS.get(c, c)} OR={o:.2f}" for c, o in zip(top["covariate"], top["odds_ratio"])) + ".")
+    role_driven = top["covariate"].iloc[0] in ("frontline", "manager")
+    A("- Skipping is therefore **not MCAR**" + (" and is mainly explained by observed role (client-facing staff answered far more often; the block asks about "
+      "traumatised clients, which may not apply to admin/management roles), so JS is partly 'not applicable' rather than withheld" if role_driven else "") +
+      ". Predictability supports MAR-given-covariates for the imputation, but MAR vs MNAR is untestable; the tipping-point table "
+      "(`tipping_point.csv`, Figure 06) shifts imputed JS by -15 ... +15 points. Complete-case and MI answer different estimands "
+      "(respondents who answered vs all organisation staff).")
+    tp = T["tipping_point"]
+    t3 = tp[(tp["equation"] == "Eq3_RET") & (tp["key"] == "JS")]
+    A(f"- JS -> Retention pooled beta across the delta grid: min {t3['std_beta'].min():.3f}, max {t3['std_beta'].max():.3f}; "
+      f"p ranges {t3['p'].min():.2f}-{t3['p'].max():.2f}.\n")
+    A("## 5. Associational mediation  X -> {BO, JS} -> RET\n")
+    mc, mm = T["mediation_complete_case"], T["mediation_imputed"]
+    tot = mc[mc["kind"] == "ind_total"].set_index("predictor")
+    tm = mm[mm["kind"] == "ind_total"].set_index("predictor")
+    rows = pd.DataFrame({"Predictor": PREDICTORS,
+                         "Total indirect (CC, BCa)": [f"{tot.loc[p, 'estimate']:.3f} [{tot.loc[p, 'ci_low']:.3f}, {tot.loc[p, 'ci_high']:.3f}]" for p in PREDICTORS],
+                         "Total indirect (MI)": [f"{tm.loc[p, 'estimate']:.3f} [{tm.loc[p, 'ci_low']:.3f}, {tm.loc[p, 'ci_high']:.3f}]" for p in PREDICTORS]})
+    A(md_table(rows))
+    A("\nUnstandardised: points of RET (0-100) per point of X. Specific indirect effects via BO and via JS, direct and total effects: "
+      "`mediation_*.csv`. Interpret as structural associations; see assumption A15.\n")
+    A("## 6. Organisation vs self-employed\n")
+    gc = T["group_comparison_incl_hybrid"]
+    A(md_table(_fmt(gc, {"label": "Outcome", "n_org": "n org", "mean_org": "Mean org", "n_self": "n self", "mean_self": "Mean self",
+                         "mean_diff_self_minus_org": "Diff (self-org)", "rank_biserial_self_vs_org": "Rank-biserial",
+                         "mannwhitney_p": "p", "q_fdr": "q"}, 3)))
+    A("\nExploratory family of 7 contrasts. Sensitivity excluding hybrid respondents: `group_comparison_excl_hybrid.csv`.\n")
+    rm = T["reduced_jdr_models"]
+    idrow = rm[(rm["key"].isin(["ID", "ID_x_self"])) & (rm["equation"].isin(["R1_BO~ID", "R2_JS~ID"]))]
+    A("Part of the JD-R model measurable in **both** groups (ID -> BO, ID -> JS; controls: age band, years in helping work). "
+      "Interaction rows test whether the slope differs between groups (raw units):\n")
+    A(md_table(_fmt(idrow, {"group": "Group", "equation": "Model", "key": "Term", "b_raw": "b (0-100 units)", "std_beta": "Std beta",
+                            "p": "p", "n": "n"}, 3)))
+    A("\nThe structural equations Eq.1-3 are **not estimable** for the self-employed (WL, OS, JR, PAY, MA, RET, SIZE, MISSION were not asked; assumption A23). "
+      "Their own top challenges are in `selfemployed_challenges.csv` / Figure 12.\n")
+    A("## 7. Support gap: provided vs wanted vs decision-makers\n")
+    g = T["support_gap"]
+    A(md_table(_fmt(g, {"item": "Support", "staff_provided_pct": "Staff: provided %", "dm_provided_pct": "Decision-makers: provided %",
+                        "staff_wanted_pct": "Staff: wanted %", "dm_wanted_pct": "Decision-makers: wanted %",
+                        "staff_unmet_pct": "Staff unmet % (want, org lacks)", "pct_of_wanters_whose_org_lacks_it": "% of wanters lacking it"}, 1)))
+    A("\nSample sizes: staff n = 241, decision-makers n = 28 (independent groups; no matched organisations). Newcombe CIs and Fisher tests: "
+      "`support_gap.csv`. Caveats: A18-A21.\n")
+    sc = T["support_count_vs_outcomes"]
+    if len(sc):
+        A("Exploratory association between the number of supports staff say exist and their JD-R scores:\n")
+        A(md_table(_fmt(sc, {"outcome": "Outcome", "spearman_rho": "Spearman rho", "n": "n", "q_fdr": "q"}, 3)))
+    A("\n**Resource levels by seniority** (organisation group; Kruskal-Wallis, exploratory; `role_profile.csv`):\n")
+    A(md_table(T["role_profile"][["construct", "Frontline helper mean (n)", "Admin / project / finance mean (n)", "Mid-level manager mean (n)",
+                                  "Founder / decision-maker mean (n)", "q_fdr"]].round(3)))
+    A("\n## 8. Validation against the IQP report\n")
+    v = T["validation_summary"]
+    agg = v[v["section"] == "aggregate"][["pipeline", "n_terms", "mean_abs_diff", "max_abs_diff", "sign_agreement", "significance_agreement", "corr_beta"]]
+    A(md_table(agg.round(3)))
+    det = T["validation_detail"]
+    ext = det[det["pipeline"] == "extended CC"]
+    bad = ext[~ext["same_sign"]]
+    A(f"\nUnder the `extended` item set the pipeline reproduces **{int((ext['diff'].abs() < 0.0015).sum())} of {len(ext)}** printed standardised betas "
+      "to three decimals, plus every n and R2. " +
+      (("The exception(s): " + "; ".join(f"{r['equation']} {r['term']} (report {r['beta_iqp']:+.3f}, recomputed {r['beta_here']:+.3f})" for _, r in bad.iterrows()) +
+        ". The magnitude agrees and only the sign differs, i.e. the printed sign looks like a transcription error; the recomputed sign "
+        "(more organisational support -> less burnout) is the theoretically coherent one.") if len(bad) else "No sign disagreements.") + "\n")
+    A("## 9. Robustness across specification, sample and estimator\n")
+    rb = T["robustness_summary"]
+    A(md_table(_fmt(rb, {"equation": "Eq", "term": "Term", "primary_std_beta": "Primary beta", "share_same_sign": "Same sign (share)",
+                         "share_p<.05": "p<.05 (share)", "min_std_beta": "Min beta", "max_std_beta": "Max beta",
+                         "brief_literal_std_beta": "Beta, brief-literal"}, 3)))
+    A("\nVariants: 2 non-literal specifications x 2 samples x complete-case, plus MI and county-clustered SE for the primary specification "
+      "(`robustness_all_estimates.csv`). `brief_literal` is shown separately because its retention scale is internally inconsistent (alpha ~ 0).\n")
+    A("## 10. Assumptions register\n")
+    A(md_table(pd.DataFrame(ASSUMPTIONS, columns=["ID", "Assumption", "Used in", "How it is handled / checked"])))
+    A("\n## 11. What this analysis cannot establish\n")
+    A("- Causal or temporal claims (cross-sectional design; A15).\n- Population prevalence or representativeness (A24).\n"
+      "- Clustering within employers (A9) and formal measurement invariance across groups (ordinal CFA needed; only loading congruence is provided: `loading_congruence.csv`).\n"
+      "- Effects of single-item predictors PAY and MA (A7).\n")
+    (out.root / "report.md").write_text("\n".join(L), encoding="utf-8")
+    LOG.info("report written: %s", out.root / "report.md")
 
-    L.append("## Column map and what the revision changed\n")
-    L.append("Column numbers are **0-based** (pandas `iloc`). The script verified every number in the brief against the question text "
-             f"(all match: {bool(meta['col_check']['match'].all())}).\n")
-    L.append(md_table(meta["changes"]) + "\n")
-    L.append("### Reliability (Cronbach's alpha): as briefed vs revised\n")
-    L.append(md_table(meta["spec_compare"].drop(columns="items")) + "\n")
 
-    L.append("## Correlations among the equation constructs (org respondents; Spearman, BH-FDR)\n")
-    rho, pv, qv, nn = corr["model"]
-    keys = CONSTRUCTS + ["SIZE"]
-    sp = sig_pairs(rho, qv, nn, keys)
-    L.append(f"{len(sp)} of {len(keys) * (len(keys) - 1) // 2} construct pairs are significant at q<.05.\n")
-    L.append("| Variable 1 | Variable 2 | rho | q | n |\n|---|---|---|---|---|")
-    for a, b, r, q, n in sp:
-        L.append(f"| {a} | {b} | {r:.2f} | {'<0.001' if q < 0.001 else format(q, '.3f')} | {n} |")
-    prho, ppv, pqv, pnn = partial
-    spp = sig_pairs(prho, pqv, pnn, CONSTRUCTS)
-    L.append(f"\n**Partial correlations** (controlling org size + mission area): {len(spp)} of "
-             f"{len(CONSTRUCTS) * (len(CONSTRUCTS) - 1) // 2} construct pairs remain significant at q<.05.\n")
-
-    rho_c, pv_c, qv_c, nn_c = comp
-    spc = sig_pairs(rho_c, qv_c, nn_c, list(rho_c.columns))
-    L.append(f"All composite measures together: {len(spc)} of {len(rho_c) * (len(rho_c) - 1) // 2} pairs significant (q<.05). "
-             "Full tables are in `tables/`.\n")
-
-    for name, (coef, s) in eqs.items():
-        L.append(f"## {name}\n")
-        extra = f"; Mission block Wald F p={s['mission_p']:.3g}" if "mission_p" in s else ""
-        L.append(f"Standardised OLS with HC3-robust SEs, n={s['n']}, R²={s['r2']:.3f}, adj. R²={s['adj_r2']:.3f}, "
-                 f"F p={s['F_p']:.2g}{extra}. All coefficients:\n")
-        t = coef[["predictor", "std_beta", "ci_low", "ci_high", "p_value", "q_value_FDR", "VIF"]].copy()
-        for c in ("p_value", "q_value_FDR"):
-            t[c] = t[c].map(lambda v: "<0.001" if v < 0.001 else f"{v:.3f}")
-        L.append(md_table(t.round(3)) + "\n")
-    L.append("## Mediation: predictor -> {Burnout, Job satisfaction} -> Retention\n")
-    L.append(f"Parallel mediation, n={med[1]} complete cases, 2,000 bootstrap resamples (percentile 95% CI). "
-             "Uses Eq.3 **plus the predictors as direct paths** (a mediation model needs them; Eq.3 as written omits them).\n")
-    L.append(md_table(med[0][["predictor", "indirect_via_burnout", "indirect_via_job_sat", "total_indirect",
-                              "total_ind_ci_low", "total_ind_ci_high", "direct_effect", "total_effect",
-                              "indirect_significant"]].round(3)) + "\n")
-
-    L.append("## Burnout headline numbers\n")
-    for col, nm in [("personal_bo", "Personal burnout"), ("work_bo", "Work-related burnout")]:
-        s = d[col].dropna()
-        L.append(f"- {nm}: mean {s.mean():.1f} (SD {s.std():.1f}, n={len(s)}); "
-                 f"{((s >= 50) & (s < 75)).mean() * 100:.0f}% moderate (50-74), {(s >= 75).mean() * 100:.0f}% high (>=75)")
-    L.append(f"- >= monthly thoughts of leaving (org respondents): {org['high_leave'].mean() * 100:.0f}%; "
-             f"actively searched for jobs: {org['job_search'].mean() * 100:.0f}%.\n")
-    L.append("## Items most associated with Burnout (Spearman)\n")
-    L.append("| Variable | rho | q | n |\n|---|---|---|---|")
-    for _, r in burn_tab.head(10).iterrows():
-        L.append(f"| {r['variable']} | {r['rho']:.2f} | {r['q']:.3g} | {int(r['n'])} |")
-    L.append("\n## Significant group differences (FDR q<.05)\n")
-    sig = gt[gt["q_value_FDR"] < ALPHA]
-    if sig.empty:
-        L.append("No subgroup difference survived FDR correction.\n")
-    else:
-        L.append("| Segment | Outcome | Test | p | q | effect | n | Group means |\n|---|---|---|---|---|---|---|---|")
-        for _, r in sig.head(15).iterrows():
-            L.append(f"| {r['segment']} | {r['outcome']} | {r['test']} | {r['p_value']:.3g} | {r['q_value_FDR']:.3g} | "
-                     f"{r['effect_size']} | {r['n']} | {r['group_means']} |")
-        L.append("")
-    if rf_info:
-        L.append("## Random forest: considers leaving at least monthly\n")
-        L.append(f"5-fold CV AUC {rf_info['auc_mean']:.2f} ± {rf_info['auc_sd']:.2f} (n={rf_info['n']}). Top drivers:\n")
-        for _, r in rf_imp.head(6).iterrows():
-            L.append(f"- {r['feature']} (importance {r['perm_importance_auc_drop']:.3f})")
-        L.append("")
-    L.append("## Method notes\n")
-    L.append("- Every construct is the mean of its items after rescaling each item to 0-100 (percent of maximum possible) and aligning direction "
-             "(reverse-scored items flipped), so a higher score always means MORE of the named construct (Pay: less pay strain; "
-             "Retention: more likely to stay).\n"
-             "- Correlations are Spearman (rank-based, suitable for ordinal items); p-values are corrected with Benjamini-Hochberg FDR. "
-             "Thresholds were NOT loosened to produce more significant results.\n"
-             "- Regressions: z-scored outcome and continuous predictors (standardised betas), 0/1 mission dummies, HC3 robust standard errors. "
-             "Mission = 8 service-area dummies (areas with >=10% prevalence; rarer areas are the reference) tested jointly as one block.\n"
-             "- Job satisfaction (ProQOL block) was optional, so Eq.2 / Eq.3 / mediation have smaller n than Eq.1.\n"
-             "- Cross-sectional, self-selected data: all results are associations, not causal effects.\n")
-    path = os.path.join(out.root, "analysis_summary.md")
-    with open(path, "w", encoding="utf-8") as f:
-        f.write("\n".join(L))
-    print(f"  report -> {path}")
+def loading_congruence(ds: pd.DataFrame) -> pd.DataFrame:
+    """Configural-similarity diagnostic (NOT formal invariance): Tucker's phi between one-factor loadings of the same scale
+    in the organisation and self-employed groups."""
+    rows = []
+    for cons in ("ID", "BO", "JS"):
+        fr_o = item_frame(ds[ds["group"] == GROUP_ORG], SPEC_PRIMARY[cons]).dropna()
+        fr_s = item_frame(ds[ds["group"] == GROUP_SELF], SPEC_PRIMARY[cons]).dropna()
+        if len(fr_o) < MIN_GROUP_N or len(fr_s) < MIN_GROUP_N or fr_o.shape[1] < 3:
+            continue
+        lo_, ls_ = one_factor_loadings(np.corrcoef(fr_o.values.T)), one_factor_loadings(np.corrcoef(fr_s.values.T))
+        rows.append({"scale": cons, "n_org": len(fr_o), "n_self": len(fr_s), "tucker_phi": tucker_phi(lo_, ls_),
+                     "interpretation": "equal (>=.95)" if tucker_phi(lo_, ls_) >= 0.95 else "fair (.85-.94)" if tucker_phi(lo_, ls_) >= 0.85 else "dissimilar"})
+    return pd.DataFrame(rows)
 
 
-# --------------------------------------------------------------------------- #
-# main
-# --------------------------------------------------------------------------- #
-def main():
-    ap = argparse.ArgumentParser(description="Analyse the 2026 Taiwan Helpers' Needs Survey CSV")
-    ap.add_argument("--input", "-i", help="survey CSV (default: first *.csv in cwd)")
+# =============================================================================================== #
+# 18. SELF-TEST  (python helper_survey_analysis.py --selftest)
+# =============================================================================================== #
+def run_selftest() -> int:
+    """Numerical unit checks of the statistical building blocks against closed-form / simulated truths."""
+    fails: list[str] = []
+
+    def check(name: str, ok: bool, detail: str = "") -> None:
+        print(f"  [{'PASS' if ok else 'FAIL'}] {name} {detail}")
+        if not ok:
+            fails.append(name)
+
+    rng = np.random.default_rng(7)
+    check("bh_fdr known example", np.allclose(bh_fdr([0.01, 0.04, 0.03, 0.005]), [0.02, 0.04, 0.04, 0.02]))
+    check("bh_fdr NaN-safe", np.isnan(bh_fdr([0.01, np.nan])[1]))
+    lo, hi = wilson_ci(10, 20)
+    check("wilson_ci(10,20)", abs(lo - 0.2993) < 1e-3 and abs(hi - 0.7007) < 1e-3)
+    check("pomp", pomp(pd.Series([1, 3, 5]), 1, 5).tolist() == [0.0, 50.0, 100.0] and pomp(pd.Series([1.0]), 1, 5, True).iloc[0] == 100.0)
+    check("row_mean min_frac", row_mean(pd.DataFrame({"a": [1, np.nan], "b": [3, np.nan]}), 1.0).isna().iloc[1])
+    x = rng.normal(size=(500, 1))
+    items = pd.DataFrame(x + 0.0 * rng.normal(size=(500, 4)))
+    check("alpha: identical items -> 1", abs(cronbach_alpha(items)[0] - 1) < 1e-9)
+    check("alpha: independent items -> ~0", abs(cronbach_alpha(pd.DataFrame(rng.normal(size=(4000, 5))))[0]) < 0.06)
+
+    f_true = rng.normal(size=6000)
+    sim = pd.DataFrame({i: 0.7 * f_true + math.sqrt(1 - 0.49) * rng.normal(size=6000) for i in range(5)})
+    om_true = (5 * 0.7) ** 2 / ((5 * 0.7) ** 2 + 5 * (1 - 0.49))
+    check("omega recovers one-factor truth", abs(omega_total(sim) - om_true) < 0.02, f"({omega_total(sim):.3f} vs {om_true:.3f})")
+    check("tucker_phi identical", abs(tucker_phi(np.array([.5, .6]), np.array([.5, .6])) - 1) < 1e-12)
+
+    n = 300
+    Xs = rng.normal(size=(n, 3))
+    yv = 1 + Xs @ [0.5, -0.3, 0.0] + rng.normal(size=n) * np.exp(0.7 * Xs[:, 0])
+    df = pd.DataFrame(Xs, columns=list("abc")).assign(y=yv)
+    fit = fit_ols(df, "y", list("abc"))
+    Xd = np.column_stack([np.ones(n), Xs])
+    XtXi = np.linalg.inv(Xd.T @ Xd)
+    b = XtXi @ Xd.T @ yv
+    e = yv - Xd @ b
+    h = np.diag(Xd @ XtXi @ Xd.T)
+    V = XtXi @ (Xd.T @ np.diag(e ** 2 / (1 - h) ** 2) @ Xd) @ XtXi
+    check("OLS coefficients", np.allclose(fit.beta, b))
+    check("HC3 covariance equals brute-force formula", np.allclose(fit.cov, V))
+    check("standardised beta = b*sd_x/sd_y", np.allclose(fit.table()["std_beta"], b[1:] * Xs.std(0, ddof=1) / yv.std(ddof=1)))
+    try:  # cross-validate against statsmodels when it happens to be installed
+        import statsmodels.api as sm
+        sm_fit = sm.OLS(yv, Xd).fit(cov_type="HC3")
+        check("HC3 equals statsmodels", np.allclose(sm_fit.bse, fit.se, rtol=1e-8))
+    except ImportError:
+        print("  [SKIP] statsmodels not installed (cross-validation skipped)")
+    cl = pd.Series(np.arange(n), index=df.index)
+    cr = fit_ols(df, "y", list("abc"), cluster=cl)
+    check("cluster-robust with singleton clusters ~ HC1-scale", np.all(cr.se > 0.7 * fit.se) and np.all(cr.se < 1.3 * fit.se))
+    dg = diagnostics(fit)
+    check("heteroskedasticity detected by Koenker-BP", dg["BP_heterosk_p"] < 0.05, f"(p={dg['BP_heterosk_p']:.4f})")
+
+    pr = pool_rubin([np.array([1.0]), np.array([1.2])], [np.array([0.04]), np.array([0.04])], 1e6)
+    check("Rubin pooling (T = .04 + 1.5*.02)", abs(pr["se"].iloc[0] ** 2 - 0.07) < 1e-9 and abs(pr["est"].iloc[0] - 1.1) < 1e-12)
+    check("Rubin m=1 reduces to complete-data", abs(pool_rubin([np.array([2.0])], [np.array([0.25])], 100)["se"].iloc[0] - 0.5) < 1e-12)
+
+    Z = np.column_stack([np.ones(2000), rng.normal(size=(2000, 2))])
+    yb = (rng.random(2000) < _expit(Z @ [-0.5, 1.0, 0.0])).astype(float)
+    lg = fit_logit(Z, yb)
+    check("logit recovers coefficients", np.allclose(lg["coef"], [-0.5, 1.0, 0.0], atol=0.2) and lg["auc"] > 0.65)
+
+    s = rng.normal(5, 2, size=60)
+    bt = np.array([[rng.choice(s, 60).mean()] for _ in range(3000)])
+    jk = np.array([[np.delete(s, i).mean()] for i in range(60)])
+    blo, bhi = bca_interval(np.array([s.mean()]), bt, jk)
+    tci = stats.t.interval(0.95, 59, s.mean(), s.std(ddof=1) / math.sqrt(60))
+    check("BCa interval close to t interval for a mean", abs(blo[0] - tci[0]) < 0.15 and abs(bhi[0] - tci[1]) < 0.15)
+
+    m_ = 40000
+    X1 = rng.normal(size=m_)
+    BO = 0.5 * X1 + rng.normal(size=m_)
+    JS = rng.normal(size=m_)
+    RET = 0.4 * BO + 0.1 * X1 + rng.normal(size=m_)
+    vec = _mediation_vector(np.column_stack([X1, BO, JS, RET]), 1)
+    check("mediation recovers a*b=.20 and direct=.10", abs(vec[0] - 0.2) < 0.02 and abs(vec[3] - 0.1) < 0.02, f"(ind={vec[0]:.3f}, direct={vec[3]:.3f})")
+
+    fr = pd.DataFrame({"JS": [50.0, np.nan]})
+    check("delta_shift clips at 100", delta_shift([fr.assign(JS=[99.0, np.nan])], pd.Series([False, True]), 10)[0]["JS"].iloc[0] == 99.0)
+    shifted = delta_shift([pd.DataFrame({"JS": [95.0, 20.0]})], pd.Series([True, False]), 10)[0]["JS"].tolist()
+    check("delta_shift only shifts imputed cells", shifted == [100.0, 20.0])
+    try:
+        verify_layout(pd.DataFrame(columns=[f"x{i}" for i in range(108)]))
+        check("layout check rejects wrong headers", False)
+    except LayoutError:
+        check("layout check rejects wrong headers", True)
+    print(f"\n{len(fails)} failure(s)" if fails else "\nall self-tests passed")
+    return 1 if fails else 0
+
+
+# =============================================================================================== #
+# 19. MANIFEST + MAIN
+# =============================================================================================== #
+def sha256(path: str | Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def write_manifest(out: Output, args: argparse.Namespace) -> None:
+    import datetime
+    import scipy
+    pkgs = {"python": platform.python_version(), "numpy": np.__version__, "pandas": pd.__version__, "scipy": scipy.__version__,
+            "matplotlib": matplotlib.__version__}
+    try:
+        import sklearn
+        pkgs["scikit-learn"] = sklearn.__version__
+    except ImportError:
+        pass
+    man = {"pipeline_version": __version__, "created_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+           "input_file": str(args.input), "input_sha256": sha256(args.input),
+           "script_sha256": sha256(__file__) if "__file__" in globals() else None, "seed": args.seed, "n_bootstrap": args.boot,
+           "n_imputations": args.m, "command_line": " ".join(sys.argv), "packages": pkgs}
+    (out.root / "run_manifest.json").write_text(json.dumps(man, indent=2), encoding="utf-8")
+
+
+def export_analysis_dataset(ds: pd.DataFrame, out: Output) -> None:
+    """Analysis dataset without identifiers/free text: underscore-prefixed (raw text, county) columns are dropped."""
+    keep = [c for c in ds.columns if not c.startswith("_")]
+    exp = ds[keep].copy()
+    exp.insert(0, "respondent_id", np.arange(1, len(exp) + 1))
+    out.table(exp, "analysis_dataset_primary_spec")
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description="Analyse the 2026 Taiwan Helpers' Needs Survey (simplified JD-R model).")
+    ap.add_argument("--input", "-i", help="survey CSV (default: first *.csv in the working directory)")
     ap.add_argument("--out", "-o", default="analysis_output", help="output directory")
-    ap.add_argument("--no-ml", action="store_true", help="skip the random-forest model")
-    ap.add_argument("--boot", type=int, default=2000, help="bootstrap resamples for the mediation CIs")
-    args = ap.parse_args()
+    ap.add_argument("--boot", type=int, default=N_BOOT, help="bootstrap resamples (default %(default)s)")
+    ap.add_argument("--m", type=int, default=N_IMPUTATIONS, help="number of multiple imputations (default %(default)s)")
+    ap.add_argument("--seed", type=int, default=SEED, help="master random seed (default %(default)s)")
+    ap.add_argument("--no-figures", action="store_true", help="skip figure generation")
+    ap.add_argument("--selftest", action="store_true", help="run numerical self-tests and exit")
+    args = ap.parse_args(argv)
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
+    if args.selftest:
+        return run_selftest()
+    if args.input is None:
+        cands = sorted(Path(".").glob("*.csv"))
+        if not cands:
+            ap.error("no --input given and no *.csv found in the working directory")
+        args.input = str(cands[0])
+    out = Output(args.out)
+    rng = np.random.default_rng(args.seed)
 
-    path = args.input
-    if not path:
-        found = sorted(glob.glob("*.csv"))
-        if not found:
-            sys.exit("No CSV found: pass --input path/to/survey.csv")
-        path = found[0]
-    out = Out(args.out)
+    LOG.info("[1/9] load, verify layout, clean")
+    d, meta = load_and_clean(args.input)
+    out.table(meta["layout"], "layout_check")
+    ds = with_spec(d, "primary")
+    export_analysis_dataset(ds, out)
+    org_mask = ds["group"] == GROUP_ORG
+    ctx = {"n": {"raw": len(d), "org": int(org_mask.sum()), "hybrid": int(d.loc[org_mask, "hybrid"].sum()), "self": int((~org_mask).sum()),
+                 "js_org": int(ds.loc[org_mask, "JS"].notna().sum()), "js_self": int(ds.loc[~org_mask, "JS"].notna().sum()),
+                 "staff": int((d["support_branch"] == "Staff").sum()), "dm": int((d["support_branch"] == "Decision-maker").sum())}}
 
-    print("\n[1/7] Cleaning & coding data")
-    d, meta = load_and_clean(path)
-    public = d[[c for c in d.columns if not c.startswith("_")]].copy()
-    for c in public.select_dtypes("category").columns:
-        public[c] = public[c].astype(object)
-    out.save_tab(public, "cleaned_coded_data_anonymised.csv")
-    out.save_tab(meta["reliability"], "scale_reliability_legacy_scales.csv", index=False)
-    out.save_tab(meta["spec_compare"], "construct_reliability_brief_vs_revised.csv", index=False)
-    out.save_tab(meta["item_diag"], "construct_item_diagnostics.csv", index=False)
-    out.save_tab(meta["changes"], "construct_changes_and_reasons.csv", index=False)
-    out.save_tab(meta["col_check"], "column_map_check.csv", index=False)
+    rows3b = ds.loc[org_mask, ["RET", "JS", "BO"] + PREDICTORS + CONTROLS].dropna()
+    r2a, r2b = fit_ols(rows3b, "RET", EQUATIONS["Eq3_RET"][1]).r2, fit_ols(rows3b, "RET", EQUATIONS["Eq3b_RET"][1]).r2
+    ctx["dr2"] = {"n": len(rows3b), "r2_eq3": r2a, "r2_eq3b": r2b, "delta": r2b - r2a}
 
-    print("\n[2/7] Descriptive statistics")
-    num = [k for k in LABELS if k in d.columns]
-    desc = d[num].describe().T.rename(index=LABELS)
-    desc["missing"] = d[num].isna().sum().values
-    out.save_tab(desc.round(3), "descriptive_statistics.csv")
+    LOG.info("[2/9] psychometrics and coding audit")
+    rel = out.table(reliability_table(d, rng), "reliability")
+    out.table(coding_audit(d), "coding_audit")
+    out.table(loading_congruence(ds), "loading_congruence")
+    out.table(pd.DataFrame([(k, v) for k, v in SPEC_NOTES.items()], columns=["item", "note"]), "specification_notes")
 
-    print("\n[3/7] Descriptive charts (one file per chart)")
-    figs_profile(d, out)
-    figs_likert(d, out)
-    figs_burnout(d, out)
-    figs_wellbeing(d, out)
-    figs_turnover(d, out)
-    figs_hours(d, out)
-    figs_eap(d, out)
+    LOG.info("[3/9] JD-R equations: specification x sample x estimator grid (includes %d imputations)", args.m)
+    fits, imputed = robustness_grid(d, args.m, args.seed)
+    prim = fits[PRIMARY_KEY]
+    out.table(prim[0], "primary_cc_coefficients")
+    out.table(prim[1], "primary_cc_model_summary")
+    out.table(fits[("primary", "org_incl_hybrid", "multiple imputation")][0], "primary_mi_coefficients")
+    out.table(fits[("primary", "org_incl_hybrid", "multiple imputation")][1], "primary_mi_model_summary")
+    long, rsum = robustness_tables(fits)
+    out.table(long, "robustness_all_estimates")
+    out.table(rsum, "robustness_summary")
 
-    print("\n[4/7] Correlations & heatmaps")
-    comp = fig_corr_composite(d, out)
-    out.save_tab(long_corr(*comp).round(4), "corr_composite_all_pairs.csv", index=False)
-    fig_corr_items(d, out)
-    fig_demand_vs_resource(d, out)
-    fig_segment_heatmap(d, out)
-    burn_excl = ["BO", "personal_bo", "work_bo", "total_bo", "RET"]
-    burn_tab = fig_correlates(d, "BO", "08_correlations/correlates_of_burnout.png", out,
-                              "Correlates of burnout (Spearman rho)", burn_excl)
-    out.save_tab(burn_tab.round(4), "correlates_of_burnout.csv", index=False)
-    fig_correlates(d, "consider_leaving", "08_correlations/correlates_of_intent_to_leave.png", out,
-                   "Correlates of considering leaving (Spearman rho)", ["RET"])
-    figs_scatter(d, out)
+    LOG.info("[4/9] missingness model and delta-adjusted tipping point")
+    org = ds[org_mask]
+    uni, lg = js_missingness(org)
+    out.table(uni, "missingness_univariate")
+    out.table(lg, "missingness_logit")
+    frames, mask = imputed["org_incl_hybrid"]
+    tp = out.table(tipping_point(frames, mask), "tipping_point")
 
-    print("\n[5/7] Model equations 1-3")
-    model_corr = fig_model_correlations(d, out)
-    fig_construct_means(d, out)
-    fig_alpha_compare(meta, out)
-    org = d[d["is_freelancer"] == 0]
-    ctrl = ["SIZE"]
-    specs = {
-        "Equation 1: Burnout": ("BO", PREDICTORS + ["SIZE"], "eq1_burnout"),
-        "Equation 2: Job satisfaction": ("JS", PREDICTORS + ["SIZE"], "eq2_job_satisfaction"),
-        "Equation 3: Retention": ("RET", ["JS", "BO", "SIZE"], "eq3_retention"),
-        "Equation 3b (sensitivity): Retention with all predictors as direct paths": ("RET", ["JS", "BO"] + PREDICTORS + ["SIZE"], "eq3b_retention_full"),
-    }
-    eqs = {}
-    for name, (y, cont, tag) in specs.items():
-        coef, summ = ols_fit(org, y, cont, MISSION_KEYS)
-        eqs[name] = (coef, summ)
-        out.save_tab(coef.round(4), f"model_{tag}.csv", index=False)
-        fig_regression(coef, summ, out, f"09_model/{tag}.png", name)
-    # Eq.1 on the same cases as Eq.2/3 -> is the smaller job-satisfaction sample driving differences?
-    sub_js = org.dropna(subset=["JS"])
-    c1b, s1b = ols_fit(sub_js, "BO", PREDICTORS + ["SIZE"], MISSION_KEYS)
-    out.save_tab(c1b.round(4), "model_eq1_burnout_on_job_satisfaction_sample.csv", index=False)
-    med = mediation_bootstrap(org, PREDICTORS, ["SIZE"] + MISSION_KEYS, B=args.boot)
-    out.save_tab(med[0].round(4), "model_mediation_indirect_effects.csv", index=False)
-    fig_mediation(med[0], med[1], out)
-    rf_imp = rf_info = None
-    if not args.no_ml:
-        feats = CONSTRUCTS[:-1] + ["hours_actual", "org_tenure", "helping_yrs", "SIZE", "age_ord"] + MISSION_KEYS
-        rf_imp, rf_info = random_forest_leave(org, feats)
-        if rf_imp is not None:
-            out.save_tab(rf_imp.round(4), "random_forest_importance.csv", index=False)
-            fig_rf(rf_imp, rf_info, out)
+    LOG.info("[5/9] associational mediation (B=%d)", args.boot)
+    med_cc, _ = mediation([org], args.boot, args.seed, bca=True)
+    med_mi, _ = mediation(frames, args.boot, args.seed, bca=False)
+    out.table(med_cc, "mediation_complete_case")
+    out.table(med_mi, "mediation_imputed")
 
-    print("\n[6/7] Group comparisons")
-    gt = group_tests(d)
-    out.save_tab(gt.round(5), "group_comparison_tests.csv", index=False)
+    LOG.info("[6/9] organisation vs self-employed")
+    out.table(group_comparison(ds, rng), "group_comparison_incl_hybrid")
+    out.table(group_comparison(ds, rng, exclude_hybrid=True), "group_comparison_excl_hybrid")
+    out.table(reduced_models(ds), "reduced_jdr_models")
+    ch = out.table(selfemployed_challenges(ds), "selfemployed_challenges")
+    prof = []
+    for g in (GROUP_ORG, GROUP_SELF):
+        sub = ds[ds["group"] == g]
+        for col, lab in (("role", "Role"), ("gender", "Gender"), ("age_cat", "Age"), ("region", "Region"), ("helping_yrs_cat", "Years in helping work")):
+            vc = sub[col].astype(object).value_counts(dropna=False)
+            prof += [{"group": g, "variable": lab, "level": str(k), "n": int(v), "pct": v / len(sub) * 100} for k, v in vc.items()]
+    out.table(pd.DataFrame(prof), "sample_profile")
 
-    print("\n[7/7] Writing summary report")
-    corr = {"composite": comp, "model": model_corr[:4], "partial": model_corr[4:]}
-    write_report(d, meta, out, corr, burn_tab, gt, eqs, med, rf_imp, rf_info)
-    print(f"\nDone. Everything is in: {os.path.abspath(out.root)}")
+    LOG.info("[7/9] support gap")
+    out.table(branch_audit(d), "support_branch_audit")
+    gap_tabs = support_gap(ds)
+    for name, tab in gap_tabs.items():
+        out.table(tab, name)
+    out.table(role_profile(ds), "role_profile")
+
+    LOG.info("[8/9] validation against the IQP report")
+    val = {"brief_literal CC": fits[("brief_literal", "org_incl_hybrid", "complete-case")],
+           "primary CC": prim, "primary MI": fits[("primary", "org_incl_hybrid", "multiple imputation")],
+           "extended CC": fits[("extended", "org_incl_hybrid", "complete-case")]}
+    det, vsum = validate_against_iqp(val)
+    out.table(det, "validation_detail")
+    out.table(vsum, "validation_summary")
+
+    if not args.no_figures:
+        LOG.info("[9/9] figures")
+        fig_reliability(rel, out)
+        corr = fig_corr(ds, out)
+        out.table(corr.reset_index(names="construct"), "construct_correlations_spearman")
+        fig_group_means(ds, out)
+        fig_forest_equations(fits, out)
+        fig_missingness(uni, out)
+        fig_tipping(tp, out)
+        fig_mediation(med_cc, med_mi, out)
+        fig_validation(det, out)
+        fig_gap_dumbbell(gap_tabs["support_gap"], out)
+        fig_gap_four_way(gap_tabs["support_gap"], out)
+        fig_barriers(gap_tabs["barriers"], out)
+        fig_challenges(ch, out)
+    write_report(ctx, out, args)
+    write_manifest(out, args)
+    LOG.info("done -> %s", out.root.resolve())
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

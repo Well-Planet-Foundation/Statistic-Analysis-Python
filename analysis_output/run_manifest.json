@@ -1,0 +1,19 @@
+{
+  "pipeline_version": "3.0",
+  "created_utc": "2026-11-24T04:16:12+00:00",
+  "input_file": "C:\\Users\\WPI Guest Account\\Downloads\\_2026 \u5e74\u81fa\u7063\u52a9\u4eba\u8005\u56f0\u5883\u5927\u8abf\u67e5 (\u56de\u8986) - \u8868\u55ae\u56de\u8986 1 (6).csv",
+  "input_sha256": "77fa876c2abd37ad4480d02a4735ae70c80434ae19550e79bd8f71f1e44e15b3",
+  "script_sha256": "65194f21d33ab30d25b88b492343403b565bdb7c5124f09b6f96406f36933bdc",
+  "seed": 20260101,
+  "n_bootstrap": 2000,
+  "n_imputations": 20,
+  "command_line": "helper_survey_analysis.py --input C:\\Users\\WPI Guest Account\\Downloads\\_2026 \u5e74\u81fa\u7063\u52a9\u4eba\u8005\u56f0\u5883\u5927\u8abf\u67e5 (\u56de\u8986) - \u8868\u55ae\u56de\u8986 1 (6).csv",
+  "packages": {
+    "python": "3.15.2",
+    "numpy": "2.5.4",
+    "pandas": "3.1.1",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "scikit-learn": "1.9.1"
+  }
+}

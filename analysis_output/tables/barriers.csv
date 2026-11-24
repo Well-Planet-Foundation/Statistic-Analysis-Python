@@ -1,0 +1,12 @@
+﻿barrier,directly_comparable,staff_pct,staff_k,staff_n,dm_pct,dm_k,dm_n,fisher_p,q_fdr
+Insufficient budget,True,20.33195020746888,49,241,71.42857142857143,20,28,8.527017847128662e-08,1.7054035694257325e-07
+No one has capacity / owner,True,19.502074688796682,47,241,46.42857142857143,13,28,0.002958978123249736,0.002958978123249736
+Decision-makers see no need (staff view only),False,26.970954356846473,65,241,,0,0,,
+Don't know where to start (staff view only),False,5.394190871369295,13,241,,0,0,,
+"Fear of complaint (staff) / awkward, low uptake (DM)",False,4.979253112033195,12,241,17.857142857142858,5,28,,
+Org too small (staff) / no programme for micro-orgs (DM),False,4.564315352697095,11,241,32.142857142857146,9,28,,
+Unclear internal needs (DM view only),False,,0,0,25.0,7,28,,
+Unclear programme benefits (DM view only),False,,0,0,17.857142857142858,5,28,,
+Board not supportive (DM view only),False,,0,0,7.142857142857142,2,28,,
+Not sure (staff view only),False,12.448132780082988,30,241,,0,0,,
+No particular concern (DM view only),False,,0,0,17.857142857142858,5,28,,

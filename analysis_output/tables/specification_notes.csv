@@ -1,0 +1,6 @@
+﻿item,note
+OS col 12,"Difficulty with colleagues is a distress item (higher = worse) exactly like col 13, which the brief already reverses; left unreversed it correlates negatively with every other support item (see coding audit)."
+RET cols 29-31,"Coded 1 = yes = looking to leave, so they must be reversed like col 27; as briefed the scale has alpha near zero because the items cancel each other."
+WL col 11 / col 7,"(extended spec only) col 11 was unassigned in the brief and correlates with the other demand items; col 7 is a contract term, not a load, and 'no agreement' is missing."
+ID (PV),"Cols 32-34 are the UWES-3 engagement items, not 'personal values'."
+JS,Cols 51/53/57 are ProQOL compassion-satisfaction items in an OPTIONAL block preceded by a trauma warning.

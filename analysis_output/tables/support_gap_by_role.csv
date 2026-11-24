@@ -1,0 +1,25 @@
+﻿role,n,item,provided_pct,wanted_pct,unmet_pct
+Frontline helper,160,Individual counselling,46.25,36.25,19.375
+Frontline helper,160,Group stress relief,33.75,26.25,18.75
+Frontline helper,160,Supervision / coaching,62.5,21.25,13.750000000000002
+Frontline helper,160,Leadership & management training,10.0,16.25,15.625
+Frontline helper,160,Professional skills training,55.625,29.375,20.0
+Frontline helper,160,Career development,12.5,36.25,31.874999999999996
+Frontline helper,160,Internal communication,36.875,18.75,13.125
+Frontline helper,160,Acting-position allowance,6.875000000000001,35.0,34.375
+Admin / project / finance,45,Individual counselling,40.0,26.666666666666668,20.0
+Admin / project / finance,45,Group stress relief,26.666666666666668,13.333333333333334,13.333333333333334
+Admin / project / finance,45,Supervision / coaching,24.444444444444443,15.555555555555555,13.333333333333334
+Admin / project / finance,45,Leadership & management training,15.555555555555555,35.55555555555556,33.33333333333333
+Admin / project / finance,45,Professional skills training,33.33333333333333,31.11111111111111,28.888888888888886
+Admin / project / finance,45,Career development,13.333333333333334,60.0,51.11111111111111
+Admin / project / finance,45,Internal communication,46.666666666666664,24.444444444444443,17.77777777777778
+Admin / project / finance,45,Acting-position allowance,2.2222222222222223,26.666666666666668,26.666666666666668
+Mid-level manager,34,Individual counselling,73.52941176470588,23.52941176470588,5.88235294117647
+Mid-level manager,34,Group stress relief,47.05882352941176,8.823529411764707,8.823529411764707
+Mid-level manager,34,Supervision / coaching,64.70588235294117,29.411764705882355,17.647058823529413
+Mid-level manager,34,Leadership & management training,35.294117647058826,32.35294117647059,23.52941176470588
+Mid-level manager,34,Professional skills training,38.23529411764706,23.52941176470588,20.588235294117645
+Mid-level manager,34,Career development,29.411764705882355,35.294117647058826,32.35294117647059
+Mid-level manager,34,Internal communication,29.411764705882355,26.47058823529412,20.588235294117645
+Mid-level manager,34,Acting-position allowance,2.941176470588235,50.0,50.0

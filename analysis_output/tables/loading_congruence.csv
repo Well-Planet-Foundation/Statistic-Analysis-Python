@@ -1,0 +1,4 @@
+﻿scale,n_org,n_self,tucker_phi,interpretation
+ID,269,49,0.9996429332820888,equal (>=.95)
+BO,269,49,0.9972882960376073,equal (>=.95)
+JS,203,38,0.9966274899801848,equal (>=.95)

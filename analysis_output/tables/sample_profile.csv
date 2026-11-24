@@ -1,0 +1,47 @@
+﻿group,variable,level,n,pct
+Organisation,Role,Frontline helper,160,59.479553903345725
+Organisation,Role,Admin / project / finance,45,16.728624535315987
+Organisation,Role,Mid-level manager,34,12.639405204460965
+Organisation,Role,Founder / decision-maker,23,8.550185873605948
+Organisation,Role,HR / training,5,1.858736059479554
+Organisation,Role,Other,2,0.7434944237918215
+Organisation,Gender,Female,199,73.97769516728626
+Organisation,Gender,Male,62,23.04832713754647
+Organisation,Gender,Prefer not to say,5,1.858736059479554
+Organisation,Gender,Non-binary / other,3,1.1152416356877324
+Organisation,Age,25-29,61,22.676579925650557
+Organisation,Age,40-49,56,20.817843866171003
+Organisation,Age,35-39,54,20.074349442379184
+Organisation,Age,30-34,53,19.702602230483272
+Organisation,Age,50+,22,8.178438661710038
+Organisation,Age,18-24,21,7.806691449814126
+Organisation,Age,nan,2,0.7434944237918215
+Organisation,Region,Taipei metro,162,60.223048327137555
+Organisation,Region,Other,102,37.9182156133829
+Organisation,Region,nan,5,1.858736059479554
+Organisation,Years in helping work,8-15 yrs,63,23.42007434944238
+Organisation,Years in helping work,1-3 yrs,52,19.33085501858736
+Organisation,Years in helping work,5-8 yrs,49,18.21561338289963
+Organisation,Years in helping work,15+ yrs,47,17.472118959107807
+Organisation,Years in helping work,3-5 yrs,39,14.49814126394052
+Organisation,Years in helping work,<1 yr,19,7.063197026022305
+Self-employed,Role,nan,49,100.0
+Self-employed,Gender,Female,35,71.42857142857143
+Self-employed,Gender,Male,12,24.489795918367346
+Self-employed,Gender,Non-binary / other,1,2.0408163265306123
+Self-employed,Gender,Prefer not to say,1,2.0408163265306123
+Self-employed,Age,35-39,14,28.57142857142857
+Self-employed,Age,30-34,9,18.367346938775512
+Self-employed,Age,40-49,8,16.3265306122449
+Self-employed,Age,25-29,8,16.3265306122449
+Self-employed,Age,50+,7,14.285714285714285
+Self-employed,Age,18-24,3,6.122448979591836
+Self-employed,Region,Taipei metro,25,51.02040816326531
+Self-employed,Region,Other,20,40.816326530612244
+Self-employed,Region,nan,4,8.16326530612245
+Self-employed,Years in helping work,8-15 yrs,13,26.53061224489796
+Self-employed,Years in helping work,1-3 yrs,12,24.489795918367346
+Self-employed,Years in helping work,15+ yrs,9,18.367346938775512
+Self-employed,Years in helping work,<1 yr,7,14.285714285714285
+Self-employed,Years in helping work,3-5 yrs,5,10.204081632653061
+Self-employed,Years in helping work,5-8 yrs,3,6.122448979591836
