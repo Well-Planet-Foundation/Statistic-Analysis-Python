@@ -1,0 +1,2 @@
+﻿n_respondents,n_counties,largest_county_share,smallest_county_n,median_county_n,effective_n_clusters,note
+264,20,0.4015151515151515,1,3.5,4.495936008257,few effective clusters: CR1 county-clustered SEs are anti-conservative here; indicative only. Employer-level clustering cannot be modelled (no organisation ID).
